@@ -76,6 +76,8 @@ const I18N = {
     quickAdd: 'Quick Add',
 
     // Add/Edit Modal
+    modalNewTitle: 'New Transaction',
+    modalEditTitle: 'Edit Transaction',
     modalExpenseTab: 'Expense -',
     modalIncomeTab: 'Income +',
     amountLabel: 'Select Currency & Enter Amount',
@@ -85,11 +87,15 @@ const I18N = {
     categoryLabel: 'Select Category',
     dateLabel: 'Date',
     saveTransaction: 'Save Transaction',
+    updateTransaction: 'Update Transaction',
+    editTxBtn: 'Edit',
+    deleteTxBtn: 'Delete',
 
     // Recurring Modal
     recurringModalTitle: 'Recurring Transactions',
     recurringModalDesc: 'Automatically track monthly fixed expenses (Rent, Subscriptions, Salary)',
     addRecurringTitle: '+ Add Recurring Item',
+    editRecurringTitle: '✏️ Edit Recurring Item',
     recTitlePlaceholder: 'Item name (e.g. Rent)',
     recAmountPlaceholder: 'Amount',
     recTypeExpense: 'Expense (-)',
@@ -98,6 +104,8 @@ const I18N = {
     recFreqWeekly: 'Weekly',
     recDayPlaceholder: 'Day of month (1-31)',
     addRecurringBtn: 'Add to Recurring List',
+    updateRecurringBtn: 'Update Recurring Item',
+    cancelEditBtn: 'Cancel',
     noRecurringRules: 'No recurring items configured yet',
     recurringItemSub: (day, type) => `Day ${day} each month · ${type === 'expense' ? 'Expense' : 'Income'}`,
 
@@ -191,6 +199,8 @@ const I18N = {
     quickAdd: '快速記帳',
 
     // Add/Edit Modal
+    modalNewTitle: '新增收支',
+    modalEditTitle: '編輯收支紀錄',
     modalExpenseTab: '支出 -',
     modalIncomeTab: '收入 +',
     amountLabel: '選擇幣別與輸入金額',
@@ -200,11 +210,15 @@ const I18N = {
     categoryLabel: '選擇類別',
     dateLabel: '消費日期',
     saveTransaction: '儲存紀錄',
+    updateTransaction: '更新紀錄',
+    editTxBtn: '編輯',
+    deleteTxBtn: '刪除',
 
     // Recurring Modal
     recurringModalTitle: '固定週期收支 (Recurring)',
     recurringModalDesc: '自動追蹤每月固定開銷 (房租、串流訂閱、薪資)',
     addRecurringTitle: '+ 新增固定收支項目',
+    editRecurringTitle: '✏️ 編輯固定收支項目',
     recTitlePlaceholder: '項目名稱 (如: 房租)',
     recAmountPlaceholder: '金額',
     recTypeExpense: '支出 (-)',
@@ -213,6 +227,8 @@ const I18N = {
     recFreqWeekly: '每週固定',
     recDayPlaceholder: '每月幾號 (1-31)',
     addRecurringBtn: '加入定期清單',
+    updateRecurringBtn: '更新定期項目',
+    cancelEditBtn: '取消',
     noRecurringRules: '目前沒有設定定期項目',
     recurringItemSub: (day, type) => `每月 ${day} 號 · ${type === 'expense' ? '支出' : '收入'}`,
 
@@ -551,6 +567,10 @@ function applyLanguage() {
   if (desktopAddLabel) desktopAddLabel.textContent = dict.quickAdd;
 
   // Add/Edit Transaction Modal
+  const isEditingTx = Boolean(document.getElementById('edit-id')?.value);
+  const modalHeading = document.getElementById('modal-heading-text');
+  if (modalHeading) modalHeading.textContent = isEditingTx ? dict.modalEditTitle : dict.modalNewTitle;
+
   const typeExpBtn = document.getElementById('type-expense-btn');
   if (typeExpBtn) typeExpBtn.textContent = dict.modalExpenseTab;
 
@@ -576,7 +596,7 @@ function applyLanguage() {
   if (modalDateLabel) modalDateLabel.textContent = dict.dateLabel;
 
   const modalSubmitBtn = document.getElementById('modal-submit-btn');
-  if (modalSubmitBtn) modalSubmitBtn.textContent = dict.saveTransaction;
+  if (modalSubmitBtn) modalSubmitBtn.textContent = isEditingTx ? dict.updateTransaction : dict.saveTransaction;
 
   // Recurring Modal
   const recModalTitle = document.getElementById('rec-modal-title');
@@ -590,8 +610,12 @@ function applyLanguage() {
   const recModalDesc = document.getElementById('rec-modal-desc');
   if (recModalDesc) recModalDesc.textContent = dict.recurringModalDesc;
 
+  const isEditingRec = Boolean(document.getElementById('rec-edit-id')?.value);
   const recAddTitle = document.getElementById('rec-add-title');
-  if (recAddTitle) recAddTitle.textContent = dict.addRecurringTitle;
+  if (recAddTitle) recAddTitle.textContent = isEditingRec ? dict.editRecurringTitle : dict.addRecurringTitle;
+
+  const recCancelBtn = document.getElementById('rec-cancel-edit-btn');
+  if (recCancelBtn) recCancelBtn.textContent = dict.cancelEditBtn;
 
   const recTitle = document.getElementById('rec-title');
   if (recTitle) recTitle.setAttribute('placeholder', dict.recTitlePlaceholder);
@@ -615,7 +639,9 @@ function applyLanguage() {
   if (recDay) recDay.setAttribute('placeholder', dict.recDayPlaceholder);
 
   const recSubmitBtn = document.getElementById('rec-submit-btn');
-  if (recSubmitBtn) recSubmitBtn.textContent = dict.addRecurringBtn;
+  if (recSubmitBtn) recSubmitBtn.textContent = isEditingRec ? dict.updateRecurringBtn : dict.addRecurringBtn;
+
+  updateRecCategoryOptions();
 
   // Settings Modal
   const settingsTitle = document.getElementById('settings-modal-title');
@@ -784,10 +810,16 @@ function initEvents() {
     renderTransactions();
   });
 
-  // Modal Open & Close
-  const openModal = () => {
+  // Modal Open, Edit & Close
+  window.openModal = function() {
     document.getElementById('transaction-form').reset();
     document.getElementById('edit-id').value = '';
+    const dict = I18N[state.lang] || I18N.en;
+    const modalHeading = document.getElementById('modal-heading-text');
+    if (modalHeading) modalHeading.textContent = dict.modalNewTitle;
+    const modalSubmitBtn = document.getElementById('modal-submit-btn');
+    if (modalSubmitBtn) modalSubmitBtn.textContent = dict.saveTransaction;
+
     document.getElementById('input-date').value = new Date().toISOString().split('T')[0];
     setModalType('expense');
     
@@ -801,15 +833,46 @@ function initEvents() {
     setTimeout(() => document.getElementById('input-amount').focus(), 100);
   };
 
-  const closeModal = () => {
+  window.closeModal = function() {
     document.getElementById('add-modal').classList.add('hidden');
     document.getElementById('add-modal').classList.remove('flex');
     document.getElementById('autocomplete-list').classList.add('hidden');
   };
 
-  document.getElementById('open-add-modal-btn').addEventListener('click', openModal);
-  document.getElementById('desktop-add-btn').addEventListener('click', openModal);
-  document.getElementById('close-add-modal-btn').addEventListener('click', closeModal);
+  window.openEditModal = function(id) {
+    const tx = state.transactions.find(t => t.id === id);
+    if (!tx) return;
+    const dict = I18N[state.lang] || I18N.en;
+
+    document.getElementById('transaction-form').reset();
+    document.getElementById('edit-id').value = tx.id;
+
+    const modalHeading = document.getElementById('modal-heading-text');
+    if (modalHeading) modalHeading.textContent = dict.modalEditTitle;
+
+    const modalSubmitBtn = document.getElementById('modal-submit-btn');
+    if (modalSubmitBtn) modalSubmitBtn.textContent = dict.updateTransaction;
+
+    document.getElementById('input-title').value = getItemTitle(tx);
+    document.getElementById('input-amount').value = tx.amount;
+    document.getElementById('input-date').value = tx.date;
+
+    const modalCurrSelect = document.getElementById('modal-currency-select');
+    if (modalCurrSelect) {
+      modalCurrSelect.value = tx.currency || state.currency || 'USD';
+    }
+
+    setModalType(tx.type);
+    selectCategory(tx.category);
+
+    document.getElementById('add-modal').classList.remove('hidden');
+    document.getElementById('add-modal').classList.add('flex');
+    setTimeout(() => document.getElementById('input-amount').focus(), 100);
+  };
+
+  document.getElementById('open-add-modal-btn').addEventListener('click', window.openModal);
+  document.getElementById('desktop-add-btn').addEventListener('click', window.openModal);
+  document.getElementById('close-add-modal-btn').addEventListener('click', window.closeModal);
 
   // Modal Type Switchers
   document.getElementById('type-expense-btn').addEventListener('click', () => setModalType('expense'));
@@ -883,7 +946,7 @@ function initEvents() {
     }
   });
 
-  // Submit Transaction Form
+  // Submit Transaction Form (Add or Edit)
   document.getElementById('transaction-form').addEventListener('submit', (e) => {
     e.preventDefault();
     const editId = document.getElementById('edit-id').value;
@@ -907,6 +970,11 @@ function initEvents() {
           currency,
           date
         };
+        if (state.lang === 'zh-TW') {
+          state.transactions[idx].title_tw = title;
+        } else {
+          state.transactions[idx].title = title;
+        }
       }
     } else {
       const newTx = {
@@ -918,6 +986,9 @@ function initEvents() {
         currency,
         date
       };
+      if (state.lang === 'zh-TW') {
+        newTx.title_tw = title;
+      }
       state.transactions.unshift(newTx);
     }
 
@@ -926,17 +997,19 @@ function initEvents() {
     updateDemoBanner();
 
     persistData();
-    closeModal();
+    window.closeModal();
   });
 
   // Recurring Modal
   const recModal = document.getElementById('recurring-modal');
   const openRecModal = () => {
+    cancelEditRecurring();
     renderRecurringList();
     recModal.classList.remove('hidden');
     recModal.classList.add('flex');
   };
   const closeRecModal = () => {
+    cancelEditRecurring();
     recModal.classList.add('hidden');
     recModal.classList.remove('flex');
   };
@@ -944,6 +1017,18 @@ function initEvents() {
   document.getElementById('open-recurring-modal-btn').addEventListener('click', openRecModal);
   document.getElementById('nav-recurring').addEventListener('click', openRecModal);
   document.getElementById('close-recurring-modal-btn').addEventListener('click', closeRecModal);
+
+  // Recurring Type change updates category dropdown
+  const recTypeSelect = document.getElementById('rec-type');
+  if (recTypeSelect) {
+    recTypeSelect.addEventListener('change', () => updateRecCategoryOptions());
+  }
+
+  // Recurring Cancel Edit Button
+  const recCancelBtn = document.getElementById('rec-cancel-edit-btn');
+  if (recCancelBtn) {
+    recCancelBtn.addEventListener('click', cancelEditRecurring);
+  }
 
   // Settings Modal Handlers
   const settingsModal = document.getElementById('settings-modal');
@@ -1021,32 +1106,58 @@ function initEvents() {
     settingsModal.classList.remove('flex');
   });
 
-  // Add Recurring Rule Form
+  // Add / Edit Recurring Rule Form
   document.getElementById('recurring-form').addEventListener('submit', (e) => {
     e.preventDefault();
+    const editId = document.getElementById('rec-edit-id').value;
     const title = document.getElementById('rec-title').value.trim();
     const currency = document.getElementById('rec-currency').value || 'USD';
     const amount = parseFloat(document.getElementById('rec-amount').value) || 0;
     const type = document.getElementById('rec-type').value;
+    const category = document.getElementById('rec-category').value;
     const freq = document.getElementById('rec-freq').value;
     const day = parseInt(document.getElementById('rec-day').value) || 1;
 
-    const newRule = {
-      id: 'rec_' + Date.now(),
-      title,
-      currency,
-      amount,
-      type,
-      category: type === 'expense' ? 'housing' : 'salary',
-      freq,
-      day
-    };
+    if (editId) {
+      const idx = state.recurring.findIndex(r => r.id === editId);
+      if (idx !== -1) {
+        state.recurring[idx] = {
+          ...state.recurring[idx],
+          title,
+          currency,
+          amount,
+          type,
+          category,
+          freq,
+          day
+        };
+        if (state.lang === 'zh-TW') {
+          state.recurring[idx].title_tw = title;
+        } else {
+          state.recurring[idx].title = title;
+        }
+      }
+    } else {
+      const newRule = {
+        id: 'rec_' + Date.now(),
+        title,
+        currency,
+        amount,
+        type,
+        category,
+        freq,
+        day
+      };
+      if (state.lang === 'zh-TW') {
+        newRule.title_tw = title;
+      }
+      state.recurring.push(newRule);
+    }
 
-    state.recurring.push(newRule);
+    cancelEditRecurring();
     persistData();
     renderRecurringList();
     checkDueRecurring();
-    document.getElementById('recurring-form').reset();
   });
 
   // Batch apply recurring
@@ -1176,6 +1287,68 @@ function applyAllDueRecurring() {
   checkDueRecurring();
 }
 
+function updateRecCategoryOptions(selectedCatId) {
+  const recCatSelect = document.getElementById('rec-category');
+  if (!recCatSelect) return;
+  const type = document.getElementById('rec-type')?.value || 'expense';
+  const list = CATEGORIES[type] || CATEGORIES.expense;
+
+  recCatSelect.innerHTML = list.map(c => {
+    const name = getCategoryName(c);
+    return `<option value="${c.id}">${c.icon} ${name}</option>`;
+  }).join('');
+
+  if (selectedCatId && list.some(c => c.id === selectedCatId)) {
+    recCatSelect.value = selectedCatId;
+  }
+}
+
+function startEditRecurring(id) {
+  const rule = state.recurring.find(r => r.id === id);
+  if (!rule) return;
+  const dict = I18N[state.lang] || I18N.en;
+
+  document.getElementById('rec-edit-id').value = rule.id;
+  document.getElementById('rec-title').value = getItemTitle(rule);
+  document.getElementById('rec-currency').value = rule.currency || 'USD';
+  document.getElementById('rec-amount').value = rule.amount;
+  document.getElementById('rec-type').value = rule.type;
+  updateRecCategoryOptions(rule.category);
+  document.getElementById('rec-freq').value = rule.freq || 'monthly';
+  document.getElementById('rec-day').value = rule.day;
+
+  const recAddTitle = document.getElementById('rec-add-title');
+  if (recAddTitle) recAddTitle.textContent = dict.editRecurringTitle;
+
+  const recSubmitBtn = document.getElementById('rec-submit-btn');
+  if (recSubmitBtn) recSubmitBtn.textContent = dict.updateRecurringBtn;
+
+  const cancelBtn = document.getElementById('rec-cancel-edit-btn');
+  if (cancelBtn) cancelBtn.classList.remove('hidden');
+
+  document.getElementById('rec-title').focus();
+}
+
+function cancelEditRecurring() {
+  const dict = I18N[state.lang] || I18N.en;
+  const editIdEl = document.getElementById('rec-edit-id');
+  if (editIdEl) editIdEl.value = '';
+
+  const recForm = document.getElementById('recurring-form');
+  if (recForm) recForm.reset();
+
+  updateRecCategoryOptions();
+
+  const recAddTitle = document.getElementById('rec-add-title');
+  if (recAddTitle) recAddTitle.textContent = dict.addRecurringTitle;
+
+  const recSubmitBtn = document.getElementById('rec-submit-btn');
+  if (recSubmitBtn) recSubmitBtn.textContent = dict.addRecurringBtn;
+
+  const cancelBtn = document.getElementById('rec-cancel-edit-btn');
+  if (cancelBtn) cancelBtn.classList.add('hidden');
+}
+
 function renderRecurringList() {
   const listEl = document.getElementById('recurring-rules-list');
   if (!listEl) return;
@@ -1193,19 +1366,26 @@ function renderRecurringList() {
     const subText = dict.recurringItemSub(rule.day, rule.type);
 
     return `
-      <div class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700/60">
-        <div class="flex items-center gap-3">
-          <span class="w-9 h-9 rounded-xl flex items-center justify-center text-lg" style="background:${cat.bg}">${cat.icon}</span>
+      <div class="group flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700/60 hover:border-indigo-300 dark:hover:border-indigo-700 transition">
+        <div class="flex items-center gap-3 cursor-pointer flex-1" data-edit-rec="${rule.id}" title="${state.lang === 'en' ? 'Click to edit recurring item' : '點擊以編輯此定期收支'}">
+          <span class="w-9 h-9 rounded-xl flex items-center justify-center text-lg shadow-sm" style="background:${cat.bg}">${cat.icon}</span>
           <div>
             <div class="text-xs font-bold text-slate-800 dark:text-slate-100">${title}</div>
-            <div class="text-[10px] text-slate-400">${subText}</div>
+            <div class="text-[10px] text-slate-400">${subText} · ${cat.name}</div>
           </div>
         </div>
-        <div class="flex items-center gap-2">
-          <div class="text-xs font-extrabold ${rule.type === 'expense' ? 'text-rose-500' : 'text-emerald-500'}">
+        <div class="flex items-center gap-1 sm:gap-2">
+          <div class="text-xs font-extrabold mr-1 ${rule.type === 'expense' ? 'text-rose-500' : 'text-emerald-500'}">
             ${rule.type === 'expense' ? '-' : '+'}${ruleSym} ${formatMoney(rule.amount)}
           </div>
-          <button class="delete-rec-btn p-1.5 text-slate-400 hover:text-rose-500 transition" data-id="${rule.id}">
+          <!-- Edit recurring button -->
+          <button class="edit-rec-btn p-1.5 text-slate-400 hover:text-indigo-600 rounded-lg hover:bg-indigo-50 dark:hover:bg-slate-700 transition"
+                  data-id="${rule.id}" title="${dict.editTxBtn}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+          </button>
+          <!-- Delete recurring button -->
+          <button class="delete-rec-btn p-1.5 text-slate-400 hover:text-rose-500 rounded-lg hover:bg-rose-50 dark:hover:bg-slate-700 transition"
+                  data-id="${rule.id}" title="${dict.deleteTxBtn}">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
           </button>
         </div>
@@ -1213,9 +1393,28 @@ function renderRecurringList() {
     `;
   }).join('');
 
-  listEl.querySelectorAll('.delete-rec-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
+  listEl.querySelectorAll('[data-edit-rec]').forEach(el => {
+    el.addEventListener('click', () => {
+      const id = el.getAttribute('data-edit-rec');
+      startEditRecurring(id);
+    });
+  });
+
+  listEl.querySelectorAll('.edit-rec-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
       const id = btn.getAttribute('data-id');
+      startEditRecurring(id);
+    });
+  });
+
+  listEl.querySelectorAll('.delete-rec-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const id = btn.getAttribute('data-id');
+      if (document.getElementById('rec-edit-id')?.value === id) {
+        cancelEditRecurring();
+      }
       state.recurring = state.recurring.filter(r => r.id !== id);
       persistData();
       renderRecurringList();
@@ -1483,7 +1682,8 @@ function renderTransactions() {
       const title = getItemTitle(item);
 
       return `
-        <div class="group flex items-center justify-between p-3.5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 hover:border-indigo-200 dark:hover:border-indigo-900 shadow-sm transition">
+        <div class="tx-item group flex items-center justify-between p-3.5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 hover:border-indigo-300 dark:hover:border-indigo-700 hover:shadow-md shadow-sm transition cursor-pointer"
+             data-id="${item.id}" title="${state.lang === 'en' ? 'Click to edit transaction' : '點擊以編輯此筆紀錄'}">
           <div class="flex items-center gap-3">
             <span class="w-10 h-10 rounded-2xl flex items-center justify-center text-xl shadow-sm" style="background:${meta.bg}">
               ${meta.icon}
@@ -1497,15 +1697,22 @@ function renderTransactions() {
             </div>
           </div>
 
-          <div class="flex items-center gap-3">
-            <div class="text-right">
+          <div class="flex items-center gap-1 sm:gap-2">
+            <div class="text-right mr-1">
               <div class="text-sm font-extrabold ${isExpense ? 'text-rose-500' : 'text-emerald-500'}">
                 ${isExpense ? '-' : '+'}${itemSym} ${formatMoney(item.amount)}
               </div>
             </div>
 
-            <button class="delete-tx-btn opacity-0 group-hover:opacity-100 p-1.5 text-slate-300 hover:text-rose-500 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 transition"
-                    data-id="${item.id}" title="${state.lang === 'en' ? 'Delete' : '刪除紀錄'}">
+            <!-- Edit Button -->
+            <button class="edit-tx-btn p-1.5 text-slate-400 hover:text-indigo-600 rounded-xl hover:bg-indigo-50 dark:hover:bg-slate-800 transition opacity-80 sm:opacity-0 group-hover:opacity-100"
+                    data-id="${item.id}" title="${dict.editTxBtn}">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+            </button>
+
+            <!-- Delete Button -->
+            <button class="delete-tx-btn p-1.5 text-slate-400 hover:text-rose-500 rounded-xl hover:bg-rose-50 dark:hover:bg-slate-800 transition opacity-80 sm:opacity-0 group-hover:opacity-100"
+                    data-id="${item.id}" title="${dict.deleteTxBtn}">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
             </button>
           </div>
@@ -1526,6 +1733,25 @@ function renderTransactions() {
     `;
   }).join('');
 
+  // Row click to edit transaction
+  container.querySelectorAll('.tx-item').forEach(row => {
+    row.addEventListener('click', (e) => {
+      if (e.target.closest('.delete-tx-btn') || e.target.closest('.edit-tx-btn')) return;
+      const id = row.getAttribute('data-id');
+      window.openEditModal(id);
+    });
+  });
+
+  // Edit button click
+  container.querySelectorAll('.edit-tx-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const id = btn.getAttribute('data-id');
+      window.openEditModal(id);
+    });
+  });
+
+  // Delete button click
   container.querySelectorAll('.delete-tx-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
