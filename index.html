@@ -313,12 +313,15 @@
       
       <!-- Modal Header -->
       <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2.5">
+          <span id="modal-heading-text" class="text-xs font-extrabold px-2.5 py-1 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200/60 dark:border-indigo-800/60">
+            New Transaction
+          </span>
           <div class="bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl flex items-center">
-            <button type="button" id="type-expense-btn" class="px-4 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-slate-700 text-rose-500 shadow-sm transition">
+            <button type="button" id="type-expense-btn" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-slate-700 text-rose-500 shadow-sm transition">
               Expense -
             </button>
-            <button type="button" id="type-income-btn" class="px-4 py-1.5 rounded-xl text-xs font-medium text-slate-500 dark:text-slate-400 transition">
+            <button type="button" id="type-income-btn" class="px-3.5 py-1.5 rounded-xl text-xs font-medium text-slate-500 dark:text-slate-400 transition">
               Income +
             </button>
           </div>
@@ -413,11 +416,15 @@
         </button>
       </div>
 
-      <!-- Add New Recurring Rule Form -->
+      <!-- Add / Edit Recurring Rule Form -->
       <form id="recurring-form" class="mt-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60 space-y-3">
-        <div id="rec-add-title" class="text-xs font-bold text-indigo-600 dark:text-indigo-400">+ Add Recurring Item</div>
+        <input type="hidden" id="rec-edit-id" value="">
+        <div class="flex items-center justify-between">
+          <div id="rec-add-title" class="text-xs font-bold text-indigo-600 dark:text-indigo-400">+ Add Recurring Item</div>
+          <button type="button" id="rec-cancel-edit-btn" class="hidden text-xs text-slate-400 hover:text-rose-500 font-semibold transition">Cancel</button>
+        </div>
         <div class="grid grid-cols-1 sm:grid-cols-4 gap-2">
-          <input id="rec-title" type="text" placeholder="Item name (e.g. Rent)" required class="px-3 py-2 bg-white dark:bg-slate-800 rounded-xl text-xs border border-slate-200 dark:border-slate-700">
+          <input id="rec-title" type="text" placeholder="Item name (e.g. Rent)" required class="px-3 py-2 bg-white dark:bg-slate-800 rounded-xl text-xs border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100">
           <select id="rec-currency" class="px-2 py-2 bg-white dark:bg-slate-800 rounded-xl text-xs border border-slate-200 dark:border-slate-700 font-bold text-indigo-600 dark:text-indigo-400">
             <option value="USD">$ USD</option>
             <option value="TWD">NT$ TWD</option>
@@ -427,18 +434,20 @@
             <option value="HKD">HK$ HKD</option>
             <option value="GBP">£ GBP</option>
           </select>
-          <input id="rec-amount" type="number" placeholder="Amount" required class="px-3 py-2 bg-white dark:bg-slate-800 rounded-xl text-xs border border-slate-200 dark:border-slate-700">
-          <select id="rec-type" class="px-3 py-2 bg-white dark:bg-slate-800 rounded-xl text-xs border border-slate-200 dark:border-slate-700">
+          <input id="rec-amount" type="number" step="any" placeholder="Amount" required class="px-3 py-2 bg-white dark:bg-slate-800 rounded-xl text-xs border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100">
+          <select id="rec-type" class="px-3 py-2 bg-white dark:bg-slate-800 rounded-xl text-xs border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100">
             <option id="rec-opt-expense" value="expense">Expense (-)</option>
             <option id="rec-opt-income" value="income">Income (+)</option>
           </select>
         </div>
-        <div class="grid grid-cols-2 gap-2">
-          <select id="rec-freq" class="px-3 py-2 bg-white dark:bg-slate-800 rounded-xl text-xs border border-slate-200 dark:border-slate-700">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <select id="rec-category" class="px-3 py-2 bg-white dark:bg-slate-800 rounded-xl text-xs border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100">
+          </select>
+          <select id="rec-freq" class="px-3 py-2 bg-white dark:bg-slate-800 rounded-xl text-xs border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100">
             <option id="rec-opt-monthly" value="monthly">Monthly</option>
             <option id="rec-opt-weekly" value="weekly">Weekly</option>
           </select>
-          <input id="rec-day" type="number" min="1" max="31" placeholder="Day of month (1-31)" value="10" required class="px-3 py-2 bg-white dark:bg-slate-800 rounded-xl text-xs border border-slate-200 dark:border-slate-700">
+          <input id="rec-day" type="number" min="1" max="31" placeholder="Day of month (1-31)" value="10" required class="px-3 py-2 bg-white dark:bg-slate-800 rounded-xl text-xs border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100">
         </div>
         <button id="rec-submit-btn" type="submit" class="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition">
           Add to Recurring List
