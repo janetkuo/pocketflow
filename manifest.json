@@ -1,7 +1,7 @@
 {
-  "name": "PocketFlow 智慧記帳",
+  "name": "PocketFlow - Smart Expense Tracker",
   "short_name": "PocketFlow",
-  "description": "針對 Pixel 10 Pro Fold 優化的現代風格雙欄記帳 PWA",
+  "description": "Modern dual-pane expense tracker PWA optimized for Pixel 10 Pro Fold",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0f172a",

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>PocketFlow - 智慧記帳</title>
+  <title>PocketFlow - Smart Expense Tracker</title>
   
   <!-- PWA Meta Tags -->
   <link rel="manifest" href="./manifest.json">
@@ -74,16 +74,16 @@
           <h1 class="text-base font-bold tracking-tight bg-gradient-to-r from-indigo-600 via-sky-600 to-emerald-500 bg-clip-text text-transparent">
             PocketFlow
           </h1>
-          <p class="text-[10px] text-slate-400 font-medium">Pixel Fold 智慧記帳</p>
+          <p id="app-subtitle" class="text-[10px] text-slate-400 font-medium">Foldable Expense Tracker</p>
         </div>
       </div>
 
       <!-- Controls & Actions -->
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-1.5 sm:gap-2">
         <!-- Fold State Indicator Pill -->
         <div id="fold-indicator" class="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/50">
           <span class="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>
-          <span id="screen-mode-text">雙欄大螢幕模式</span>
+          <span id="screen-mode-text">Dual-Pane Mode (Unfolded)</span>
         </div>
 
         <!-- Month Pill -->
@@ -91,14 +91,20 @@
           <button id="prev-month-btn" class="p-1 hover:bg-white dark:hover:bg-slate-700 rounded-xl transition text-slate-600 dark:text-slate-300">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
           </button>
-          <span id="current-month-label" class="px-2 text-xs font-semibold text-slate-700 dark:text-slate-200 tracking-wide">2026年 10月</span>
+          <span id="current-month-label" class="px-2 text-xs font-semibold text-slate-700 dark:text-slate-200 tracking-wide">October 2026</span>
           <button id="next-month-btn" class="p-1 hover:bg-white dark:hover:bg-slate-700 rounded-xl transition text-slate-600 dark:text-slate-300">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
           </button>
         </div>
 
+        <!-- Language Switcher Toggle Button -->
+        <button id="lang-toggle-btn" title="Switch Language / 切換語言" class="px-2.5 py-1.5 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition flex items-center gap-1 text-xs font-bold border border-slate-200 dark:border-slate-700/60">
+          <svg class="w-3.5 h-3.5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/></svg>
+          <span id="lang-label">繁中</span>
+        </button>
+
         <!-- Settings / Data Reset Modal Button -->
-        <button id="open-settings-btn" title="設定與資料管理" class="p-2 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition">
+        <button id="open-settings-btn" title="Settings & Data Backup" class="p-2 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
         </button>
 
@@ -115,13 +121,13 @@
   <div id="demo-mode-banner" class="bg-gradient-to-r from-sky-600 via-indigo-600 to-purple-600 text-white px-4 py-2.5 shadow-md">
     <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-xs">
       <div class="flex items-center gap-2 text-center sm:text-left">
-        <span class="px-2 py-0.5 rounded-full bg-white/20 font-bold text-[10px] tracking-wide uppercase shrink-0">展示預覽</span>
-        <span class="font-medium text-white/95 leading-normal">
-          💡 目前畫面為<strong>「公開展示用預設範例」</strong>（非任何人之個人帳本）。所有數據僅安全保存在您自己的手機或電腦本機。
+        <span id="demo-banner-tag" class="px-2 py-0.5 rounded-full bg-white/20 font-bold text-[10px] tracking-wide uppercase shrink-0">Demo Preview</span>
+        <span id="demo-banner-text" class="font-medium text-white/95 leading-normal">
+          💡 Currently displaying <strong>sample demo data</strong> for preview. All your ledger data is stored safely on your local device.
         </span>
       </div>
       <button id="banner-clear-btn" class="shrink-0 px-3.5 py-1.5 rounded-full bg-white text-indigo-700 font-bold hover:bg-slate-100 active:scale-95 shadow-sm transition text-xs flex items-center gap-1">
-        <span>✨ 清空並開始我的私密帳本</span>
+        <span id="banner-clear-btn-text">✨ Clear & Start My Private Ledger</span>
       </button>
     </div>
   </div>
@@ -134,10 +140,10 @@
           <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
           <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
         </span>
-        <span id="recurring-alert-text" class="text-amber-900 dark:text-amber-200 font-medium">本月有週期性固定收支待入帳</span>
+        <span id="recurring-alert-text" class="text-amber-900 dark:text-amber-200 font-medium">Recurring items due this month</span>
       </div>
       <button id="apply-recurring-btn" class="px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-full font-bold shadow-sm transition">
-        一鍵全數入帳
+        Post All Now
       </button>
     </div>
   </div>
@@ -156,8 +162,8 @@
 
           <div class="relative z-10">
             <div class="flex items-center justify-between text-indigo-200 text-xs font-semibold uppercase tracking-wider">
-              <span>本月結餘 (淨儲蓄)</span>
-              <span id="balance-badge" class="px-2 py-0.5 rounded-full bg-white/15 text-[11px] font-bold">良好</span>
+              <span id="monthly-balance-title">Monthly Balance (Net Savings)</span>
+              <span id="balance-badge" class="px-2 py-0.5 rounded-full bg-white/15 text-[11px] font-bold">Healthy ✨</span>
             </div>
 
             <div class="mt-2 text-3xl sm:text-4xl font-extrabold tracking-tight">
@@ -169,7 +175,7 @@
               <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-3">
                 <div class="flex items-center gap-1.5 text-emerald-300 text-xs font-semibold">
                   <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-                  總收入
+                  <span id="total-income-title">Total Income</span>
                 </div>
                 <div class="text-base sm:text-lg font-bold text-white mt-1">
                   +<span class="curr-symbol text-xs font-medium mr-0.5">$</span><span id="total-income">0</span>
@@ -179,7 +185,7 @@
               <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-3">
                 <div class="flex items-center gap-1.5 text-rose-300 text-xs font-semibold">
                   <span class="w-2 h-2 rounded-full bg-rose-400"></span>
-                  總支出
+                  <span id="total-expense-title">Total Expense</span>
                 </div>
                 <div class="text-base sm:text-lg font-bold text-white mt-1">
                   -<span class="curr-symbol text-xs font-medium mr-0.5">$</span><span id="total-expense">0</span>
@@ -194,11 +200,11 @@
           <div class="flex items-center justify-between mb-4">
             <h2 class="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
               <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/></svg>
-              分類收支佔比
+              <span id="category-breakdown-title">Category Breakdown</span>
             </h2>
             <div class="inline-flex p-0.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs">
-              <button id="chart-tab-expense" class="px-2.5 py-1 rounded-lg font-bold bg-white dark:bg-slate-700 text-rose-500 shadow-sm transition">支出</button>
-              <button id="chart-tab-income" class="px-2.5 py-1 rounded-lg font-medium text-slate-500 dark:text-slate-400 transition">收入</button>
+              <button id="chart-tab-expense" class="px-2.5 py-1 rounded-lg font-bold bg-white dark:bg-slate-700 text-rose-500 shadow-sm transition">Expense</button>
+              <button id="chart-tab-income" class="px-2.5 py-1 rounded-lg font-medium text-slate-500 dark:text-slate-400 transition">Income</button>
             </div>
           </div>
 
@@ -210,9 +216,9 @@
               </svg>
               <!-- Center Donut Text -->
               <div class="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none px-4">
-                <span id="donut-center-sub" class="text-[11px] text-slate-400 font-medium">本月總額</span>
+                <span id="donut-center-sub" class="text-[11px] text-slate-400 font-medium">Total Expense</span>
                 <span id="donut-center-val" class="text-sm sm:text-base font-extrabold text-slate-800 dark:text-slate-100"><span class="curr-symbol">$</span> 0</span>
-                <span id="donut-center-cat" class="text-[10px] text-indigo-500 font-semibold mt-0.5 truncate max-w-[120px]">全部類別</span>
+                <span id="donut-center-cat" class="text-[10px] text-indigo-500 font-semibold mt-0.5 truncate max-w-[120px]">All Categories</span>
               </div>
             </div>
           </div>
@@ -226,12 +232,12 @@
         <!-- Quick Summary & Recurring Shortcut -->
         <div class="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-800 shadow-sm flex items-center justify-between">
           <div>
-            <div class="text-xs text-slate-400 font-medium">本月儲蓄率</div>
+            <div id="savings-rate-title" class="text-xs text-slate-400 font-medium">Monthly Savings Rate</div>
             <div class="text-lg font-bold text-indigo-600 dark:text-indigo-400 mt-0.5" id="savings-rate-label">0%</div>
           </div>
           <button id="open-recurring-modal-btn" class="flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/60 text-indigo-600 dark:text-indigo-300 text-xs font-bold transition">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-            管理固定週期收支
+            <span id="manage-recurring-label">Manage Recurring</span>
           </button>
         </div>
 
@@ -244,14 +250,14 @@
         <div class="bg-white dark:bg-slate-900 rounded-3xl p-4 border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row gap-3 items-center justify-between">
           <div class="relative w-full sm:w-64">
             <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-            <input id="search-input" type="text" placeholder="搜尋項目或備註..." class="w-full pl-9 pr-3 py-2 bg-slate-100 dark:bg-slate-800 rounded-2xl text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 border border-transparent">
+            <input id="search-input" type="text" placeholder="Search records or notes..." class="w-full pl-9 pr-3 py-2 bg-slate-100 dark:bg-slate-800 rounded-2xl text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 border border-transparent">
           </div>
 
           <!-- Type Filter Tabs -->
           <div class="flex items-center gap-1 w-full sm:w-auto justify-end">
-            <button data-filter="all" class="filter-tab px-3 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 text-white shadow-sm transition">全部</button>
-            <button data-filter="expense" class="filter-tab px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition">只看支出</button>
-            <button data-filter="income" class="filter-tab px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition">只看收入</button>
+            <button id="filter-all-btn" data-filter="all" class="filter-tab px-3 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 text-white shadow-sm transition">All</button>
+            <button id="filter-expense-btn" data-filter="expense" class="filter-tab px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition">Expenses Only</button>
+            <button id="filter-income-btn" data-filter="income" class="filter-tab px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition">Income Only</button>
           </div>
         </div>
 
@@ -265,8 +271,8 @@
           <div class="w-16 h-16 mx-auto rounded-3xl bg-indigo-50 dark:bg-indigo-950/50 flex items-center justify-center text-indigo-500 mb-3">
             <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
           </div>
-          <p class="text-sm font-bold text-slate-700 dark:text-slate-200">目前沒有記帳紀錄</p>
-          <p class="text-xs text-slate-400 mt-1">點擊下方「+」按鈕，立即記錄第一筆消費！</p>
+          <p id="empty-state-title" class="text-sm font-bold text-slate-700 dark:text-slate-200">No transaction records yet</p>
+          <p id="empty-state-desc" class="text-xs text-slate-400 mt-1">Tap the '+' button below to add your first transaction!</p>
         </div>
 
       </section>
@@ -278,19 +284,19 @@
     <div class="flex items-center justify-around max-w-md mx-auto relative">
       <button id="nav-records" class="flex flex-col items-center gap-1 text-indigo-600 dark:text-indigo-400">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-        <span class="text-[10px] font-bold">明細</span>
+        <span id="nav-records-label" class="text-[10px] font-bold">Records</span>
       </button>
 
       <!-- Center Floating (+) Button -->
       <div class="-mt-7">
-        <button id="open-add-modal-btn" class="w-14 h-14 rounded-full bg-gradient-to-tr from-indigo-600 via-indigo-500 to-sky-400 text-white shadow-lg shadow-indigo-500/40 flex items-center justify-center transform active:scale-95 hover:scale-105 transition">
+        <button id="open-add-modal-btn" aria-label="Add Transaction" class="w-14 h-14 rounded-full bg-gradient-to-tr from-indigo-600 via-indigo-500 to-sky-400 text-white shadow-lg shadow-indigo-500/40 flex items-center justify-center transform active:scale-95 hover:scale-105 transition">
           <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"/></svg>
         </button>
       </div>
 
       <button id="nav-recurring" class="flex flex-col items-center gap-1 text-slate-400 hover:text-indigo-500">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-        <span class="text-[10px] font-medium">週期</span>
+        <span id="nav-recurring-label" class="text-[10px] font-medium">Recurring</span>
       </button>
     </div>
   </nav>
@@ -298,7 +304,7 @@
   <!-- Desktop / Fold Inner Screen Floating Quick Add Button (Bottom Right) -->
   <button id="desktop-add-btn" class="hidden md:flex fixed bottom-8 right-8 z-30 items-center gap-2 px-5 py-3.5 rounded-full bg-gradient-to-r from-indigo-600 to-sky-500 text-white font-bold shadow-xl shadow-indigo-600/30 hover:scale-105 active:scale-95 transition">
     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"/></svg>
-    <span>快速記帳</span>
+    <span id="desktop-add-label">Quick Add</span>
   </button>
 
   <!-- ================= ADD / EDIT TRANSACTION MODAL ================= -->
@@ -310,10 +316,10 @@
         <div class="flex items-center gap-2">
           <div class="bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl flex items-center">
             <button type="button" id="type-expense-btn" class="px-4 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-slate-700 text-rose-500 shadow-sm transition">
-              支出 -
+              Expense -
             </button>
             <button type="button" id="type-income-btn" class="px-4 py-1.5 rounded-xl text-xs font-medium text-slate-500 dark:text-slate-400 transition">
-              收入 +
+              Income +
             </button>
           </div>
         </div>
@@ -328,8 +334,8 @@
 
         <!-- Big Amount & Currency Input Combo -->
         <div class="py-2 text-center">
-          <label class="block text-xs font-semibold text-slate-400 mb-1.5">
-            選擇幣別與輸入金額
+          <label id="modal-amount-label" class="block text-xs font-semibold text-slate-400 mb-1.5">
+            Select Currency & Enter Amount
           </label>
           <div class="inline-flex items-center justify-center gap-2">
             <!-- Currency selector inside entry modal -->
@@ -356,11 +362,11 @@
 
         <!-- Description with AUTOCOMPLETE -->
         <div class="relative">
-          <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5">
-            備註 / 項目名稱 <span class="text-[11px] font-normal text-indigo-500">(支援智慧自動填入)</span>
+          <label id="modal-desc-label" class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5">
+            <span id="modal-desc-text">Description / Title</span> <span id="modal-desc-hint" class="text-[11px] font-normal text-indigo-500">(Smart autocomplete enabled)</span>
           </label>
           <div class="relative">
-            <input id="input-title" type="text" placeholder="例如：拿鐵、全聯、捷運..." autocomplete="off" required
+            <input id="input-title" type="text" placeholder="e.g., Latte, Groceries, Metro..." autocomplete="off" required
               class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/80 rounded-2xl text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 border border-slate-200 dark:border-slate-700/80 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
             <!-- Autocomplete Dropdown List -->
             <div id="autocomplete-list" class="hidden absolute left-0 right-0 top-full mt-1.5 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 max-h-48 overflow-y-auto z-50 divide-y divide-slate-100 dark:divide-slate-700/60">
@@ -370,21 +376,21 @@
 
         <!-- Category Picker Grid -->
         <div>
-          <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5">選擇類別</label>
+          <label id="modal-cat-label" class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5">Select Category</label>
           <div id="category-grid" class="grid grid-cols-4 gap-2.5 max-h-44 overflow-y-auto hide-scrollbar p-1">
           </div>
         </div>
 
         <!-- Date Picker -->
         <div>
-          <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5">消費日期</label>
+          <label id="modal-date-label" class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5">Date</label>
           <input id="input-date" type="date" required
             class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/80 rounded-2xl text-xs text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700/80 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
         </div>
 
         <!-- Submit Button -->
-        <button type="submit" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-sky-500 text-white font-bold text-sm shadow-lg shadow-indigo-600/30 hover:opacity-95 active:scale-98 transition">
-          儲存紀錄
+        <button id="modal-submit-btn" type="submit" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-sky-500 text-white font-bold text-sm shadow-lg shadow-indigo-600/30 hover:opacity-95 active:scale-98 transition">
+          Save Transaction
         </button>
       </form>
 
@@ -396,11 +402,11 @@
     <div class="bg-white dark:bg-slate-900 w-full max-w-lg rounded-3xl p-6 shadow-2xl border border-slate-200/80 dark:border-slate-800 max-h-[85vh] flex flex-col">
       <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
         <div>
-          <h3 class="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+          <h3 id="rec-modal-title" class="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
             <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-            固定週期收支 (Recurring)
+            Recurring Transactions
           </h3>
-          <p class="text-xs text-slate-400 mt-0.5">自動追蹤每月固定開銷 (房租、串流訂閱、薪資)</p>
+          <p id="rec-modal-desc" class="text-xs text-slate-400 mt-0.5">Automatically track monthly fixed expenses (Rent, Subscriptions, Salary)</p>
         </div>
         <button id="close-recurring-modal-btn" class="p-2 text-slate-400 hover:text-slate-600">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -409,9 +415,9 @@
 
       <!-- Add New Recurring Rule Form -->
       <form id="recurring-form" class="mt-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60 space-y-3">
-        <div class="text-xs font-bold text-indigo-600 dark:text-indigo-400">+ 新增固定收支項目</div>
+        <div id="rec-add-title" class="text-xs font-bold text-indigo-600 dark:text-indigo-400">+ Add Recurring Item</div>
         <div class="grid grid-cols-1 sm:grid-cols-4 gap-2">
-          <input id="rec-title" type="text" placeholder="項目名稱 (如: 房租)" required class="px-3 py-2 bg-white dark:bg-slate-800 rounded-xl text-xs border border-slate-200 dark:border-slate-700">
+          <input id="rec-title" type="text" placeholder="Item name (e.g. Rent)" required class="px-3 py-2 bg-white dark:bg-slate-800 rounded-xl text-xs border border-slate-200 dark:border-slate-700">
           <select id="rec-currency" class="px-2 py-2 bg-white dark:bg-slate-800 rounded-xl text-xs border border-slate-200 dark:border-slate-700 font-bold text-indigo-600 dark:text-indigo-400">
             <option value="USD">$ USD</option>
             <option value="TWD">NT$ TWD</option>
@@ -421,21 +427,21 @@
             <option value="HKD">HK$ HKD</option>
             <option value="GBP">£ GBP</option>
           </select>
-          <input id="rec-amount" type="number" placeholder="金額" required class="px-3 py-2 bg-white dark:bg-slate-800 rounded-xl text-xs border border-slate-200 dark:border-slate-700">
+          <input id="rec-amount" type="number" placeholder="Amount" required class="px-3 py-2 bg-white dark:bg-slate-800 rounded-xl text-xs border border-slate-200 dark:border-slate-700">
           <select id="rec-type" class="px-3 py-2 bg-white dark:bg-slate-800 rounded-xl text-xs border border-slate-200 dark:border-slate-700">
-            <option value="expense">支出 (-)</option>
-            <option value="income">收入 (+)</option>
+            <option id="rec-opt-expense" value="expense">Expense (-)</option>
+            <option id="rec-opt-income" value="income">Income (+)</option>
           </select>
         </div>
         <div class="grid grid-cols-2 gap-2">
           <select id="rec-freq" class="px-3 py-2 bg-white dark:bg-slate-800 rounded-xl text-xs border border-slate-200 dark:border-slate-700">
-            <option value="monthly">每月固定</option>
-            <option value="weekly">每週固定</option>
+            <option id="rec-opt-monthly" value="monthly">Monthly</option>
+            <option id="rec-opt-weekly" value="weekly">Weekly</option>
           </select>
-          <input id="rec-day" type="number" min="1" max="31" placeholder="每月幾號 (1-31)" value="10" required class="px-3 py-2 bg-white dark:bg-slate-800 rounded-xl text-xs border border-slate-200 dark:border-slate-700">
+          <input id="rec-day" type="number" min="1" max="31" placeholder="Day of month (1-31)" value="10" required class="px-3 py-2 bg-white dark:bg-slate-800 rounded-xl text-xs border border-slate-200 dark:border-slate-700">
         </div>
-        <button type="submit" class="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition">
-          加入定期清單
+        <button id="rec-submit-btn" type="submit" class="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition">
+          Add to Recurring List
         </button>
       </form>
 
@@ -449,9 +455,9 @@
   <div id="settings-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4">
     <div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-3xl p-6 shadow-2xl border border-slate-200/80 dark:border-slate-800 max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-        <h3 class="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+        <h3 id="settings-modal-title" class="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
           <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-          設定與資料備份
+          Settings & Data Backup
         </h3>
         <button id="close-settings-modal-btn" class="p-2 text-slate-400 hover:text-slate-600">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -460,18 +466,18 @@
 
       <div class="mt-4 space-y-4">
         
-        <!-- FEATURE: AI Prompt Exporter (打包丟給 AI 看) -->
+        <!-- FEATURE: AI Prompt Exporter -->
         <div class="p-4 rounded-2xl bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-sky-500/10 border border-indigo-200/80 dark:border-indigo-800/60">
           <div class="flex items-center gap-2 text-xs font-bold text-indigo-600 dark:text-indigo-400">
             <span class="text-base">🤖</span>
-            <span>打包丟給 AI 財務分析</span>
+            <span id="ai-export-title">Export for AI Financial Review</span>
           </div>
-          <p class="text-[11px] text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
-            自動將本月份的<strong>收支總額、分類佔比、儲蓄率與明細清單</strong>整理成專業 Markdown 提示詞，複製後可直接貼給 Gemini 或 ChatGPT 進行財務健檢與省錢建議！
+          <p id="ai-export-desc" class="text-[11px] text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
+            Formats this month's <strong>totals, category breakdown, savings rate, and items</strong> into a prompt. Paste directly into Gemini or ChatGPT for financial advice!
           </p>
           <button id="copy-ai-prompt-btn" class="mt-3 w-full py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold rounded-xl text-xs shadow-md shadow-indigo-500/20 flex items-center justify-center gap-2 transition active:scale-98">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
-            <span id="copy-ai-btn-text">複製本月 AI 分析提示詞</span>
+            <span id="copy-ai-btn-text">Copy AI Financial Prompt</span>
           </button>
         </div>
 
@@ -479,21 +485,21 @@
         <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 space-y-3">
           <div class="text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
             <svg class="w-4 h-4 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
-            資料備份與轉移
+            <span id="backup-title">Backup & Transfer</span>
           </div>
-          <p class="text-[11px] text-slate-400 leading-normal">
-            可下載備份檔保存至雲端硬碟，或在電腦與手機換機時無痛匯入還原：
+          <p id="backup-desc" class="text-[11px] text-slate-400 leading-normal">
+            Download backup files to keep in cloud storage or restore easily when switching devices:
           </p>
 
           <div class="grid grid-cols-2 gap-2 pt-1">
             <button id="export-json-btn" class="py-2 px-3 bg-white dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-bold rounded-xl text-xs border border-slate-200 dark:border-slate-600 flex items-center justify-center gap-1.5 transition">
               <svg class="w-3.5 h-3.5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-              匯出 JSON 備份
+              <span id="export-json-label">Export JSON Backup</span>
             </button>
 
             <button id="export-csv-btn" class="py-2 px-3 bg-white dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-bold rounded-xl text-xs border border-slate-200 dark:border-slate-600 flex items-center justify-center gap-1.5 transition">
               <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-              匯出 CSV 試算表
+              <span id="export-csv-label">Export CSV Sheet</span>
             </button>
           </div>
 
@@ -501,7 +507,7 @@
           <input type="file" id="import-json-input" accept=".json" class="hidden">
           <button id="import-json-btn" class="w-full py-2 bg-slate-200/80 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 transition">
             <svg class="w-3.5 h-3.5 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-            選擇檔案匯入還原 (JSON)
+            <span id="import-json-label">Import & Restore (JSON)</span>
           </button>
         </div>
 
@@ -509,20 +515,20 @@
         <div class="p-4 rounded-2xl bg-rose-50/70 dark:bg-rose-950/30 border border-rose-200/80 dark:border-rose-900/40">
           <div class="text-xs font-bold text-rose-600 dark:text-rose-400 flex items-center gap-1.5">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-            清空所有紀錄（開始自己的帳本）
+            <span id="clear-data-title">Clear All Data (Start Fresh)</span>
           </div>
-          <p class="text-[11px] text-rose-500/80 dark:text-rose-300/70 mt-1">
-            點擊此處可一鍵清空所有紀錄，還原成乾淨的空白帳本。
+          <p id="clear-data-desc" class="text-[11px] text-rose-500/80 dark:text-rose-300/70 mt-1">
+            One-click reset to start your own completely blank, private ledger.
           </p>
           <button id="clear-all-data-btn" class="mt-3 w-full py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-xs transition">
-            一鍵清空所有紀錄
+            Clear All Data
           </button>
         </div>
 
         <!-- Reload Demo Data -->
         <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800 text-center">
           <button id="reload-demo-btn" class="text-xs text-indigo-600 dark:text-indigo-400 font-semibold hover:underline">
-            重新載入預設範例資料
+            Reload Demo Sample Data
           </button>
         </div>
       </div>
