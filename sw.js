@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pocketflow-tracker-v1';
+const CACHE_NAME = 'pocketflow-tracker-v2';
 const ASSETS = [
   './',
   './index.html',
