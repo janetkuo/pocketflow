@@ -9,7 +9,7 @@ const LANG_KEY = 'pocketflow_lang_v1';
 const DEFAULT_CURR_KEY = 'pocketflow_default_currency';
 const GDRIVE_CLIENT_ID_KEY = 'pocketflow_gdrive_client_id';
 const GDRIVE_LAST_BACKUP_KEY = 'pocketflow_gdrive_last_backup';
-const DEFAULT_GDRIVE_CLIENT_ID = '';
+const DEFAULT_GDRIVE_CLIENT_ID = '592001205133-6f41prs5p41s92e61pae5eb34rs05as2.apps.googleusercontent.com';
 
 // Google Drive Auth State
 let gdriveTokenClient = null;
@@ -2201,7 +2201,8 @@ function importJSON(e) {
 
 // ================= GOOGLE DRIVE BACKUP & RESTORE =================
 function getGoogleClientId() {
-  return (localStorage.getItem(GDRIVE_CLIENT_ID_KEY) || DEFAULT_GDRIVE_CLIENT_ID).trim();
+  const custom = (localStorage.getItem(GDRIVE_CLIENT_ID_KEY) || '').trim();
+  return custom || DEFAULT_GDRIVE_CLIENT_ID;
 }
 
 function updateGoogleDriveStatusUI() {
