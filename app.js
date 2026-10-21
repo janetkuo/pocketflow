@@ -9,12 +9,22 @@ const LANG_KEY = 'pocketflow_lang_v1';
 const DEFAULT_CURR_KEY = 'pocketflow_default_currency';
 const GDRIVE_CLIENT_ID_KEY = 'pocketflow_gdrive_client_id';
 const GDRIVE_LAST_BACKUP_KEY = 'pocketflow_gdrive_last_backup';
+const GDRIVE_TOKEN_KEY = 'pocketflow_gdrive_token';
+const GDRIVE_TOKEN_EXPIRES_KEY = 'pocketflow_gdrive_token_expires';
+const GDRIVE_USER_EMAIL_KEY = 'pocketflow_gdrive_user_email';
+const GDRIVE_CONNECTED_KEY = 'pocketflow_gdrive_connected';
 const DEFAULT_GDRIVE_CLIENT_ID = '592001205133-6f41prs5p41s92e61pae5eb34rs05as2.apps.googleusercontent.com';
 
 // Google Drive Auth State
 let gdriveTokenClient = null;
-let gdriveAccessToken = null;
-let gdriveTokenExpiresAt = 0;
+let gdriveAccessToken = localStorage.getItem(GDRIVE_TOKEN_KEY) || null;
+let gdriveTokenExpiresAt = parseInt(localStorage.getItem(GDRIVE_TOKEN_EXPIRES_KEY) || '0', 10);
+if (gdriveAccessToken && Date.now() >= gdriveTokenExpiresAt - 30000) {
+  gdriveAccessToken = null;
+  gdriveTokenExpiresAt = 0;
+  localStorage.removeItem(GDRIVE_TOKEN_KEY);
+  localStorage.removeItem(GDRIVE_TOKEN_EXPIRES_KEY);
+}
 
 // Supported Currencies
 const CURRENCIES = {
@@ -139,6 +149,8 @@ const I18N = {
     gdriveStatusDisconnected: 'Not Connected',
     gdriveStatusConnected: 'Connected',
     gdriveStatusNeedConfig: 'Client ID Needed',
+    gdriveDisconnectBtn: 'Disconnect',
+    gdriveDisconnectConfirm: 'Are you sure you want to disconnect Google Drive?',
     gdriveLastBackup: (time) => `Last backup: ${time}`,
     gdriveNoBackup: 'No cloud backup yet',
     gdriveMissingClientId: 'Please enter and save your Google OAuth Client ID first.',
@@ -291,6 +303,8 @@ const I18N = {
     gdriveStatusDisconnected: '未連接',
     gdriveStatusConnected: '已連接',
     gdriveStatusNeedConfig: '尚未設定 Client ID',
+    gdriveDisconnectBtn: '中斷連結',
+    gdriveDisconnectConfirm: '確定要中斷與 Google 雲端硬碟的連結嗎？',
     gdriveLastBackup: (time) => `最後備份：${time}`,
     gdriveNoBackup: '尚無雲端備份',
     gdriveMissingClientId: '請先於下方輸入並儲存您的 Google OAuth Client ID。',
@@ -750,6 +764,9 @@ function applyLanguage() {
   const gdriveRestoreLabel = document.getElementById('gdrive-restore-label');
   if (gdriveRestoreLabel) gdriveRestoreLabel.textContent = dict.gdriveRestoreBtn;
 
+  const disconnectBtn = document.getElementById('gdrive-disconnect-btn');
+  if (disconnectBtn) disconnectBtn.textContent = dict.gdriveDisconnectBtn;
+
   const gdriveToggleConfigLabel = document.getElementById('gdrive-toggle-config-label');
   if (gdriveToggleConfigLabel) gdriveToggleConfigLabel.textContent = dict.gdriveToggleConfig;
 
@@ -1171,6 +1188,13 @@ function initEvents() {
   if (gdriveRestoreBtn) {
     gdriveRestoreBtn.addEventListener('click', () => {
       restoreFromGoogleDrive();
+    });
+  }
+
+  const gdriveDisconnectBtn = document.getElementById('gdrive-disconnect-btn');
+  if (gdriveDisconnectBtn) {
+    gdriveDisconnectBtn.addEventListener('click', () => {
+      disconnectGoogleDrive();
     });
   }
 
@@ -2208,6 +2232,7 @@ function getGoogleClientId() {
 function updateGoogleDriveStatusUI() {
   const dict = I18N[state.lang] || I18N.en;
   const statusBadge = document.getElementById('gdrive-status-badge');
+  const disconnectBtn = document.getElementById('gdrive-disconnect-btn');
   const lastBackupText = document.getElementById('gdrive-last-backup-text');
   const clientIdInput = document.getElementById('gdrive-client-id-input');
 
@@ -2216,17 +2241,25 @@ function updateGoogleDriveStatusUI() {
     clientIdInput.value = clientId;
   }
 
-  // Status Badge
+  const isConnected = localStorage.getItem(GDRIVE_CONNECTED_KEY) === 'true';
+  const userEmail = localStorage.getItem(GDRIVE_USER_EMAIL_KEY);
+  const hasActiveToken = Boolean(gdriveAccessToken && Date.now() < gdriveTokenExpiresAt - 10000);
+
+  // Status Badge & Disconnect Button
   if (statusBadge) {
-    if (gdriveAccessToken && Date.now() < gdriveTokenExpiresAt - 10000) {
-      statusBadge.textContent = dict.gdriveStatusConnected;
+    if (hasActiveToken || isConnected) {
+      const emailDisplay = userEmail ? ` (${userEmail})` : '';
+      statusBadge.textContent = `${dict.gdriveStatusConnected}${emailDisplay}`;
       statusBadge.className = 'text-[10px] px-2 py-0.5 rounded-full font-medium bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400';
+      if (disconnectBtn) disconnectBtn.classList.remove('hidden');
     } else if (clientId) {
       statusBadge.textContent = dict.gdriveStatusDisconnected;
       statusBadge.className = 'text-[10px] px-2 py-0.5 rounded-full font-medium bg-slate-200/70 dark:bg-slate-700 text-slate-500 dark:text-slate-400';
+      if (disconnectBtn) disconnectBtn.classList.add('hidden');
     } else {
       statusBadge.textContent = dict.gdriveStatusNeedConfig;
       statusBadge.className = 'text-[10px] px-2 py-0.5 rounded-full font-medium bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400';
+      if (disconnectBtn) disconnectBtn.classList.add('hidden');
     }
   }
 
@@ -2243,6 +2276,44 @@ function updateGoogleDriveStatusUI() {
       lastBackupText.textContent = dict.gdriveNoBackup;
     }
   }
+}
+
+async function fetchGoogleDriveUserInfo(token) {
+  try {
+    const res = await fetch('https://www.googleapis.com/drive/v3/about?fields=user(displayName,emailAddress)', {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.user && data.user.emailAddress) {
+        localStorage.setItem(GDRIVE_USER_EMAIL_KEY, data.user.emailAddress);
+        updateGoogleDriveStatusUI();
+      }
+    }
+  } catch (e) {
+    console.log('Failed to fetch Drive user info:', e);
+  }
+}
+
+function disconnectGoogleDrive() {
+  const dict = I18N[state.lang] || I18N.en;
+  if (!confirm(dict.gdriveDisconnectConfirm)) return;
+
+  if (gdriveAccessToken && typeof google !== 'undefined' && google.accounts && google.accounts.oauth2) {
+    try {
+      google.accounts.oauth2.revoke(gdriveAccessToken, () => {});
+    } catch (e) {
+      console.log('Revoke token note:', e);
+    }
+  }
+
+  gdriveAccessToken = null;
+  gdriveTokenExpiresAt = 0;
+  localStorage.removeItem(GDRIVE_TOKEN_KEY);
+  localStorage.removeItem(GDRIVE_TOKEN_EXPIRES_KEY);
+  localStorage.removeItem(GDRIVE_USER_EMAIL_KEY);
+  localStorage.removeItem(GDRIVE_CONNECTED_KEY);
+  updateGoogleDriveStatusUI();
 }
 
 function initGoogleDriveClient(callback) {
@@ -2284,6 +2355,10 @@ function initGoogleDriveClient(callback) {
         gdriveAccessToken = response.access_token;
         const expiresInSec = parseInt(response.expires_in, 10) || 3599;
         gdriveTokenExpiresAt = Date.now() + expiresInSec * 1000;
+        localStorage.setItem(GDRIVE_TOKEN_KEY, gdriveAccessToken);
+        localStorage.setItem(GDRIVE_TOKEN_EXPIRES_KEY, String(gdriveTokenExpiresAt));
+        localStorage.setItem(GDRIVE_CONNECTED_KEY, 'true');
+        fetchGoogleDriveUserInfo(gdriveAccessToken);
         updateGoogleDriveStatusUI();
         callback(gdriveAccessToken);
       }
@@ -2326,6 +2401,8 @@ async function backupToGoogleDrive() {
       if (searchRes.status === 401) {
         gdriveAccessToken = null;
         gdriveTokenExpiresAt = 0;
+        localStorage.removeItem(GDRIVE_TOKEN_KEY);
+        localStorage.removeItem(GDRIVE_TOKEN_EXPIRES_KEY);
         updateGoogleDriveStatusUI();
         throw new Error('Google authorization expired. Please try again.');
       }
@@ -2420,6 +2497,8 @@ async function restoreFromGoogleDrive() {
       if (searchRes.status === 401) {
         gdriveAccessToken = null;
         gdriveTokenExpiresAt = 0;
+        localStorage.removeItem(GDRIVE_TOKEN_KEY);
+        localStorage.removeItem(GDRIVE_TOKEN_EXPIRES_KEY);
         updateGoogleDriveStatusUI();
         throw new Error('Google authorization expired. Please try again.');
       }
