@@ -1,10 +1,11 @@
-const CACHE_NAME = 'pocketflow-tracker-v3';
+const CACHE_NAME = 'pocketflow-tracker-v5';
 const ASSETS = [
   './',
   './index.html',
   './app.js',
   './manifest.json',
-  './icon.svg'
+  './icon.svg',
+  './icon-maskable.svg'
 ];
 
 self.addEventListener('install', (event) => {

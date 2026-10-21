@@ -7,6 +7,14 @@ const THEME_KEY = 'pocketflow_theme_v1';
 const CURRENCY_KEY = 'pocketflow_currency_v1';
 const LANG_KEY = 'pocketflow_lang_v1';
 const DEFAULT_CURR_KEY = 'pocketflow_default_currency';
+const GDRIVE_CLIENT_ID_KEY = 'pocketflow_gdrive_client_id';
+const GDRIVE_LAST_BACKUP_KEY = 'pocketflow_gdrive_last_backup';
+const DEFAULT_GDRIVE_CLIENT_ID = '';
+
+// Google Drive Auth State
+let gdriveTokenClient = null;
+let gdriveAccessToken = null;
+let gdriveTokenExpiresAt = 0;
 
 // Supported Currencies
 const CURRENCIES = {
@@ -116,6 +124,35 @@ const I18N = {
     copyAiPromptBtn: 'Copy AI Financial Prompt',
     copyAiSuccess: '✅ Copied! Ready to paste into Gemini or ChatGPT',
 
+    // Google Drive Backup
+    gdriveTitle: 'Google Drive Backup',
+    gdriveDesc: 'Securely sync and backup your ledger to your personal Google Drive with strict privacy (only accesses PocketFlow backup files).',
+    gdriveBackupBtn: 'Backup Now',
+    gdriveRestoreBtn: 'Restore from Drive',
+    gdriveToggleConfig: 'Google Client ID Settings',
+    gdriveClientIdLabel: 'Google OAuth 2.0 Client ID:',
+    gdriveSaveClientIdBtn: 'Save',
+    gdriveGuideTitle: 'How to get your Client ID:',
+    gdriveGuideStep1: '1. Go to <a href="https://console.cloud.google.com/" target="_blank" rel="noopener" class="text-indigo-500 underline font-medium">Google Cloud Console</a> and create or select a project.',
+    gdriveGuideStep2: '2. Enable Google Drive API, then go to APIs & Services > Credentials > Create OAuth client ID (Web application).',
+    gdriveGuideStep3: '3. In "Authorized JavaScript origins", add <code class="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded font-mono">https://janetkuo.github.io</code> and <code class="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded font-mono">http://localhost:8080</code>.',
+    gdriveStatusDisconnected: 'Not Connected',
+    gdriveStatusConnected: 'Connected',
+    gdriveStatusNeedConfig: 'Client ID Needed',
+    gdriveLastBackup: (time) => `Last backup: ${time}`,
+    gdriveNoBackup: 'No cloud backup yet',
+    gdriveMissingClientId: 'Please enter and save your Google OAuth Client ID first.',
+    gdriveSavedClientId: '✅ Client ID saved successfully!',
+    gdriveLibraryLoading: 'Google Identity Service is loading, please try again in a moment.',
+    gdriveBackingUp: 'Backing up...',
+    gdriveRestoring: 'Restoring...',
+    gdriveBackupSuccess: '🎉 Successfully backed up to Google Drive!',
+    gdriveBackupError: (err) => `Failed to backup to Google Drive: ${err}`,
+    gdriveRestoreNotFound: 'No PocketFlow backup file found in your Google Drive.',
+    gdriveRestoreConfirm: (date, count) => `Found cloud backup from ${date} (${count} transactions).\nDo you want to restore and replace current data?`,
+    gdriveRestoreSuccess: '🎉 Data restored from Google Drive successfully!',
+    gdriveRestoreError: (err) => `Failed to restore from Google Drive: ${err}`,
+
     backupTitle: 'Backup & Transfer',
     backupDesc: 'Download backup files to keep in cloud storage or restore easily when switching devices:',
     exportJsonBtn: 'Export JSON Backup',
@@ -123,9 +160,9 @@ const I18N = {
     importJsonBtn: 'Import & Restore (JSON)',
 
     clearDataTitle: 'Clear All Data (Start Fresh)',
-    clearDataDesc: 'One-click reset to start your own completely blank, private ledger.',
+    clearDataDesc: 'One-click reset to start your own completely blank, private ledger (clears all transactions & recurring settings).',
     clearDataBtn: 'Clear All Data',
-    clearConfirm: 'Are you sure you want to clear all records? You will start with a fresh, private ledger!',
+    clearConfirm: 'Are you sure you want to clear all records and recurring rules? You will start with a fresh, private ledger!',
 
     reloadDemoBtn: 'Reload Demo Sample Data',
     importConfirm: (count) => `Successfully read backup file with ${count} transactions.\nDo you want to import and replace current data?`,
@@ -239,6 +276,35 @@ const I18N = {
     copyAiPromptBtn: '複製本月 AI 分析提示詞',
     copyAiSuccess: '✅ 已複製！可直接貼給 Gemini 或 ChatGPT',
 
+    // Google Drive Backup
+    gdriveTitle: 'Google 雲端硬碟備份',
+    gdriveDesc: '安全地將帳本備份至個人的 Google 雲端硬碟（採用最小權限，僅存取 PocketFlow 備份檔，極致保護隱私）。',
+    gdriveBackupBtn: '立即備份到雲端',
+    gdriveRestoreBtn: '從雲端硬碟還原',
+    gdriveToggleConfig: 'Google Client ID 設定',
+    gdriveClientIdLabel: 'Google OAuth 2.0 Client ID：',
+    gdriveSaveClientIdBtn: '儲存',
+    gdriveGuideTitle: '如何取得您的 Client ID：',
+    gdriveGuideStep1: '1. 前往 <a href="https://console.cloud.google.com/" target="_blank" rel="noopener" class="text-indigo-500 underline font-medium">Google Cloud Console</a> 建立或選擇專案。',
+    gdriveGuideStep2: '2. 啟用 Google Drive API，並於「API 與服務 > 憑證」建立「OAuth 2.0 用戶端 ID（網頁應用程式）」。',
+    gdriveGuideStep3: '3. 於「已授權的 JavaScript 來源」填入 <code class="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded font-mono">https://janetkuo.github.io</code> 與 <code class="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded font-mono">http://localhost:8080</code>。',
+    gdriveStatusDisconnected: '未連接',
+    gdriveStatusConnected: '已連接',
+    gdriveStatusNeedConfig: '尚未設定 Client ID',
+    gdriveLastBackup: (time) => `最後備份：${time}`,
+    gdriveNoBackup: '尚無雲端備份',
+    gdriveMissingClientId: '請先於下方輸入並儲存您的 Google OAuth Client ID。',
+    gdriveSavedClientId: '✅ Client ID 儲存成功！',
+    gdriveLibraryLoading: 'Google 認證服務載入中，請稍候重試。',
+    gdriveBackingUp: '備份上傳中...',
+    gdriveRestoring: '下載還原中...',
+    gdriveBackupSuccess: '🎉 成功備份至 Google 雲端硬碟！',
+    gdriveBackupError: (err) => `備份至 Google 雲端硬碟失敗：${err}`,
+    gdriveRestoreNotFound: '在您的 Google 雲端硬碟中找不到 PocketFlow 備份檔案。',
+    gdriveRestoreConfirm: (date, count) => `找到雲端備份檔（日期：${date}，包含 ${count} 筆交易紀錄）。\n確定要還原並覆蓋目前紀錄嗎？`,
+    gdriveRestoreSuccess: '🎉 已成功自 Google 雲端硬碟還原資料！',
+    gdriveRestoreError: (err) => `自 Google 雲端硬碟還原失敗：${err}`,
+
     backupTitle: '資料備份與轉移',
     backupDesc: '可下載備份檔保存至雲端硬碟，或在電腦與手機換機時無痛匯入還原：',
     exportJsonBtn: '匯出 JSON 備份',
@@ -246,9 +312,9 @@ const I18N = {
     importJsonBtn: '選擇檔案匯入還原 (JSON)',
 
     clearDataTitle: '清空所有紀錄（開始自己的帳本）',
-    clearDataDesc: '點擊此處可一鍵清空所有紀錄，還原成乾淨的空白帳本。',
+    clearDataDesc: '點擊此處可一鍵清空所有交易紀錄與固定週期收支設定，還原成乾淨的空白帳本。',
     clearDataBtn: '一鍵清空所有紀錄',
-    clearConfirm: '確定要清空所有紀錄嗎？清空後你將擁有一本完全乾淨的私密帳本！',
+    clearConfirm: '確定要清空所有交易紀錄與固定週期收支設定嗎？清空後你將擁有一本完全乾淨的私密帳本！',
 
     reloadDemoBtn: '重新載入預設範例資料',
     importConfirm: (count) => `成功讀取備份檔！包含 ${count} 筆交易紀錄。\n確定要匯入並覆蓋目前紀錄嗎？`,
@@ -336,13 +402,28 @@ const DEMO_RECURRING = [
   { id: 'rec_gym', title: 'Gym Membership', title_tw: '健身房月費', amount: 45, type: 'expense', category: 'health', freq: 'monthly', day: 25, currency: 'USD' }
 ];
 
+const isDemoMode = localStorage.getItem('pocketflow_is_demo') !== 'false';
+
+function loadInitialData(key, fallback) {
+  const item = localStorage.getItem(key);
+  if (item !== null) {
+    try {
+      const parsed = JSON.parse(item);
+      if (Array.isArray(parsed)) return parsed;
+    } catch (e) {
+      console.warn('Failed to parse storage item:', key, e);
+    }
+  }
+  return isDemoMode ? fallback : [];
+}
+
 // App State
 let state = {
   lang: localStorage.getItem(LANG_KEY) || 'en', // Default to English as requested
-  transactions: JSON.parse(localStorage.getItem(STORAGE_KEY)) || DEMO_TRANSACTIONS,
-  recurring: JSON.parse(localStorage.getItem(RECURRING_KEY)) || DEMO_RECURRING,
+  transactions: loadInitialData(STORAGE_KEY, DEMO_TRANSACTIONS),
+  recurring: loadInitialData(RECURRING_KEY, DEMO_RECURRING),
   currency: localStorage.getItem(CURRENCY_KEY) || 'USD',
-  isDemo: localStorage.getItem('pocketflow_is_demo') !== 'false',
+  isDemo: isDemoMode,
   currentDate: new Date(2026, 9, 1), // Oct 2026
   currentFilter: 'all',
   searchQuery: '',
@@ -655,6 +736,42 @@ function applyLanguage() {
 
   const copyAiBtnText = document.getElementById('copy-ai-btn-text');
   if (copyAiBtnText) copyAiBtnText.textContent = dict.copyAiPromptBtn;
+
+  // Google Drive Backup UI
+  const gdriveTitle = document.getElementById('gdrive-title');
+  if (gdriveTitle) gdriveTitle.textContent = dict.gdriveTitle;
+
+  const gdriveDesc = document.getElementById('gdrive-desc');
+  if (gdriveDesc) gdriveDesc.textContent = dict.gdriveDesc;
+
+  const gdriveBackupLabel = document.getElementById('gdrive-backup-label');
+  if (gdriveBackupLabel) gdriveBackupLabel.textContent = dict.gdriveBackupBtn;
+
+  const gdriveRestoreLabel = document.getElementById('gdrive-restore-label');
+  if (gdriveRestoreLabel) gdriveRestoreLabel.textContent = dict.gdriveRestoreBtn;
+
+  const gdriveToggleConfigLabel = document.getElementById('gdrive-toggle-config-label');
+  if (gdriveToggleConfigLabel) gdriveToggleConfigLabel.textContent = dict.gdriveToggleConfig;
+
+  const gdriveClientIdLabel = document.getElementById('gdrive-client-id-label');
+  if (gdriveClientIdLabel) gdriveClientIdLabel.textContent = dict.gdriveClientIdLabel;
+
+  const gdriveSaveClientIdBtn = document.getElementById('gdrive-save-client-id-btn');
+  if (gdriveSaveClientIdBtn) gdriveSaveClientIdBtn.textContent = dict.gdriveSaveClientIdBtn;
+
+  const gdriveGuideTitle = document.getElementById('gdrive-guide-title');
+  if (gdriveGuideTitle) gdriveGuideTitle.textContent = dict.gdriveGuideTitle;
+
+  const gdriveGuideStep1 = document.getElementById('gdrive-guide-step1');
+  if (gdriveGuideStep1) gdriveGuideStep1.innerHTML = dict.gdriveGuideStep1;
+
+  const gdriveGuideStep2 = document.getElementById('gdrive-guide-step2');
+  if (gdriveGuideStep2) gdriveGuideStep2.innerHTML = dict.gdriveGuideStep2;
+
+  const gdriveGuideStep3 = document.getElementById('gdrive-guide-step3');
+  if (gdriveGuideStep3) gdriveGuideStep3.innerHTML = dict.gdriveGuideStep3;
+
+  updateGoogleDriveStatusUI();
 
   const backupTitle = document.getElementById('backup-title');
   if (backupTitle) backupTitle.textContent = dict.backupTitle;
@@ -1033,6 +1150,7 @@ function initEvents() {
   // Settings Modal Handlers
   const settingsModal = document.getElementById('settings-modal');
   document.getElementById('open-settings-btn').addEventListener('click', () => {
+    updateGoogleDriveStatusUI();
     settingsModal.classList.remove('hidden');
     settingsModal.classList.add('flex');
   });
@@ -1040,6 +1158,43 @@ function initEvents() {
     settingsModal.classList.add('hidden');
     settingsModal.classList.remove('flex');
   });
+
+  // FEATURE: Google Drive Backup & Sync
+  const gdriveBackupBtn = document.getElementById('gdrive-backup-btn');
+  if (gdriveBackupBtn) {
+    gdriveBackupBtn.addEventListener('click', () => {
+      backupToGoogleDrive();
+    });
+  }
+
+  const gdriveRestoreBtn = document.getElementById('gdrive-restore-btn');
+  if (gdriveRestoreBtn) {
+    gdriveRestoreBtn.addEventListener('click', () => {
+      restoreFromGoogleDrive();
+    });
+  }
+
+  const gdriveToggleConfigBtn = document.getElementById('gdrive-toggle-config-btn');
+  const gdriveConfigPanel = document.getElementById('gdrive-config-panel');
+  if (gdriveToggleConfigBtn && gdriveConfigPanel) {
+    gdriveToggleConfigBtn.addEventListener('click', () => {
+      gdriveConfigPanel.classList.toggle('hidden');
+    });
+  }
+
+  const gdriveSaveClientIdBtn = document.getElementById('gdrive-save-client-id-btn');
+  const gdriveClientIdInput = document.getElementById('gdrive-client-id-input');
+  if (gdriveSaveClientIdBtn && gdriveClientIdInput) {
+    gdriveSaveClientIdBtn.addEventListener('click', () => {
+      const val = gdriveClientIdInput.value.trim();
+      localStorage.setItem(GDRIVE_CLIENT_ID_KEY, val);
+      gdriveAccessToken = null;
+      gdriveTokenExpiresAt = 0;
+      updateGoogleDriveStatusUI();
+      const dict = I18N[state.lang] || I18N.en;
+      alert(dict.gdriveSavedClientId);
+    });
+  }
 
   // FEATURE: Copy AI Financial Advisor Prompt
   document.getElementById('copy-ai-prompt-btn').addEventListener('click', () => {
@@ -1070,9 +1225,12 @@ function initEvents() {
   if (bannerClearBtn) {
     bannerClearBtn.addEventListener('click', () => {
       state.transactions = [];
+      state.recurring = [];
       state.isDemo = false;
       localStorage.setItem('pocketflow_is_demo', 'false');
+      cancelEditRecurring();
       persistData();
+      renderRecurringList();
       checkDueRecurring();
       updateDemoBanner();
     });
@@ -1083,9 +1241,12 @@ function initEvents() {
     const dict = I18N[state.lang] || I18N.en;
     if (confirm(dict.clearConfirm)) {
       state.transactions = [];
+      state.recurring = [];
       state.isDemo = false;
       localStorage.setItem('pocketflow_is_demo', 'false');
+      cancelEditRecurring();
       persistData();
+      renderRecurringList();
       checkDueRecurring();
       updateDemoBanner();
       settingsModal.classList.add('hidden');
@@ -1099,7 +1260,9 @@ function initEvents() {
     state.recurring = [...DEMO_RECURRING];
     state.isDemo = true;
     localStorage.setItem('pocketflow_is_demo', 'true');
+    cancelEditRecurring();
     persistData();
+    renderRecurringList();
     checkDueRecurring();
     updateDemoBanner();
     settingsModal.classList.add('hidden');
@@ -2005,14 +2168,22 @@ function importJSON(e) {
       if (Array.isArray(data.transactions)) {
         if (confirm(dict.importConfirm(data.transactions.length))) {
           state.transactions = data.transactions;
-          if (Array.isArray(data.recurring)) state.recurring = data.recurring;
+          if (Array.isArray(data.recurring)) {
+            state.recurring = data.recurring;
+          } else {
+            state.recurring = [];
+          }
           if (data.currency) state.currency = data.currency;
           if (data.language) state.lang = data.language;
+          state.isDemo = false;
+          localStorage.setItem('pocketflow_is_demo', 'false');
 
+          cancelEditRecurring();
           persistData();
           initCurrency();
           applyLanguage();
           checkDueRecurring();
+          updateDemoBanner();
           alert(dict.importSuccess);
           document.getElementById('settings-modal').classList.add('hidden');
           document.getElementById('settings-modal').classList.remove('flex');
@@ -2026,6 +2197,298 @@ function importJSON(e) {
   };
   reader.readAsText(file);
   e.target.value = '';
+}
+
+// ================= GOOGLE DRIVE BACKUP & RESTORE =================
+function getGoogleClientId() {
+  return (localStorage.getItem(GDRIVE_CLIENT_ID_KEY) || DEFAULT_GDRIVE_CLIENT_ID).trim();
+}
+
+function updateGoogleDriveStatusUI() {
+  const dict = I18N[state.lang] || I18N.en;
+  const statusBadge = document.getElementById('gdrive-status-badge');
+  const lastBackupText = document.getElementById('gdrive-last-backup-text');
+  const clientIdInput = document.getElementById('gdrive-client-id-input');
+
+  const clientId = getGoogleClientId();
+  if (clientIdInput && document.activeElement !== clientIdInput) {
+    clientIdInput.value = clientId;
+  }
+
+  // Status Badge
+  if (statusBadge) {
+    if (gdriveAccessToken && Date.now() < gdriveTokenExpiresAt - 10000) {
+      statusBadge.textContent = dict.gdriveStatusConnected;
+      statusBadge.className = 'text-[10px] px-2 py-0.5 rounded-full font-medium bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400';
+    } else if (clientId) {
+      statusBadge.textContent = dict.gdriveStatusDisconnected;
+      statusBadge.className = 'text-[10px] px-2 py-0.5 rounded-full font-medium bg-slate-200/70 dark:bg-slate-700 text-slate-500 dark:text-slate-400';
+    } else {
+      statusBadge.textContent = dict.gdriveStatusNeedConfig;
+      statusBadge.className = 'text-[10px] px-2 py-0.5 rounded-full font-medium bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400';
+    }
+  }
+
+  // Last Backup Info
+  if (lastBackupText) {
+    const lastBackupIso = localStorage.getItem(GDRIVE_LAST_BACKUP_KEY);
+    if (lastBackupIso) {
+      const d = new Date(lastBackupIso);
+      const timeStr = state.lang === 'zh-TW'
+        ? `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+        : d.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+      lastBackupText.textContent = dict.gdriveLastBackup(timeStr);
+    } else {
+      lastBackupText.textContent = dict.gdriveNoBackup;
+    }
+  }
+}
+
+function initGoogleDriveClient(callback) {
+  const dict = I18N[state.lang] || I18N.en;
+  const clientId = getGoogleClientId();
+
+  if (!clientId) {
+    alert(dict.gdriveMissingClientId);
+    const panel = document.getElementById('gdrive-config-panel');
+    if (panel) panel.classList.remove('hidden');
+    const input = document.getElementById('gdrive-client-id-input');
+    if (input) input.focus();
+    return;
+  }
+
+  if (typeof google === 'undefined' || !google.accounts || !google.accounts.oauth2) {
+    alert(dict.gdriveLibraryLoading);
+    return;
+  }
+
+  // Reuse unexpired access token
+  if (gdriveAccessToken && Date.now() < gdriveTokenExpiresAt - 30000) {
+    callback(gdriveAccessToken);
+    return;
+  }
+
+  try {
+    gdriveTokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: clientId,
+      scope: 'https://www.googleapis.com/auth/drive.file',
+      callback: (response) => {
+        if (response.error) {
+          console.error('Google OAuth error:', response);
+          if (response.error !== 'popup_closed_by_user') {
+            alert(dict.gdriveBackupError(response.error_description || response.error));
+          }
+          return;
+        }
+        gdriveAccessToken = response.access_token;
+        const expiresInSec = parseInt(response.expires_in, 10) || 3599;
+        gdriveTokenExpiresAt = Date.now() + expiresInSec * 1000;
+        updateGoogleDriveStatusUI();
+        callback(gdriveAccessToken);
+      }
+    });
+
+    gdriveTokenClient.requestAccessToken({ prompt: '' });
+  } catch (err) {
+    console.error('GIS initialization error:', err);
+    alert(err.message || 'Google Auth Error');
+  }
+}
+
+async function backupToGoogleDrive() {
+  const dict = I18N[state.lang] || I18N.en;
+  const backupBtn = document.getElementById('gdrive-backup-btn');
+  const backupLabel = document.getElementById('gdrive-backup-label');
+  const originalLabel = backupLabel ? backupLabel.textContent : '';
+
+  initGoogleDriveClient(async (token) => {
+    try {
+      if (backupBtn) backupBtn.disabled = true;
+      if (backupLabel) backupLabel.textContent = dict.gdriveBackingUp;
+
+      const backupData = {
+        appName: 'PocketFlow',
+        version: 1,
+        exportedAt: new Date().toISOString(),
+        language: state.lang,
+        currency: state.currency,
+        transactions: state.transactions,
+        recurring: state.recurring
+      };
+
+      // Search for existing backup file
+      const q = encodeURIComponent("name = 'pocketflow-backup.json' and trashed = false");
+      const searchRes = await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name,modifiedTime)`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (searchRes.status === 401) {
+        gdriveAccessToken = null;
+        gdriveTokenExpiresAt = 0;
+        updateGoogleDriveStatusUI();
+        throw new Error('Google authorization expired. Please try again.');
+      }
+
+      if (!searchRes.ok) {
+        const errText = await searchRes.text();
+        throw new Error(`Search failed (${searchRes.status}): ${errText}`);
+      }
+
+      const searchJson = await searchRes.json();
+      const existingFile = searchJson.files && searchJson.files.length > 0 ? searchJson.files[0] : null;
+
+      if (existingFile) {
+        // Update existing file content
+        const updateRes = await fetch(`https://www.googleapis.com/upload/drive/v3/files/${existingFile.id}?uploadType=media`, {
+          method: 'PATCH',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json; charset=UTF-8'
+          },
+          body: JSON.stringify(backupData, null, 2)
+        });
+
+        if (!updateRes.ok) {
+          const errText = await updateRes.text();
+          throw new Error(`Update failed (${updateRes.status}): ${errText}`);
+        }
+      } else {
+        // Create new backup file
+        const metadata = {
+          name: 'pocketflow-backup.json',
+          mimeType: 'application/json'
+        };
+        const boundary = '-------pocketflow_multipart_' + Date.now();
+        const delimiter = `\r\n--${boundary}\r\n`;
+        const closeDelim = `\r\n--${boundary}--`;
+
+        const multipartBody =
+          delimiter +
+          'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
+          JSON.stringify(metadata) +
+          delimiter +
+          'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
+          JSON.stringify(backupData, null, 2) +
+          closeDelim;
+
+        const createRes = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': `multipart/related; boundary=${boundary}`
+          },
+          body: multipartBody
+        });
+
+        if (!createRes.ok) {
+          const errText = await createRes.text();
+          throw new Error(`Create failed (${createRes.status}): ${errText}`);
+        }
+      }
+
+      // Record successful backup time
+      localStorage.setItem(GDRIVE_LAST_BACKUP_KEY, new Date().toISOString());
+      updateGoogleDriveStatusUI();
+      alert(dict.gdriveBackupSuccess);
+    } catch (err) {
+      console.error('Google Drive backup error:', err);
+      alert(dict.gdriveBackupError(err.message || 'Unknown error'));
+    } finally {
+      if (backupBtn) backupBtn.disabled = false;
+      if (backupLabel) backupLabel.textContent = originalLabel;
+    }
+  });
+}
+
+async function restoreFromGoogleDrive() {
+  const dict = I18N[state.lang] || I18N.en;
+  const restoreBtn = document.getElementById('gdrive-restore-btn');
+  const restoreLabel = document.getElementById('gdrive-restore-label');
+  const originalLabel = restoreLabel ? restoreLabel.textContent : '';
+
+  initGoogleDriveClient(async (token) => {
+    try {
+      if (restoreBtn) restoreBtn.disabled = true;
+      if (restoreLabel) restoreLabel.textContent = dict.gdriveRestoring;
+
+      const q = encodeURIComponent("name = 'pocketflow-backup.json' and trashed = false");
+      const searchRes = await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name,modifiedTime)&orderBy=modifiedTime desc`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (searchRes.status === 401) {
+        gdriveAccessToken = null;
+        gdriveTokenExpiresAt = 0;
+        updateGoogleDriveStatusUI();
+        throw new Error('Google authorization expired. Please try again.');
+      }
+
+      if (!searchRes.ok) {
+        const errText = await searchRes.text();
+        throw new Error(`Search failed (${searchRes.status}): ${errText}`);
+      }
+
+      const searchJson = await searchRes.json();
+      if (!searchJson.files || searchJson.files.length === 0) {
+        alert(dict.gdriveRestoreNotFound);
+        return;
+      }
+
+      const targetFile = searchJson.files[0];
+
+      // Download backup JSON content
+      const contentRes = await fetch(`https://www.googleapis.com/drive/v3/files/${targetFile.id}?alt=media`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (!contentRes.ok) {
+        const errText = await contentRes.text();
+        throw new Error(`Download failed (${contentRes.status}): ${errText}`);
+      }
+
+      const data = await contentRes.json();
+
+      if (!Array.isArray(data.transactions)) {
+        alert(dict.importInvalid);
+        return;
+      }
+
+      const dateStr = data.exportedAt
+        ? (state.lang === 'zh-TW'
+            ? new Date(data.exportedAt).toLocaleString('zh-TW')
+            : new Date(data.exportedAt).toLocaleString('en-US'))
+        : (targetFile.modifiedTime ? new Date(targetFile.modifiedTime).toLocaleString() : '');
+
+      if (confirm(dict.gdriveRestoreConfirm(dateStr, data.transactions.length))) {
+        state.transactions = data.transactions;
+        state.recurring = Array.isArray(data.recurring) ? data.recurring : [];
+        if (data.currency) state.currency = data.currency;
+        if (data.language) state.lang = data.language;
+        state.isDemo = false;
+        localStorage.setItem('pocketflow_is_demo', 'false');
+
+        cancelEditRecurring();
+        persistData();
+        initCurrency();
+        applyLanguage();
+        checkDueRecurring();
+        updateDemoBanner();
+
+        alert(dict.gdriveRestoreSuccess);
+        const settingsModal = document.getElementById('settings-modal');
+        if (settingsModal) {
+          settingsModal.classList.add('hidden');
+          settingsModal.classList.remove('flex');
+        }
+      }
+    } catch (err) {
+      console.error('Google Drive restore error:', err);
+      alert(dict.gdriveRestoreError(err.message || 'Unknown error'));
+    } finally {
+      if (restoreBtn) restoreBtn.disabled = false;
+      if (restoreLabel) restoreLabel.textContent = originalLabel;
+    }
+  });
 }
 
 // Register Service Worker for PWA
