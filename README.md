@@ -16,7 +16,8 @@
 - 💰 **Multi-Currency Support**: Set your transaction currency ($ USD, NT$ TWD, ¥ JPY, € EUR, ₩ KRW, HK$ HKD, £ GBP) right inside the entry modal with smart per-transaction memory.
 - 🔄 **Recurring Transactions Automation**: Track subscriptions (Netflix, Spotify), rent, utilities, and salary with monthly due alerts and one-click batch entry.
 - 🤖 **AI Financial Advisor Packager**: One-click structured Markdown prompt generator formatting your monthly savings rate, top expenses, and category breakdown to paste into Gemini or ChatGPT for personalized advice.
-- 💾 **Data Backup & Transfer**: Complete JSON export/import and CSV spreadsheet export.
+- ☁️ **Google Drive Cloud Backup & Restore**: One-click secure backup and restore directly to your Google Drive using strict least-privilege permission (`drive.file`), keeping your data private and accessible across devices.
+- 💾 **Data Backup & Transfer**: Complete JSON export/import, CSV spreadsheet export, and cloud synchronization.
 - 🔒 **100% Privacy & Offline First**: Zero server tracking. All your financial data stays strictly on your local device.
 
 ---
