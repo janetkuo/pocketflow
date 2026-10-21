@@ -2491,10 +2491,20 @@ async function restoreFromGoogleDrive() {
   });
 }
 
-// Register Service Worker for PWA
+// Register Service Worker for PWA with active update checks
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').catch(err => {
+    navigator.serviceWorker.register('./sw.js').then((reg) => {
+      // Actively check for SW updates when page loads
+      reg.update().catch(() => {});
+
+      // Re-check for updates whenever user returns to the app tab
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          reg.update().catch(() => {});
+        }
+      });
+    }).catch(err => {
       console.log('SW registration note:', err);
     });
   });
