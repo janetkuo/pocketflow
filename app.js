@@ -351,8 +351,9 @@ const I18N = {
 // Category Definitions with distinct color palette & icons
 const CATEGORIES = {
   expense: [
-    { id: 'food', name: { en: 'Food & Dining', 'zh-TW': '餐飲美食' }, icon: '🍔', color: '#f97316', bg: 'rgba(249, 115, 22, 0.15)' },
-    { id: 'transport', name: { en: 'Transportation', 'zh-TW': '通勤交通' }, icon: '🚗', color: '#3b82f6', bg: 'rgba(59, 130, 246, 0.15)' },
+    { id: 'food', name: { en: 'Food & Meals', 'zh-TW': '餐飲正餐' }, icon: '🍽️', color: '#f97316', bg: 'rgba(249, 115, 22, 0.15)' },
+    { id: 'drinks', name: { en: 'Drinks & Coffee', 'zh-TW': '咖啡手搖' }, icon: '☕', color: '#ea580c', bg: 'rgba(234, 88, 12, 0.15)' },
+    { id: 'transport', name: { en: 'Transportation', 'zh-TW': '通勤交通' }, icon: '🚇', color: '#3b82f6', bg: 'rgba(59, 130, 246, 0.15)' },
     { id: 'shopping', name: { en: 'Shopping', 'zh-TW': '購物消費' }, icon: '🛍️', color: '#ec4899', bg: 'rgba(236, 72, 153, 0.15)' },
     { id: 'entertainment', name: { en: 'Entertainment', 'zh-TW': '休閒娛樂' }, icon: '🎮', color: '#8b5cf6', bg: 'rgba(139, 92, 246, 0.15)' },
     { id: 'housing', name: { en: 'Housing & Utilities', 'zh-TW': '居住水電' }, icon: '🏠', color: '#06b6d4', bg: 'rgba(6, 182, 212, 0.15)' },
@@ -373,7 +374,7 @@ const CATEGORIES = {
 // Autocomplete Presets per Language
 const AUTOCOMPLETE_PRESETS = {
   en: [
-    { title: 'Large Iced Latte', category: 'food', type: 'expense', amount: 5.5, currency: 'USD' },
+    { title: 'Large Iced Latte', category: 'drinks', type: 'expense', amount: 5.5, currency: 'USD' },
     { title: 'Whole Foods Grocery', category: 'shopping', type: 'expense', amount: 68.5, currency: 'USD' },
     { title: 'Metro Transit Pass', category: 'transport', type: 'expense', amount: 35, currency: 'USD' },
     { title: 'Uber Ride', category: 'transport', type: 'expense', amount: 24, currency: 'USD' },
@@ -384,11 +385,14 @@ const AUTOCOMPLETE_PRESETS = {
     { title: 'Project Performance Bonus', category: 'bonus', type: 'income', amount: 1500, currency: 'USD' }
   ],
   'zh-TW': [
-    { title: '大杯拿鐵', category: 'food', type: 'expense', amount: 85, currency: 'TWD' },
+    { title: '中杯燕麥熱拿鐵', category: 'drinks', type: 'expense', amount: 85, currency: 'TWD' },
+    { title: '大杯黑咖啡', category: 'drinks', type: 'expense', amount: 65, currency: 'TWD' },
     { title: '全聯日常採買', category: 'shopping', type: 'expense', amount: 650, currency: 'TWD' },
     { title: '中油加油', category: 'transport', type: 'expense', amount: 150, currency: 'TWD' },
+    { title: '地鐵通勤週票', category: 'transport', type: 'expense', amount: 350, currency: 'TWD' },
     { title: 'Uber 乘車', category: 'transport', type: 'expense', amount: 240, currency: 'TWD' },
-    { title: '外送午餐', category: 'food', type: 'expense', amount: 180, currency: 'TWD' },
+    { title: '週末朋友聚餐', category: 'food', type: 'expense', amount: 580, currency: 'TWD' },
+    { title: '外送午餐便當', category: 'food', type: 'expense', amount: 180, currency: 'TWD' },
     { title: 'Steam 遊戲特價', category: 'entertainment', type: 'expense', amount: 590, currency: 'TWD' },
     { title: '銀行活存/定存利息', category: 'interest', type: 'income', amount: 35, currency: 'TWD' },
     { title: '股票股利入帳', category: 'invest', type: 'income', amount: 3500, currency: 'TWD' },
@@ -399,7 +403,7 @@ const AUTOCOMPLETE_PRESETS = {
 // Initial Sample Data (default English with Traditional Chinese localization)
 const DEMO_TRANSACTIONS = [
   { id: 'tx_1', title: 'Supermarket Grocery Run', title_tw: '超市日常補貨', amount: 68.5, type: 'expense', category: 'shopping', date: '2026-10-17', currency: 'USD' },
-  { id: 'tx_2', title: 'Oat Milk Latte', title_tw: '中杯燕麥熱拿鐵', amount: 5.75, type: 'expense', category: 'food', date: '2026-10-17', currency: 'USD' },
+  { id: 'tx_2', title: 'Oat Milk Latte', title_tw: '中杯燕麥熱拿鐵', amount: 5.75, type: 'expense', category: 'drinks', date: '2026-10-17', currency: 'USD' },
   { id: 'tx_3', title: 'Weekly Metro Pass', title_tw: '地鐵通勤週票', amount: 35, type: 'expense', category: 'transport', date: '2026-10-16', currency: 'USD' },
   { id: 'tx_4', title: 'Weekend Dinner with Friends', title_tw: '週末朋友聚餐', amount: 92, type: 'expense', category: 'food', date: '2026-10-15', currency: 'USD' },
   { id: 'tx_5', title: 'Netflix Subscription', title_tw: 'Netflix 串流訂閱', amount: 15.99, type: 'expense', category: 'entertainment', date: '2026-10-15', recurringId: 'rec_netflix', currency: 'USD' },
@@ -483,19 +487,105 @@ function getCategoryName(cat) {
   return cat.name;
 }
 
-function getCategoryMeta(type, catId) {
+// Smart item icon resolver to pair accurate icons with item descriptions
+function resolveItemIcon(category, title, fallbackIcon = '✨') {
+  if (!title) return fallbackIcon;
+  const t = title.toLowerCase();
+
+  // Beverages & Drinks (differentiates coffee, tea, juices, drinks from meals)
+  if (/latte|coffee|cafe|espresso|cappuccino|mocha|americano|tea|boba|milk tea|beverage|drink|smoothie|juice|starbucks|拿鐵|咖啡|美式|摩卡|卡布|手搖|珍奶|奶茶|鮮奶|茶|綠茶|紅茶|烏龍|燕麥奶|果汁|飲料|汽水|可樂|星巴克/.test(t)) {
+    return '☕';
+  }
+  if (/beer|wine|cocktail|bar|pub|whiskey|sake|酒|啤酒|調酒|居酒屋|微醺/.test(t)) {
+    return '🍺';
+  }
+
+  // Food & Meals
+  if (category === 'food' || /food|meal|dinner|lunch|breakfast|brunch|burger|sandwich|pizza|sushi|ramen|noodle|pasta|steak|rice|bento|salad|snack|restaurant|餐|飯|麵|午餐|晚餐|早餐|早午餐|聚餐|便當|火鍋|壽司|拉麵|牛排|披薩|漢堡|炸雞|水餃|點心|夜市|小吃/.test(t)) {
+    if (/burger|hamburger|漢堡|麥當勞|肯德基|fast food/.test(t)) return '🍔';
+    if (/noodle|ramen|pasta|spaghetti|麵|拉麵|義大利麵|牛肉麵/.test(t)) return '🍜';
+    if (/pizza|披薩|比薩/.test(t)) return '🍕';
+    if (/sushi|japanese|壽司|生魚片|日料/.test(t)) return '🍣';
+    if (/bento|便當/.test(t)) return '🍱';
+    if (/bread|bakery|cake|dessert|麵包|烘焙|蛋糕|甜點/.test(t)) return '🥐';
+    return '🍽️';
+  }
+
+  // Transportation (public transit vs driving vs taxi vs bike)
+  if (category === 'transport' || /metro|subway|transit|bus|train|mrt|uber|taxi|gas|fuel|flight|air|parking|traffic|交通|通勤|車/.test(t)) {
+    if (/metro|subway|mrt|train|rail|pass|ticket|transit|地鐵|捷運|高鐵|火車|台鐵|電車|週票|月票|票|悠遊卡|一卡通/.test(t)) return '🚇';
+    if (/bus|coach|公車|客運|巴士/.test(t)) return '🚌';
+    if (/uber|taxi|cab|lyft|計程車|小黃|乘車|叫車/.test(t)) return '🚕';
+    if (/bike|bicycle|youbike|ubike|單車|腳踏車|自行車/.test(t)) return '🚲';
+    if (/gas|fuel|petrol|oil|加油|中油|台塑/.test(t)) return '⛽';
+    if (/parking|parking fee|停車|車位/.test(t)) return '🅿️';
+    if (/flight|plane|airline|airport|機票|航空|飛機/.test(t)) return '✈️';
+    return '🚗';
+  }
+
+  // Shopping (groceries/supermarket vs clothing vs electronics)
+  if (category === 'shopping' || /grocery|supermarket|market|mall|amazon|store|購物|採買|超市/.test(t)) {
+    if (/supermarket|grocery|market|foods|costco|px mart|超市|量販|全聯|家樂福|好市多|買菜|食材|日常補貨/.test(t)) return '🛒';
+    if (/clothes|clothing|shirt|shoes|apparel|uniqlo|zara|衣服|服飾|鞋|外套/.test(t)) return '👕';
+    if (/apple|iphone|ipad|mac|electronic|gadget|3c|手機|電腦/.test(t)) return '📱';
+    return '🛍️';
+  }
+
+  // Entertainment
+  if (category === 'entertainment' || /game|stream|movie|cinema|netflix|spotify|youtube|娛樂|休閒/.test(t)) {
+    if (/netflix|disney|movie|cinema|film|theater|hbo|tv|電影|影集|戲院|串流/.test(t)) return '🎬';
+    if (/spotify|music|concert|apple music|音樂|演唱會|k歌|ktv/.test(t)) return '🎵';
+    if (/game|steam|playstation|switch|xbox|nintendo|遊戲|電玩/.test(t)) return '🎮';
+    return '🎮';
+  }
+
+  // Housing & Utilities
+  if (category === 'housing' || /rent|utility|water|electric|power|gas|internet|wifi|房租|水電|水費|電費/.test(t)) {
+    if (/water|水費/.test(t)) return '💧';
+    if (/electric|power|energy|電費/.test(t)) return '⚡';
+    if (/wifi|internet|telecom|broadband|網費|網路|寬頻|電信/.test(t)) return '🌐';
+    if (/rent|apartment|lease|房租|租金|公寓/.test(t)) return '🏠';
+    return '🏠';
+  }
+
+  // Health & Medical
+  if (category === 'health' || /gym|fitness|workout|hospital|clinic|doctor|medicine|pharmacy|健保|看診|醫院|診所|藥|健身/.test(t)) {
+    if (/gym|fitness|workout|sport|yoga|健身|重訓|運動|瑜伽/.test(t)) return '🏋️';
+    if (/hospital|clinic|doctor|dentist|醫|診所|牙醫|健檢/.test(t)) return '🏥';
+    return '💊';
+  }
+
+  // Education
+  if (category === 'education' || /book|course|study|class|tutor|lesson|書|課程|學習|進修|學費/.test(t)) {
+    return '📚';
+  }
+
+  // Income sources
+  if (/salary|payroll|wage|薪資|月薪|發薪/.test(t)) return '💰';
+  if (/interest|bank|savings|利息|活存|定存/.test(t)) return '🏦';
+  if (/dividend|stock|invest|crypto|股利|股票|投資|分紅/.test(t)) return '📈';
+  if (/bonus|獎金|紅利/.test(t)) return '🎉';
+  if (/freelance|project|side-gig|parttime|接案|副業|外包/.test(t)) return '💻';
+
+  return fallbackIcon;
+}
+
+function getCategoryMeta(type, catId, title = '') {
   const list = CATEGORIES[type] || CATEGORIES.expense;
   const found = list.find(c => c.id === catId);
+  const baseIcon = found ? found.icon : '✨';
+  const resolvedIcon = title ? resolveItemIcon(catId, title, baseIcon) : baseIcon;
   if (found) {
     return {
       ...found,
-      name: getCategoryName(found)
+      name: getCategoryName(found),
+      icon: resolvedIcon
     };
   }
   return {
     id: catId,
     name: state.lang === 'en' ? 'Other' : '其他',
-    icon: '✨',
+    icon: resolvedIcon,
     color: '#64748b',
     bg: 'rgba(100, 116, 139, 0.15)'
   };
@@ -512,10 +602,35 @@ function updateCurrencySymbols() {
   });
 }
 
-// Format Numbers with Commas according to active locale
-function formatMoney(amount) {
+// Helper: Get local YYYY-MM-DD date string without UTC timezone shift
+function getLocalDateString(d = new Date()) {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+// Format Numbers with Commas according to active locale and currency standards
+function formatMoney(amount, currency = null) {
+  const curr = currency || state.currency || 'USD';
   const locale = state.lang === 'en' ? 'en-US' : 'zh-TW';
-  return Number(amount || 0).toLocaleString(locale);
+  const num = Number(amount || 0);
+
+  // Currencies without cents/decimals
+  if (curr === 'JPY' || curr === 'KRW') {
+    return num.toLocaleString(locale, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  }
+
+  // TWD: whole numbers use 0 decimals, fractional uses 2 decimals
+  if (curr === 'TWD') {
+    if (num % 1 === 0) {
+      return num.toLocaleString(locale, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    }
+    return num.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  // USD, EUR, GBP, HKD: always 2 decimals so +$6,098.50 is properly formatted and neat
+  return num.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 // Autocomplete suggestions based on transaction history & localized presets
@@ -954,7 +1069,7 @@ function initEvents() {
     const modalSubmitBtn = document.getElementById('modal-submit-btn');
     if (modalSubmitBtn) modalSubmitBtn.textContent = dict.saveTransaction;
 
-    document.getElementById('input-date').value = new Date().toISOString().split('T')[0];
+    document.getElementById('input-date').value = getLocalDateString();
     setModalType('expense');
     
     // Set default currency to last used in modal
@@ -1025,7 +1140,7 @@ function initEvents() {
     }
 
     autocompleteList.innerHTML = matches.map(item => {
-      const cat = getCategoryMeta(item.type, item.category);
+      const cat = getCategoryMeta(item.type, item.category, item.title);
       const itemSym = (CURRENCIES[item.currency] && CURRENCIES[item.currency].symbol) || '$';
       const typeLabel = item.type === 'expense' 
         ? (state.lang === 'en' ? 'Expense' : '支出') 
@@ -1042,7 +1157,7 @@ function initEvents() {
             </div>
           </div>
           <div class="text-xs font-semibold ${item.type === 'expense' ? 'text-rose-500' : 'text-emerald-500'}">
-            ${itemSym} ${formatMoney(item.amount)}
+            ${itemSym} ${formatMoney(item.amount, item.currency)}
           </div>
         </div>
       `;
@@ -1547,9 +1662,9 @@ function renderRecurringList() {
   }
 
   listEl.innerHTML = state.recurring.map(rule => {
-    const cat = getCategoryMeta(rule.type, rule.category);
-    const ruleSym = (CURRENCIES[rule.currency] && CURRENCIES[rule.currency].symbol) || '$';
     const title = getItemTitle(rule);
+    const cat = getCategoryMeta(rule.type, rule.category, title);
+    const ruleSym = (CURRENCIES[rule.currency] && CURRENCIES[rule.currency].symbol) || '$';
     const subText = dict.recurringItemSub(rule.day, rule.type);
 
     return `
@@ -1563,7 +1678,7 @@ function renderRecurringList() {
         </div>
         <div class="flex items-center gap-1 sm:gap-2">
           <div class="text-xs font-extrabold mr-1 ${rule.type === 'expense' ? 'text-rose-500' : 'text-emerald-500'}">
-            ${rule.type === 'expense' ? '-' : '+'}${ruleSym} ${formatMoney(rule.amount)}
+            ${rule.type === 'expense' ? '-' : '+'}${ruleSym} ${formatMoney(rule.amount, rule.currency)}
           </div>
           <!-- Edit recurring button -->
           <button class="edit-rec-btn p-1.5 text-slate-400 hover:text-indigo-600 rounded-lg hover:bg-indigo-50 dark:hover:bg-slate-700 transition"
@@ -1638,22 +1753,22 @@ function render() {
 
   const net = income - expense;
 
-  document.getElementById('total-income').textContent = formatMoney(income);
-  document.getElementById('total-expense').textContent = formatMoney(expense);
-  document.getElementById('net-balance').textContent = formatMoney(net);
+  document.getElementById('total-income').textContent = formatMoney(income, state.currency);
+  document.getElementById('total-expense').textContent = formatMoney(expense, state.currency);
+  document.getElementById('net-balance').textContent = formatMoney(net, state.currency);
 
   const balanceBadge = document.getElementById('balance-badge');
   if (net >= 0) {
     balanceBadge.textContent = dict.balanceHealthy;
-    balanceBadge.className = 'px-2 py-0.5 rounded-full bg-emerald-400/20 text-emerald-300 text-[11px] font-bold';
+    balanceBadge.className = 'px-2.5 py-0.5 rounded-full bg-emerald-500/25 text-emerald-200 border border-emerald-400/30 text-[11px] font-bold backdrop-blur-sm';
   } else {
     balanceBadge.textContent = dict.balanceDeficit;
-    balanceBadge.className = 'px-2 py-0.5 rounded-full bg-rose-400/20 text-rose-300 text-[11px] font-bold';
+    balanceBadge.className = 'px-2.5 py-0.5 rounded-full bg-rose-500/25 text-rose-200 border border-rose-400/30 text-[11px] font-bold backdrop-blur-sm';
   }
 
   const sym = getCurrencySymbol();
   const rate = income > 0 ? Math.round((net / income) * 100) : 0;
-  document.getElementById('savings-rate-label').textContent = dict.savingsRateLabel(rate, sym, formatMoney(net));
+  document.getElementById('savings-rate-label').textContent = dict.savingsRateLabel(rate, sym, formatMoney(net, state.currency));
 
   updateCurrencySymbols();
   renderChart();
@@ -1709,7 +1824,7 @@ function renderChart() {
   const sym = getCurrencySymbol();
 
   document.getElementById('donut-center-sub').textContent = state.chartType === 'expense' ? dict.donutCenterExp : dict.donutCenterInc;
-  document.getElementById('donut-center-val').textContent = `${sym} ${formatMoney(total)}`;
+  document.getElementById('donut-center-val').textContent = `${sym} ${formatMoney(total, state.currency)}`;
   document.getElementById('donut-center-cat').textContent = dict.donutCenterAll;
 
   if (total === 0) {
@@ -1765,13 +1880,13 @@ function renderChart() {
       const amt = slice.getAttribute('data-cat-amount');
       const pct = slice.getAttribute('data-cat-pct');
       document.getElementById('donut-center-sub').textContent = `${pct}% ${dict.donutCenterPct}`;
-      document.getElementById('donut-center-val').textContent = `${sym} ${formatMoney(amt)}`;
+      document.getElementById('donut-center-val').textContent = `${sym} ${formatMoney(amt, state.currency)}`;
       document.getElementById('donut-center-cat').textContent = name;
     };
 
     const handleReset = () => {
       document.getElementById('donut-center-sub').textContent = state.chartType === 'expense' ? dict.donutCenterExp : dict.donutCenterInc;
-      document.getElementById('donut-center-val').textContent = `${sym} ${formatMoney(total)}`;
+      document.getElementById('donut-center-val').textContent = `${sym} ${formatMoney(total, state.currency)}`;
       document.getElementById('donut-center-cat').textContent = dict.donutCenterAll;
     };
 
@@ -1785,20 +1900,40 @@ function renderChart() {
     const rawPct = (amount / total) * 100;
     const pctText = rawPct < 1 && rawPct > 0 ? '< 1%' : `${Math.round(rawPct)}%`;
     return `
-      <div class="flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition">
-        <div class="flex items-center gap-2.5">
-          <span class="w-7 h-7 rounded-lg flex items-center justify-center text-sm" style="background:${meta.bg}">
+      <div class="legend-row flex items-center justify-between p-1.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition cursor-pointer"
+           data-cat-name="${meta.name}" data-cat-amount="${amount}" data-cat-pct="${pctText}">
+        <div class="flex items-center gap-1.5 min-w-0">
+          <span class="w-6 h-6 rounded-lg flex items-center justify-center text-xs shrink-0" style="background:${meta.bg}">
             ${meta.icon}
           </span>
-          <span class="text-xs font-semibold text-slate-700 dark:text-slate-200">${meta.name}</span>
+          <span class="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate">${meta.name}</span>
         </div>
-        <div class="flex items-center gap-2">
-          <span class="text-[11px] font-bold text-slate-400">${pctText}</span>
-          <span class="text-xs font-bold text-slate-800 dark:text-slate-100">${sym} ${formatMoney(amount)}</span>
+        <div class="flex items-center gap-1.5 shrink-0 pl-1 text-right">
+          <span class="text-[10px] font-bold text-slate-400">${pctText}</span>
+          <span class="text-xs font-bold text-slate-800 dark:text-slate-100">${sym} ${formatMoney(amount, state.currency)}</span>
         </div>
       </div>
     `;
   }).join('');
+
+  legend.querySelectorAll('.legend-row').forEach(row => {
+    const handleInspect = () => {
+      const name = row.getAttribute('data-cat-name');
+      const amt = row.getAttribute('data-cat-amount');
+      const pct = row.getAttribute('data-cat-pct');
+      document.getElementById('donut-center-sub').textContent = `${pct} ${dict.donutCenterPct}`;
+      document.getElementById('donut-center-val').textContent = `${sym} ${formatMoney(amt, state.currency)}`;
+      document.getElementById('donut-center-cat').textContent = name;
+    };
+    const handleReset = () => {
+      document.getElementById('donut-center-sub').textContent = state.chartType === 'expense' ? dict.donutCenterExp : dict.donutCenterInc;
+      document.getElementById('donut-center-val').textContent = `${sym} ${formatMoney(total, state.currency)}`;
+      document.getElementById('donut-center-cat').textContent = dict.donutCenterAll;
+    };
+    row.addEventListener('mouseenter', handleInspect);
+    row.addEventListener('mouseleave', handleReset);
+    row.addEventListener('click', handleInspect);
+  });
 }
 
 function renderTransactions() {
@@ -1832,7 +1967,7 @@ function renderTransactions() {
   }
 
   emptyState.classList.add('hidden');
-  list.sort((a, b) => new Date(b.date) - new Date(a.date));
+  list.sort((a, b) => b.date.localeCompare(a.date));
 
   const groups = {};
   list.forEach(t => {
@@ -1840,33 +1975,43 @@ function renderTransactions() {
     groups[t.date].push(t);
   });
 
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = getLocalDateString(new Date());
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
-  const yesterdayStr = yesterday.toISOString().split('T')[0];
+  const yesterdayStr = getLocalDateString(yesterday);
 
   container.innerHTML = Object.entries(groups).map(([dateStr, items]) => {
-    let dateLabel = dateStr;
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const isCurrentYear = y === new Date().getFullYear();
+
+    let dateLabel = '';
     if (dateStr === todayStr) {
-      dateLabel = dict.today;
+      dateLabel = state.lang === 'en'
+        ? `${dict.today} · ${dict.shortMonths[m - 1]} ${d}`
+        : `${dict.today} · ${m}月${d}日`;
     } else if (dateStr === yesterdayStr) {
-      dateLabel = dict.yesterday;
+      dateLabel = state.lang === 'en'
+        ? `${dict.yesterday} · ${dict.shortMonths[m - 1]} ${d}`
+        : `${dict.yesterday} · ${m}月${d}日`;
     } else {
-      const d = new Date(dateStr);
       if (state.lang === 'en') {
-        dateLabel = `${dict.shortMonths[d.getMonth()]} ${d.getDate()}`;
+        dateLabel = isCurrentYear
+          ? `${dict.shortMonths[m - 1]} ${d}`
+          : `${dict.shortMonths[m - 1]} ${d}, ${y}`;
       } else {
-        dateLabel = `${d.getMonth() + 1}月${d.getDate()}日`;
+        dateLabel = isCurrentYear
+          ? `${m}月${d}日`
+          : `${y}年${m}月${d}日`;
       }
     }
 
     const dayTotalExpense = items.filter(i => i.type === 'expense').reduce((sum, i) => sum + Number(i.amount), 0);
 
     const itemsHtml = items.map(item => {
-      const meta = getCategoryMeta(item.type, item.category);
+      const title = getItemTitle(item);
+      const meta = getCategoryMeta(item.type, item.category, title);
       const isExpense = item.type === 'expense';
       const itemSym = (CURRENCIES[item.currency] && CURRENCIES[item.currency].symbol) || sym;
-      const title = getItemTitle(item);
 
       return `
         <div class="tx-item group flex items-center justify-between p-3.5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 hover:border-indigo-300 dark:hover:border-indigo-700 hover:shadow-md shadow-sm transition cursor-pointer"
@@ -1887,7 +2032,7 @@ function renderTransactions() {
           <div class="flex items-center gap-1 sm:gap-2">
             <div class="text-right mr-1">
               <div class="text-sm font-extrabold ${isExpense ? 'text-rose-500' : 'text-emerald-500'}">
-                ${isExpense ? '-' : '+'}${itemSym} ${formatMoney(item.amount)}
+                ${isExpense ? '-' : '+'}${itemSym} ${formatMoney(item.amount, item.currency)}
               </div>
             </div>
 
@@ -1910,9 +2055,15 @@ function renderTransactions() {
     return `
       <div class="space-y-2">
         <div class="flex items-center justify-between px-2 text-xs font-semibold text-slate-400">
-          <span>${dateLabel} (${dateStr})</span>
-          ${dayTotalExpense > 0 ? `<span>${dict.dailyExpense(sym, formatMoney(dayTotalExpense))}</span>` : ''}
+          <span>${dateLabel}</span>
+          ${dayTotalExpense > 0 ? `<span>${dict.dailyExpense(sym, formatMoney(dayTotalExpense, state.currency))}</span>` : ''}
         </div>
+        <div class="space-y-1.5">
+          ${itemsHtml}
+        </div>
+      </div>
+    `;
+  }).join('');
         <div class="space-y-1.5">
           ${itemsHtml}
         </div>
