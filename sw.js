@@ -74,7 +74,10 @@ self.addEventListener('fetch', (event) => {
         .catch(() => {
           // If offline or timed out, fallback to local cache
           return caches.match(event.request).then((cachedResponse) => {
-            return cachedResponse || caches.match('./index.html') || caches.match('./');
+            if (cachedResponse) return cachedResponse;
+            return caches.match('./index.html').then((fallbackHtml) => {
+              return fallbackHtml || caches.match('./');
+            });
           });
         })
     );
@@ -84,22 +87,16 @@ self.addEventListener('fetch', (event) => {
   // Strategy 2: Cache-First for static assets (icons, manifest, etc.)
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
-      return (
-        cachedResponse ||
-        fetch(event.request)
-          .then((networkResponse) => {
-            if (networkResponse && networkResponse.ok && isSameOrigin) {
-              const responseToCache = networkResponse.clone();
-              caches.open(CACHE_NAME).then((cache) => {
-                cache.put(event.request, responseToCache);
-              });
-            }
-            return networkResponse;
-          })
-          .catch(() => {
-            return caches.match('./index.html');
-          })
-      );
+      if (cachedResponse) return cachedResponse;
+      return fetch(event.request).then((networkResponse) => {
+        if (networkResponse && networkResponse.ok && isSameOrigin) {
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseToCache);
+          });
+        }
+        return networkResponse;
+      });
     })
   );
 });
