@@ -1,0 +1,9 @@
+# Local project rules and instructions
+GEMINI.md
+
+# macOS system files
+.DS_Store
+
+# Scratch files
+*.tmp
+*.bak
