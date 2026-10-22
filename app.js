@@ -2064,12 +2064,6 @@ function renderTransactions() {
       </div>
     `;
   }).join('');
-        <div class="space-y-1.5">
-          ${itemsHtml}
-        </div>
-      </div>
-    `;
-  }).join('');
 
   // Row click to edit transaction
   container.querySelectorAll('.tx-item').forEach(row => {
