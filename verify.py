@@ -114,11 +114,29 @@ def check_business_logic():
     print("   ✅ formatMoney ($6,098.50) and resolveItemIcon (☕, 🚇) verified.")
     return True
 
+def check_branding_and_icons():
+    print("🔍 [4/4] Checking branding assets and icon synchronization...")
+    if not os.path.exists('icon.svg') or not os.path.exists('icon-maskable.svg'):
+        print("❌ Missing icon.svg or icon-maskable.svg!")
+        return False
+    with open('index.html') as f:
+        html = f.read()
+    if 'src="./icon.svg"' not in html and "src='./icon.svg'" not in html:
+        print("❌ index.html does not directly reference ./icon.svg (single source of truth violation)!")
+        return False
+    with open('manifest.json') as f:
+        manifest = f.read()
+    if './icon.svg' not in manifest or './icon-maskable.svg' not in manifest:
+        print("❌ manifest.json missing icon.svg or icon-maskable.svg!")
+        return False
+    print("   ✅ icon.svg, icon-maskable.svg, and index.html single source of truth verified.")
+    return True
+
 if __name__ == '__main__':
     print("=" * 60)
     print(" PocketFlow Automated Pre-Commit/Pre-Push Verification")
     print("=" * 60)
-    success = check_js_syntax() and check_dom_ids() and check_business_logic()
+    success = check_js_syntax() and check_dom_ids() and check_business_logic() and check_branding_and_icons()
     print("=" * 60)
     if success:
         print("🎉 [SUCCESS] All checks passed! Safe to commit and push.")
