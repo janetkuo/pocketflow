@@ -421,12 +421,17 @@ const MORANDI_PALETTES = {
     categories: {
       food: { color: '#CB8364', bg: 'rgba(203, 131, 100, 0.15)' },
       drinks: { color: '#8C6C58', bg: 'rgba(140, 108, 88, 0.15)' },
+      groceries: { color: '#709775', bg: 'rgba(112, 151, 117, 0.15)' },
       transport: { color: '#6A839A', bg: 'rgba(106, 131, 154, 0.15)' },
-      shopping: { color: '#9E778E', bg: 'rgba(158, 119, 142, 0.15)' },
-      entertainment: { color: '#837B97', bg: 'rgba(131, 123, 151, 0.15)' },
       housing: { color: '#5A8485', bg: 'rgba(90, 132, 133, 0.15)' },
-      health: { color: '#AB5F5F', bg: 'rgba(171, 95, 95, 0.15)' },
+      household: { color: '#7A938C', bg: 'rgba(122, 147, 140, 0.15)' },
+      apparel: { color: '#B47B82', bg: 'rgba(180, 123, 130, 0.15)' },
+      entertainment: { color: '#837B97', bg: 'rgba(131, 123, 151, 0.15)' },
+      travel: { color: '#538B9E', bg: 'rgba(83, 139, 158, 0.15)' },
       education: { color: '#BF9F5F', bg: 'rgba(191, 159, 95, 0.15)' },
+      health: { color: '#AB5F5F', bg: 'rgba(171, 95, 95, 0.15)' },
+      taxes: { color: '#8E8279', bg: 'rgba(142, 130, 121, 0.15)' },
+      shopping: { color: '#9E778E', bg: 'rgba(158, 119, 142, 0.15)' },
       other_exp: { color: '#788282', bg: 'rgba(120, 130, 130, 0.15)' },
       salary: { color: '#5E8C78', bg: 'rgba(94, 140, 120, 0.15)' },
       interest: { color: '#5F828F', bg: 'rgba(95, 130, 143, 0.15)' },
@@ -456,12 +461,17 @@ const MORANDI_PALETTES = {
     categories: {
       food: { color: '#C27D66', bg: 'rgba(194, 125, 102, 0.15)' },
       drinks: { color: '#887063', bg: 'rgba(136, 112, 99, 0.15)' },
+      groceries: { color: '#6B9178', bg: 'rgba(107, 145, 120, 0.15)' },
       transport: { color: '#5B7A99', bg: 'rgba(91, 122, 153, 0.15)' },
-      shopping: { color: '#9A758B', bg: 'rgba(154, 117, 139, 0.15)' },
-      entertainment: { color: '#777594', bg: 'rgba(119, 117, 148, 0.15)' },
       housing: { color: '#568087', bg: 'rgba(86, 128, 135, 0.15)' },
-      health: { color: '#A85E60', bg: 'rgba(168, 94, 96, 0.15)' },
+      household: { color: '#6E8C94', bg: 'rgba(110, 140, 148, 0.15)' },
+      apparel: { color: '#A87085', bg: 'rgba(168, 112, 133, 0.15)' },
+      entertainment: { color: '#777594', bg: 'rgba(119, 117, 148, 0.15)' },
+      travel: { color: '#4D7D9A', bg: 'rgba(77, 125, 154, 0.15)' },
       education: { color: '#B59C63', bg: 'rgba(181, 156, 99, 0.15)' },
+      health: { color: '#A85E60', bg: 'rgba(168, 94, 96, 0.15)' },
+      taxes: { color: '#7C7877', bg: 'rgba(124, 120, 119, 0.15)' },
+      shopping: { color: '#9A758B', bg: 'rgba(154, 117, 139, 0.15)' },
       other_exp: { color: '#737C87', bg: 'rgba(115, 124, 135, 0.15)' },
       salary: { color: '#568266', bg: 'rgba(86, 130, 102, 0.15)' },
       interest: { color: '#5B7C99', bg: 'rgba(91, 124, 153, 0.15)' },
@@ -491,12 +501,17 @@ const MORANDI_PALETTES = {
     categories: {
       food: { color: '#B5745E', bg: 'rgba(181, 116, 94, 0.15)' },
       drinks: { color: '#826556', bg: 'rgba(130, 101, 86, 0.15)' },
+      groceries: { color: '#72896D', bg: 'rgba(114, 137, 109, 0.15)' },
       transport: { color: '#6A7885', bg: 'rgba(106, 120, 133, 0.15)' },
-      shopping: { color: '#9E6F7C', bg: 'rgba(158, 111, 124, 0.15)' },
-      entertainment: { color: '#7E6F85', bg: 'rgba(126, 111, 133, 0.15)' },
       housing: { color: '#627D7C', bg: 'rgba(98, 125, 124, 0.15)' },
-      health: { color: '#A35A62', bg: 'rgba(163, 90, 98, 0.15)' },
+      household: { color: '#778A86', bg: 'rgba(119, 138, 134, 0.15)' },
+      apparel: { color: '#A86D74', bg: 'rgba(168, 109, 116, 0.15)' },
+      entertainment: { color: '#7E6F85', bg: 'rgba(126, 111, 133, 0.15)' },
+      travel: { color: '#597C8A', bg: 'rgba(89, 124, 138, 0.15)' },
       education: { color: '#AD9261', bg: 'rgba(173, 146, 97, 0.15)' },
+      health: { color: '#A35A62', bg: 'rgba(163, 90, 98, 0.15)' },
+      taxes: { color: '#877C72', bg: 'rgba(135, 124, 114, 0.15)' },
+      shopping: { color: '#9E6F7C', bg: 'rgba(158, 111, 124, 0.15)' },
       other_exp: { color: '#756D67', bg: 'rgba(117, 109, 103, 0.15)' },
       salary: { color: '#62876F', bg: 'rgba(98, 135, 111, 0.15)' },
       interest: { color: '#5E7A85', bg: 'rgba(94, 122, 133, 0.15)' },
@@ -526,12 +541,17 @@ const MORANDI_PALETTES = {
     categories: {
       food: { color: '#C77D6A', bg: 'rgba(199, 125, 106, 0.15)' },
       drinks: { color: '#8D7068', bg: 'rgba(141, 112, 104, 0.15)' },
+      groceries: { color: '#6E967D', bg: 'rgba(110, 150, 125, 0.15)' },
       transport: { color: '#6281A6', bg: 'rgba(98, 129, 166, 0.15)' },
-      shopping: { color: '#A36E8F', bg: 'rgba(163, 110, 143, 0.15)' },
-      entertainment: { color: '#7E769E', bg: 'rgba(126, 118, 158, 0.15)' },
       housing: { color: '#56848E', bg: 'rgba(86, 132, 142, 0.15)' },
-      health: { color: '#AC6369', bg: 'rgba(172, 99, 105, 0.15)' },
+      household: { color: '#6E8CA0', bg: 'rgba(110, 140, 160, 0.15)' },
+      apparel: { color: '#AC6D8A', bg: 'rgba(172, 109, 138, 0.15)' },
+      entertainment: { color: '#7E769E', bg: 'rgba(126, 118, 158, 0.15)' },
+      travel: { color: '#5184B0', bg: 'rgba(81, 132, 176, 0.15)' },
       education: { color: '#B89B66', bg: 'rgba(184, 155, 102, 0.15)' },
+      health: { color: '#AC6369', bg: 'rgba(172, 99, 105, 0.15)' },
+      taxes: { color: '#7C7B8A', bg: 'rgba(124, 123, 138, 0.15)' },
+      shopping: { color: '#A36E8F', bg: 'rgba(163, 110, 143, 0.15)' },
       other_exp: { color: '#777E90', bg: 'rgba(119, 126, 144, 0.15)' },
       salary: { color: '#598E7B', bg: 'rgba(89, 142, 123, 0.15)' },
       interest: { color: '#5A7F9D', bg: 'rgba(90, 127, 157, 0.15)' },
@@ -561,12 +581,17 @@ const MORANDI_PALETTES = {
     categories: {
       food: { color: '#C97D66', bg: 'rgba(201, 125, 102, 0.15)' },
       drinks: { color: '#8A6B5C', bg: 'rgba(138, 107, 92, 0.15)' },
+      groceries: { color: '#729377', bg: 'rgba(114, 147, 119, 0.15)' },
       transport: { color: '#717E96', bg: 'rgba(113, 126, 150, 0.15)' },
-      shopping: { color: '#B56F84', bg: 'rgba(181, 111, 132, 0.15)' },
-      entertainment: { color: '#8E7591', bg: 'rgba(142, 117, 145, 0.15)' },
       housing: { color: '#5E8284', bg: 'rgba(94, 130, 132, 0.15)' },
-      health: { color: '#AB5C64', bg: 'rgba(171, 92, 100, 0.15)' },
+      household: { color: '#7E8F8B', bg: 'rgba(126, 143, 139, 0.15)' },
+      apparel: { color: '#BD6D83', bg: 'rgba(189, 109, 131, 0.15)' },
+      entertainment: { color: '#8E7591', bg: 'rgba(142, 117, 145, 0.15)' },
+      travel: { color: '#5A83A2', bg: 'rgba(90, 131, 162, 0.15)' },
       education: { color: '#B89C67', bg: 'rgba(184, 156, 103, 0.15)' },
+      health: { color: '#AB5C64', bg: 'rgba(171, 92, 100, 0.15)' },
+      taxes: { color: '#8A787E', bg: 'rgba(138, 120, 126, 0.15)' },
+      shopping: { color: '#B56F84', bg: 'rgba(181, 111, 132, 0.15)' },
       other_exp: { color: '#80777B', bg: 'rgba(128, 119, 123, 0.15)' },
       salary: { color: '#5E8E7C', bg: 'rgba(94, 142, 124, 0.15)' },
       interest: { color: '#607D8F', bg: 'rgba(96, 125, 143, 0.15)' },
@@ -596,12 +621,17 @@ const MORANDI_PALETTES = {
     categories: {
       food: { color: '#D47E35', bg: 'rgba(212, 126, 53, 0.15)' },
       drinks: { color: '#996F40', bg: 'rgba(153, 111, 64, 0.15)' },
+      groceries: { color: '#6E9954', bg: 'rgba(110, 153, 84, 0.15)' },
       transport: { color: '#547E95', bg: 'rgba(84, 126, 149, 0.15)' },
-      shopping: { color: '#A86C78', bg: 'rgba(168, 108, 120, 0.15)' },
-      entertainment: { color: '#816F8C', bg: 'rgba(129, 111, 140, 0.15)' },
       housing: { color: '#58807C', bg: 'rgba(88, 128, 124, 0.15)' },
-      health: { color: '#B35750', bg: 'rgba(179, 87, 80, 0.15)' },
+      household: { color: '#6D8C83', bg: 'rgba(109, 140, 131, 0.15)' },
+      apparel: { color: '#B8686D', bg: 'rgba(184, 104, 109, 0.15)' },
+      entertainment: { color: '#816F8C', bg: 'rgba(129, 111, 140, 0.15)' },
+      travel: { color: '#4688A6', bg: 'rgba(70, 136, 166, 0.15)' },
       education: { color: '#C98F28', bg: 'rgba(201, 143, 40, 0.15)' },
+      health: { color: '#B35750', bg: 'rgba(179, 87, 80, 0.15)' },
+      taxes: { color: '#8A7963', bg: 'rgba(138, 121, 99, 0.15)' },
+      shopping: { color: '#A86C78', bg: 'rgba(168, 108, 120, 0.15)' },
       other_exp: { color: '#7D7668', bg: 'rgba(125, 118, 104, 0.15)' },
       salary: { color: '#4F8A67', bg: 'rgba(79, 138, 103, 0.15)' },
       interest: { color: '#507D8C', bg: 'rgba(80, 125, 140, 0.15)' },
@@ -616,14 +646,19 @@ const MORANDI_PALETTES = {
 // Category Definitions with distinct color palette & icons (defaults to Sage)
 const CATEGORIES = {
   expense: [
-    { id: 'food', name: { en: 'Food & Meals', 'zh-TW': '餐飲正餐' }, icon: '🍽️', color: '#CB8364', bg: 'rgba(203, 131, 100, 0.15)' },
-    { id: 'drinks', name: { en: 'Drinks & Coffee', 'zh-TW': '咖啡手搖' }, icon: '☕', color: '#8C6C58', bg: 'rgba(140, 108, 88, 0.15)' },
+    { id: 'food', name: { en: 'Food & Dining', 'zh-TW': '餐飲正餐' }, icon: '🍽️', color: '#CB8364', bg: 'rgba(203, 131, 100, 0.15)' },
+    { id: 'drinks', name: { en: 'Drinks & Desserts', 'zh-TW': '飲品點心' }, icon: '☕', color: '#8C6C58', bg: 'rgba(140, 108, 88, 0.15)' },
+    { id: 'groceries', name: { en: 'Groceries', 'zh-TW': '食材生鮮' }, icon: '🛒', color: '#709775', bg: 'rgba(112, 151, 117, 0.15)' },
     { id: 'transport', name: { en: 'Transportation', 'zh-TW': '通勤交通' }, icon: '🚇', color: '#6A839A', bg: 'rgba(106, 131, 154, 0.15)' },
-    { id: 'shopping', name: { en: 'Shopping', 'zh-TW': '購物消費' }, icon: '🛍️', color: '#9E778E', bg: 'rgba(158, 119, 142, 0.15)' },
-    { id: 'entertainment', name: { en: 'Entertainment', 'zh-TW': '休閒娛樂' }, icon: '🎮', color: '#837B97', bg: 'rgba(131, 123, 151, 0.15)' },
     { id: 'housing', name: { en: 'Housing & Utilities', 'zh-TW': '居住水電' }, icon: '🏠', color: '#5A8485', bg: 'rgba(90, 132, 133, 0.15)' },
-    { id: 'health', name: { en: 'Health & Medical', 'zh-TW': '醫療保健' }, icon: '💊', color: '#AB5F5F', bg: 'rgba(171, 95, 95, 0.15)' },
+    { id: 'household', name: { en: 'Household Essentials', 'zh-TW': '生活日用' }, icon: '🧻', color: '#7A938C', bg: 'rgba(122, 147, 140, 0.15)' },
+    { id: 'apparel', name: { en: 'Apparel & Beauty', 'zh-TW': '服飾美妝' }, icon: '👗', color: '#B47B82', bg: 'rgba(180, 123, 130, 0.15)' },
+    { id: 'entertainment', name: { en: 'Entertainment', 'zh-TW': '休閒娛樂' }, icon: '🎮', color: '#837B97', bg: 'rgba(131, 123, 151, 0.15)' },
+    { id: 'travel', name: { en: 'Travel & Vacation', 'zh-TW': '旅遊度假' }, icon: '✈️', color: '#538B9E', bg: 'rgba(83, 139, 158, 0.15)' },
     { id: 'education', name: { en: 'Education & Growth', 'zh-TW': '學習進修' }, icon: '📚', color: '#BF9F5F', bg: 'rgba(191, 159, 95, 0.15)' },
+    { id: 'health', name: { en: 'Health & Medical', 'zh-TW': '醫療保健' }, icon: '💊', color: '#AB5F5F', bg: 'rgba(171, 95, 95, 0.15)' },
+    { id: 'taxes', name: { en: 'Taxes & Fees', 'zh-TW': '稅費規費' }, icon: '🧾', color: '#8E8279', bg: 'rgba(142, 130, 121, 0.15)' },
+    { id: 'shopping', name: { en: 'Gadgets & Shopping', 'zh-TW': '3C 購物' }, icon: '🛍️', color: '#9E778E', bg: 'rgba(158, 119, 142, 0.15)' },
     { id: 'other_exp', name: { en: 'Other Expense', 'zh-TW': '其他支出' }, icon: '✨', color: '#788282', bg: 'rgba(120, 130, 130, 0.15)' }
   ],
   income: [
@@ -640,25 +675,34 @@ const CATEGORIES = {
 const AUTOCOMPLETE_PRESETS = {
   en: [
     { title: 'Large Iced Latte', category: 'drinks', type: 'expense', amount: 5.5, currency: 'USD' },
-    { title: 'Whole Foods Grocery', category: 'shopping', type: 'expense', amount: 68.5, currency: 'USD' },
+    { title: 'Artisan Sourdough Bread', category: 'drinks', type: 'expense', amount: 6.5, currency: 'USD' },
+    { title: 'Whole Foods Grocery', category: 'groceries', type: 'expense', amount: 68.5, currency: 'USD' },
+    { title: 'Paper Towels & Detergent', category: 'household', type: 'expense', amount: 24.5, currency: 'USD' },
+    { title: 'Flight Tickets to Tokyo', category: 'travel', type: 'expense', amount: 480, currency: 'USD' },
+    { title: 'Uniqlo Winter Jacket', category: 'apparel', type: 'expense', amount: 79.9, currency: 'USD' },
     { title: 'Metro Transit Pass', category: 'transport', type: 'expense', amount: 35, currency: 'USD' },
     { title: 'Uber Ride', category: 'transport', type: 'expense', amount: 24, currency: 'USD' },
     { title: 'DoorDash Lunch Delivery', category: 'food', type: 'expense', amount: 22.5, currency: 'USD' },
     { title: 'Steam Game Sale', category: 'entertainment', type: 'expense', amount: 39.99, currency: 'USD' },
+    { title: 'Annual Property / Income Tax', category: 'taxes', type: 'expense', amount: 350, currency: 'USD' },
     { title: 'High-Yield Savings Interest', category: 'interest', type: 'income', amount: 48.5, currency: 'USD' },
     { title: 'Stock Dividend', category: 'invest', type: 'income', amount: 350, currency: 'USD' },
     { title: 'Project Performance Bonus', category: 'bonus', type: 'income', amount: 1500, currency: 'USD' }
   ],
   'zh-TW': [
     { title: '中杯燕麥熱拿鐵', category: 'drinks', type: 'expense', amount: 85, currency: 'TWD' },
-    { title: '大杯黑咖啡', category: 'drinks', type: 'expense', amount: 65, currency: 'TWD' },
-    { title: '全聯日常採買', category: 'shopping', type: 'expense', amount: 650, currency: 'TWD' },
+    { title: '法式可頌麵包', category: 'drinks', type: 'expense', amount: 65, currency: 'TWD' },
+    { title: '全聯生鮮買菜', category: 'groceries', type: 'expense', amount: 560, currency: 'TWD' },
+    { title: '好市多衛生紙與洗衣精', category: 'household', type: 'expense', amount: 890, currency: 'TWD' },
+    { title: '日本東京機票訂位', category: 'travel', type: 'expense', amount: 13500, currency: 'TWD' },
+    { title: 'Uniqlo 保暖發熱衣', category: 'apparel', type: 'expense', amount: 990, currency: 'TWD' },
     { title: '中油加油', category: 'transport', type: 'expense', amount: 150, currency: 'TWD' },
     { title: '地鐵通勤週票', category: 'transport', type: 'expense', amount: 350, currency: 'TWD' },
     { title: 'Uber 乘車', category: 'transport', type: 'expense', amount: 240, currency: 'TWD' },
     { title: '週末朋友聚餐', category: 'food', type: 'expense', amount: 580, currency: 'TWD' },
     { title: '外送午餐便當', category: 'food', type: 'expense', amount: 180, currency: 'TWD' },
     { title: 'Steam 遊戲特價', category: 'entertainment', type: 'expense', amount: 590, currency: 'TWD' },
+    { title: '年度綜合所得稅/房屋稅', category: 'taxes', type: 'expense', amount: 4500, currency: 'TWD' },
     { title: '銀行活存/定存利息', category: 'interest', type: 'income', amount: 35, currency: 'TWD' },
     { title: '股票股利入帳', category: 'invest', type: 'income', amount: 3500, currency: 'TWD' },
     { title: '專案獎金', category: 'bonus', type: 'income', amount: 10000, currency: 'TWD' }
@@ -771,19 +815,52 @@ function resolveItemIcon(category, title, fallbackIcon = '✨') {
   if (/beer|wine|cocktail|bar|pub|whiskey|sake|酒|啤酒|調酒|居酒屋|微醺/.test(t)) {
     return '🍺';
   }
+  // Bakery, Desserts & Afternoon Tea
+  if (/bread|bakery|cake|dessert|pastry|croissant|donut|toast|cookie|waffle|麵包|烘焙|蛋糕|甜點|點心|泡芙|甜甜圈|吐司|鬆餅|餅乾|下午茶/.test(t)) {
+    return '🥐';
+  }
+
+  // Travel & Vacation (hotels, flights, tour tickets)
+  if (category === 'travel' || /travel|trip|hotel|hostel|resort|airbnb|tour|vacation|sightseeing|luggage|passport|旅遊|旅行|飯店|旅館|民宿|住宿|景點|行程|渡假|度假|出國|一日遊/.test(t)) {
+    if (/hotel|hostel|resort|airbnb|飯店|旅館|住宿|民宿|訂房/.test(t)) return '🏨';
+    if (/flight|airline|plane|airport|機票|航空|飛機/.test(t)) return '✈️';
+    if (/ticket|pass|tour|門票|景點|行程|票券/.test(t)) return '🎫';
+    return '✈️';
+  }
+
+  // Taxes & Government Fees
+  if (category === 'taxes' || /tax|duty|fee|fine|license|levy|所得稅|綜所稅|房屋稅|地價稅|牌照稅|燃料費|稅|規費|罰單|印花稅/.test(t)) {
+    return '🧾';
+  }
+
+  // Household & Daily Essentials
+  if (category === 'household' || (!['shopping', 'travel'].includes(category) && /tissue|shampoo|soap|detergent|towel|clean|toilet|toothpaste|衛生紙|洗髮|沐浴|洗衣精|洗碗精|清潔劑|牙膏|毛巾|垃圾袋|掃具|日用品/.test(t))) {
+    return '🧻';
+  }
+
+  // Apparel & Beauty / Personal Care
+  if (category === 'apparel' || (!['shopping', 'travel'].includes(category) && /clothes|clothing|shirt|pants|dress|shoes|jacket|uniqlo|zara|cosmetic|skincare|makeup|haircut|salon|beauty|衣服|服飾|褲|洋裝|外套|鞋|保養品|化妝|彩妝|防曬|面霜|口紅|剪髮|理髮|美甲|染髮/.test(t))) {
+    if (/cosmetic|skincare|makeup|beauty|保養|化妝|彩妝|口紅|乳液|精華|防曬/.test(t)) return '💄';
+    if (/haircut|salon|barber|剪髮|理髮|美髮|美甲|燙髮|染髮/.test(t)) return '✂️';
+    return '👗';
+  }
+
+  // Groceries & Fresh Cooking Ingredients
+  if (category === 'groceries' || (!['shopping', 'apparel', 'household', 'travel'].includes(category) && /grocery|market|supermarket|vegetable|fruit|meat|seafood|cooking|食材|買菜|生鮮|蔬菜|水果|全聯|家樂福|好市多|costco|px mart|大潤發|愛買|菜市場|傳統市場|肉品|海鮮/.test(t))) {
+    return '🛒';
+  }
 
   // Food & Meals
-  if (category === 'food' || /food|meal|dinner|lunch|breakfast|brunch|burger|sandwich|pizza|sushi|ramen|noodle|pasta|steak|rice|bento|salad|snack|restaurant|餐|飯|麵|午餐|晚餐|早餐|早午餐|聚餐|便當|火鍋|壽司|拉麵|牛排|披薩|漢堡|炸雞|水餃|點心|夜市|小吃/.test(t)) {
+  if (category === 'food' || (!['travel', 'groceries', 'household', 'apparel', 'taxes', 'shopping', 'housing'].includes(category) && !/飯店|旅館|民宿|住宿/.test(t) && /food|meal|dinner|lunch|breakfast|brunch|burger|sandwich|pizza|sushi|ramen|noodle|pasta|steak|rice|bento|salad|snack|restaurant|餐|飯|麵|午餐|晚餐|早餐|早午餐|聚餐|便當|火鍋|壽司|拉麵|牛排|披薩|漢堡|炸雞|水餃|夜市|小吃/.test(t))) {
     if (/burger|hamburger|漢堡|麥當勞|肯德基|fast food/.test(t)) return '🍔';
     if (/noodle|ramen|pasta|spaghetti|麵|拉麵|義大利麵|牛肉麵/.test(t)) return '🍜';
     if (/pizza|披薩|比薩/.test(t)) return '🍕';
     if (/sushi|japanese|壽司|生魚片|日料/.test(t)) return '🍣';
     if (/bento|便當/.test(t)) return '🍱';
-    if (/bread|bakery|cake|dessert|麵包|烘焙|蛋糕|甜點/.test(t)) return '🥐';
     return '🍽️';
   }
 
-  // Transportation (public transit vs driving vs taxi vs bike)
+  // Transportation (public transit vs driving vs taxi vs bike vs car maintenance)
   if (category === 'transport' || /metro|subway|transit|bus|train|mrt|uber|taxi|gas|fuel|flight|air|parking|traffic|交通|通勤|車/.test(t)) {
     if (/metro|subway|mrt|train|rail|pass|ticket|transit|地鐵|捷運|高鐵|火車|台鐵|電車|週票|月票|票|悠遊卡|一卡通/.test(t)) return '🚇';
     if (/bus|coach|公車|客運|巴士/.test(t)) return '🚌';
@@ -791,31 +868,26 @@ function resolveItemIcon(category, title, fallbackIcon = '✨') {
     if (/bike|bicycle|youbike|ubike|單車|腳踏車|自行車/.test(t)) return '🚲';
     if (/gas|fuel|petrol|oil|加油|中油|台塑/.test(t)) return '⛽';
     if (/parking|parking fee|停車|車位/.test(t)) return '🅿️';
+    if (/maintenance|repair|tire|service|保養|修車|車輛保養|驗車/.test(t)) return '🔧';
     if (/flight|plane|airline|airport|機票|航空|飛機/.test(t)) return '✈️';
     return '🚗';
-  }
-
-  // Shopping (groceries/supermarket vs clothing vs electronics)
-  if (category === 'shopping' || /grocery|supermarket|market|mall|amazon|store|購物|採買|超市/.test(t)) {
-    if (/supermarket|grocery|market|foods|costco|px mart|超市|量販|全聯|家樂福|好市多|買菜|食材|日常補貨/.test(t)) return '🛒';
-    if (/clothes|clothing|shirt|shoes|apparel|uniqlo|zara|衣服|服飾|鞋|外套/.test(t)) return '👕';
-    if (/apple|iphone|ipad|mac|electronic|gadget|3c|手機|電腦/.test(t)) return '📱';
-    return '🛍️';
   }
 
   // Entertainment
   if (category === 'entertainment' || /game|stream|movie|cinema|netflix|spotify|youtube|娛樂|休閒/.test(t)) {
     if (/netflix|disney|movie|cinema|film|theater|hbo|tv|電影|影集|戲院|串流/.test(t)) return '🎬';
     if (/spotify|music|concert|apple music|音樂|演唱會|k歌|ktv/.test(t)) return '🎵';
+    if (/exhibition|expo|museum|gallery|展覽|看展|美術館|博覽會/.test(t)) return '🎨';
     if (/game|steam|playstation|switch|xbox|nintendo|遊戲|電玩/.test(t)) return '🎮';
     return '🎮';
   }
 
   // Housing & Utilities
-  if (category === 'housing' || /rent|utility|water|electric|power|gas|internet|wifi|房租|水電|水費|電費/.test(t)) {
+  if (category === 'housing' || /rent|mortgage|utility|water|electric|power|gas|internet|wifi|phone|telecom|房租|房貸|水電|水費|電費|瓦斯|電話費|話費|網費|寬頻|電信/.test(t)) {
     if (/water|水費/.test(t)) return '💧';
     if (/electric|power|energy|電費/.test(t)) return '⚡';
-    if (/wifi|internet|telecom|broadband|網費|網路|寬頻|電信/.test(t)) return '🌐';
+    if (/wifi|internet|telecom|broadband|phone|mobile|網費|網路|寬頻|電信|話費|電話費/.test(t)) return '🌐';
+    if (/mortgage|房貸/.test(t)) return '🏠';
     if (/rent|apartment|lease|房租|租金|公寓/.test(t)) return '🏠';
     return '🏠';
   }
@@ -830,6 +902,12 @@ function resolveItemIcon(category, title, fallbackIcon = '✨') {
   // Education
   if (category === 'education' || /book|course|study|class|tutor|lesson|書|課程|學習|進修|學費/.test(t)) {
     return '📚';
+  }
+
+  // Gadgets & Shopping
+  if (category === 'shopping' || /shopping|apple|iphone|ipad|mac|electronic|gadget|3c|device|appliance|電腦|手機|平板|筆電|耳機|相機|家電|購物/.test(t)) {
+    if (/apple|iphone|ipad|mac|phone|laptop|pc|electronic|gadget|3c|手機|電腦|筆電|平板|耳機|相機/.test(t)) return '📱';
+    return '🛍️';
   }
 
   // Income sources

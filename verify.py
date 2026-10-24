@@ -105,6 +105,24 @@ def check_business_logic():
     const healthIcon = resolveItemIcon('health', '常備保健品定期方案', '💊');
     if (healthIcon !== '💊') throw new Error('resolveItemIcon health failed: got ' + healthIcon);
 
+    const travelIcon = resolveItemIcon('travel', '日本東京飯店住宿', '✈️');
+    if (travelIcon !== '🏨') throw new Error('resolveItemIcon travel failed: got ' + travelIcon);
+
+    const groceryIcon = resolveItemIcon('groceries', '全聯生鮮蔬菜', '🛒');
+    if (groceryIcon !== '🛒') throw new Error('resolveItemIcon groceries failed: got ' + groceryIcon);
+
+    const householdIcon = resolveItemIcon('household', '好市多三層抽取衛生紙', '🧻');
+    if (householdIcon !== '🧻') throw new Error('resolveItemIcon household failed: got ' + householdIcon);
+
+    const beautyIcon = resolveItemIcon('apparel', '專櫃保養品乳液', '👗');
+    if (beautyIcon !== '💄') throw new Error('resolveItemIcon apparel/beauty failed: got ' + beautyIcon);
+
+    const taxIcon = resolveItemIcon('taxes', '年度綜合所得稅繳納', '🧾');
+    if (taxIcon !== '🧾') throw new Error('resolveItemIcon taxes failed: got ' + taxIcon);
+
+    const dessertIcon = resolveItemIcon('drinks', '法式草莓千層蛋糕', '☕');
+    if (dessertIcon !== '🥐') throw new Error('resolveItemIcon dessert failed: got ' + dessertIcon);
+
     'OK'
     """
     proc = subprocess.run(['osascript', '-l', 'JavaScript', '-e', test_logic], capture_output=True, text=True)
