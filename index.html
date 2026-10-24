@@ -7,7 +7,7 @@
   
   <!-- PWA Meta Tags -->
   <link rel="manifest" href="./manifest.json">
-  <meta name="theme-color" content="#5B7C75">
+  <meta name="theme-color" content="#638881">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="icon" type="image/svg+xml" href="./icon.svg">
@@ -23,7 +23,7 @@
           colors: {
             indigo: {
               50: 'rgb(var(--pf-primary-rgb) / 0.12)',
-              100: 'rgb(var(--pf-primary-rgb) / 0.2)',
+              100: '#F1F5F9',
               200: 'rgb(var(--pf-primary-rgb) / 0.35)',
               300: 'rgb(var(--pf-primary-rgb) / 0.5)',
               400: 'rgb(var(--pf-primary-rgb) / 0.7)',
@@ -35,16 +35,18 @@
               950: 'rgb(var(--pf-primary-dark-rgb) / 0.4)',
             },
             emerald: {
-              300: 'rgb(var(--pf-income-rgb) / 0.65)',
-              400: 'rgb(var(--pf-income-rgb) / 0.85)',
-              500: 'rgb(var(--pf-income-rgb) / <alpha-value>)',
-              600: 'rgb(var(--pf-income-rgb) / <alpha-value>)',
+              200: '#A7F3D0',
+              300: '#6EE7B7',
+              400: '#34D399',
+              500: 'var(--pf-income)',
+              600: 'rgb(var(--pf-income-rgb) / 0.9)',
             },
             rose: {
-              300: 'rgb(var(--pf-expense-rgb) / 0.65)',
-              400: 'rgb(var(--pf-expense-rgb) / 0.85)',
-              500: 'rgb(var(--pf-expense-rgb) / <alpha-value>)',
-              600: 'rgb(var(--pf-expense-rgb) / <alpha-value>)',
+              200: '#FECDD3',
+              300: '#FDA4AF',
+              400: '#FB7185',
+              500: 'var(--pf-expense)',
+              600: 'rgb(var(--pf-expense-rgb) / 0.9)',
             },
             pocket: {
               primary: 'var(--pf-primary, #5B7C75)',
@@ -63,10 +65,10 @@
   </script>
   <style>
     :root {
-      --pf-primary: #5B7C75;
-      --pf-primary-rgb: 91 124 117;
-      --pf-primary-dark: #4A6862;
-      --pf-primary-dark-rgb: 74 104 98;
+      --pf-primary: #638881;
+      --pf-primary-rgb: 99 136 129;
+      --pf-primary-dark: #50716A;
+      --pf-primary-dark-rgb: 80 113 106;
       --pf-income: #5E8C78;
       --pf-income-rgb: 94 140 120;
       --pf-expense: #B86968;
@@ -214,37 +216,43 @@
       <!-- ================= LEFT PANE (Dashboard & Donut Chart) ================= -->
       <section class="md:col-span-5 lg:col-span-5 space-y-4">
         
-        <!-- Net Balance Card (Solid Signature Brand Anchor) -->
-        <div class="relative overflow-hidden rounded-3xl p-6 bg-indigo-600 dark:bg-indigo-600 text-white shadow-lg shadow-indigo-600/15">
+        <!-- Net Balance Card (Refined Luminous Morandi Anchor) -->
+        <div class="relative overflow-hidden rounded-3xl p-6 bg-gradient-to-br from-indigo-500 via-indigo-600 to-indigo-700/90 text-white shadow-xl shadow-indigo-600/15 border border-white/20">
+          <!-- Ambient lighting blur for lightness & depth -->
+          <div class="absolute -top-12 -right-12 w-48 h-48 rounded-full bg-white/15 blur-2xl pointer-events-none"></div>
+          <div class="absolute -bottom-8 -left-8 w-36 h-36 rounded-full bg-white/10 blur-xl pointer-events-none"></div>
+
           <div class="relative z-10">
-            <div class="flex items-center justify-between text-indigo-100 text-xs font-semibold uppercase tracking-wider">
+            <div class="flex items-center justify-between text-white/95 text-xs font-bold uppercase tracking-wider">
               <span id="monthly-balance-title">Monthly Balance (Net Savings)</span>
-              <span id="balance-badge" class="px-2.5 py-0.5 rounded-full bg-white/20 text-[11px] font-bold backdrop-blur-sm">Healthy ✨</span>
+              <span id="balance-badge" class="px-2.5 py-0.5 rounded-full bg-white/20 text-white text-[11px] font-bold backdrop-blur-sm">Healthy ✨</span>
             </div>
 
-            <div class="mt-2 text-3xl sm:text-4xl font-extrabold tracking-tight">
+            <div class="mt-2 text-3xl sm:text-4xl font-extrabold tracking-tight text-white drop-shadow-sm">
               <span class="curr-symbol">$</span> <span id="net-balance">0.00</span>
             </div>
 
-            <!-- Income vs Expense Sub-cards -->
-            <div class="mt-6 grid grid-cols-2 gap-3 pt-4 border-t border-indigo-400/30">
-              <div class="bg-indigo-700/60 rounded-2xl p-3 border border-indigo-400/20">
-                <div class="flex items-center gap-1.5 text-emerald-300 text-xs font-semibold">
-                  <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-                  <span id="total-income-title">Total Income</span>
+            <!-- Income vs Expense Sub-cards (High Contrast Frosted Chips) -->
+            <div class="mt-6 grid grid-cols-2 gap-3 pt-4 border-t border-white/20">
+              <!-- Total Income Chip -->
+              <div class="bg-white/15 dark:bg-black/25 backdrop-blur-md rounded-2xl p-3.5 border border-white/25 shadow-sm">
+                <div class="flex items-center gap-1.5 text-xs font-bold">
+                  <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-sm shrink-0"></span>
+                  <span id="total-income-title" class="text-white font-bold tracking-wide">Total Income</span>
                 </div>
-                <div class="text-base sm:text-lg font-bold text-white mt-1">
-                  +<span class="curr-symbol text-xs font-medium mr-0.5">$</span><span id="total-income">0.00</span>
+                <div class="text-base sm:text-lg font-extrabold text-white mt-1.5 drop-shadow-sm">
+                  +<span class="curr-symbol text-xs font-semibold mr-0.5">$</span><span id="total-income">0.00</span>
                 </div>
               </div>
 
-              <div class="bg-indigo-700/60 rounded-2xl p-3 border border-indigo-400/20">
-                <div class="flex items-center gap-1.5 text-rose-300 text-xs font-semibold">
-                  <span class="w-2 h-2 rounded-full bg-rose-400"></span>
-                  <span id="total-expense-title">Total Expense</span>
+              <!-- Total Expense Chip -->
+              <div class="bg-white/15 dark:bg-black/25 backdrop-blur-md rounded-2xl p-3.5 border border-white/25 shadow-sm">
+                <div class="flex items-center gap-1.5 text-xs font-bold">
+                  <span class="w-2.5 h-2.5 rounded-full bg-rose-400 shadow-sm shrink-0"></span>
+                  <span id="total-expense-title" class="text-white font-bold tracking-wide">Total Expense</span>
                 </div>
-                <div class="text-base sm:text-lg font-bold text-white mt-1">
-                  -<span class="curr-symbol text-xs font-medium mr-0.5">$</span><span id="total-expense">0.00</span>
+                <div class="text-base sm:text-lg font-extrabold text-white mt-1.5 drop-shadow-sm">
+                  -<span class="curr-symbol text-xs font-semibold mr-0.5">$</span><span id="total-expense">0.00</span>
                 </div>
               </div>
             </div>
