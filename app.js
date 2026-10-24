@@ -100,7 +100,7 @@ const I18N = {
     modalExpenseTab: 'Expense -',
     modalIncomeTab: 'Income +',
     amountLabel: 'Select Currency & Enter Amount',
-    descLabel: 'Description / Title',
+    descLabel: 'Description / Title (Optional)',
     descHint: '(Smart autocomplete enabled)',
     descPlaceholder: 'e.g., Latte, Groceries, Metro...',
     categoryLabel: 'Select Category',
@@ -275,7 +275,7 @@ const I18N = {
     modalExpenseTab: '支出 -',
     modalIncomeTab: '收入 +',
     amountLabel: '選擇幣別與輸入金額',
-    descLabel: '備註 / 項目名稱',
+    descLabel: '備註 / 項目名稱 (選填)',
     descHint: '(支援智慧自動填入)',
     descPlaceholder: '例如：拿鐵、全聯、捷運...',
     categoryLabel: '選擇類別',
@@ -1774,12 +1774,13 @@ function initEvents() {
         let recId = state.transactions[idx].recurringId;
 
         if (isRecurring) {
+          const recTitle = title || getCategoryMeta(state.modalType, state.selectedCategory).name;
           if (recId) {
             const rIdx = state.recurring.findIndex(r => r.id === recId);
             if (rIdx !== -1) {
               state.recurring[rIdx] = {
                 ...state.recurring[rIdx],
-                title,
+                title: recTitle,
                 currency,
                 amount,
                 type: state.modalType,
@@ -1788,14 +1789,14 @@ function initEvents() {
                 day: recDay
               };
               if (state.lang === 'zh-TW') {
-                state.recurring[rIdx].title_tw = title;
+                state.recurring[rIdx].title_tw = recTitle;
               } else {
-                state.recurring[rIdx].title = title;
+                state.recurring[rIdx].title = recTitle;
               }
             } else {
               const newRule = {
                 id: recId,
-                title,
+                title: recTitle,
                 currency,
                 amount,
                 type: state.modalType,
@@ -1803,14 +1804,14 @@ function initEvents() {
                 freq: recFreq,
                 day: recDay
               };
-              if (state.lang === 'zh-TW') newRule.title_tw = title;
+              if (state.lang === 'zh-TW') newRule.title_tw = recTitle;
               state.recurring.push(newRule);
             }
           } else {
             recId = 'rec_' + Date.now();
             const newRule = {
               id: recId,
-              title,
+              title: recTitle,
               currency,
               amount,
               type: state.modalType,
@@ -1818,7 +1819,7 @@ function initEvents() {
               freq: recFreq,
               day: recDay
             };
-            if (state.lang === 'zh-TW') newRule.title_tw = title;
+            if (state.lang === 'zh-TW') newRule.title_tw = recTitle;
             state.recurring.push(newRule);
           }
         } else {
@@ -1850,10 +1851,11 @@ function initEvents() {
     } else {
       let recId = undefined;
       if (isRecurring) {
+        const recTitle = title || getCategoryMeta(state.modalType, state.selectedCategory).name;
         recId = 'rec_' + Date.now();
         const newRule = {
           id: recId,
-          title,
+          title: recTitle,
           currency,
           amount,
           type: state.modalType,
@@ -1862,7 +1864,7 @@ function initEvents() {
           day: recDay
         };
         if (state.lang === 'zh-TW') {
-          newRule.title_tw = title;
+          newRule.title_tw = recTitle;
         }
         state.recurring.push(newRule);
       }
@@ -2639,7 +2641,9 @@ function renderTransactions() {
     const q = state.searchQuery.toLowerCase();
     list = list.filter(t => {
       const title = getItemTitle(t).toLowerCase();
-      return title.includes(q);
+      const meta = getCategoryMeta(t.type, t.category, title);
+      const catName = meta.name.toLowerCase();
+      return title.includes(q) || catName.includes(q);
     });
   }
 
@@ -2705,10 +2709,10 @@ function renderTransactions() {
             </span>
             <div>
               <div class="text-xs font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
-                ${title}
+                ${title || meta.name}
                 ${item.recurringId ? `<span class="text-[9px] px-1.5 py-0.5 rounded-full bg-indigo-50 text-indigo-500 font-semibold dark:bg-indigo-950 dark:text-indigo-400">${dict.recurringBadge}</span>` : ''}
               </div>
-              <div class="text-[10px] text-slate-400 font-medium">${meta.name}</div>
+              ${title ? `<div class="text-[10px] text-slate-400 font-medium">${meta.name}</div>` : ''}
             </div>
           </div>
 
@@ -2816,7 +2820,8 @@ function copyAIPrompt() {
 
     const recurringLines = state.recurring.map(r => {
       const isExp = r.type === 'expense';
-      const title = getItemTitle(r);
+      const cat = getCategoryMeta(r.type, r.category);
+      const title = getItemTitle(r) || cat.name;
       return `- [${isExp ? 'Fixed Expense' : 'Fixed Income'}] ${title}: Day ${r.day} each month ${sym}${formatMoney(r.amount)}`;
     }).join('\n') || '- No recurring items configured';
 
@@ -2824,14 +2829,19 @@ function copyAIPrompt() {
       .filter(t => t.type === 'expense')
       .sort((a, b) => Number(b.amount) - Number(a.amount))
       .slice(0, 5)
-      .map((t, idx) => `${idx + 1}. ${getItemTitle(t)} (${t.date}): ${sym}${formatMoney(t.amount)}`)
+      .map((t, idx) => {
+        const cat = getCategoryMeta(t.type, t.category);
+        const title = getItemTitle(t) || cat.name;
+        return `${idx + 1}. ${title} (${t.date}): ${sym}${formatMoney(t.amount)}`;
+      })
       .join('\n') || 'None';
 
     const txListSample = monthTxs.slice(0, 25).map(t => {
       const sign = t.type === 'expense' ? '-' : '+';
       const cat = getCategoryMeta(t.type, t.category);
       const title = getItemTitle(t);
-      return `- ${t.date} | ${title} (${cat.name}) | ${sign}${sym}${formatMoney(t.amount)}`;
+      const displayDesc = title ? `${title} (${cat.name})` : cat.name;
+      return `- ${t.date} | ${displayDesc} | ${sign}${sym}${formatMoney(t.amount)}`;
     }).join('\n') || 'No records for this month';
 
     promptText = `# Personal Financial Review & Budget Analysis Request (from PocketFlow)
@@ -2881,7 +2891,8 @@ Thank you! Please provide a structured, friendly, and professional response in E
 
     const recurringLines = state.recurring.map(r => {
       const isExp = r.type === 'expense';
-      const title = getItemTitle(r);
+      const cat = getCategoryMeta(r.type, r.category);
+      const title = getItemTitle(r) || cat.name;
       return `- [${isExp ? '固定支出' : '固定收入'}] ${title}: 每月 ${r.day} 號 ${sym}${formatMoney(r.amount)}`;
     }).join('\n') || '- 目前無設定固定週期收支';
 
@@ -2889,14 +2900,19 @@ Thank you! Please provide a structured, friendly, and professional response in E
       .filter(t => t.type === 'expense')
       .sort((a, b) => Number(b.amount) - Number(a.amount))
       .slice(0, 5)
-      .map((t, idx) => `${idx + 1}. ${getItemTitle(t)} (${t.date}): ${sym}${formatMoney(t.amount)}`)
+      .map((t, idx) => {
+        const cat = getCategoryMeta(t.type, t.category);
+        const title = getItemTitle(t) || cat.name;
+        return `${idx + 1}. ${title} (${t.date}): ${sym}${formatMoney(t.amount)}`;
+      })
       .join('\n') || '無';
 
     const txListSample = monthTxs.slice(0, 25).map(t => {
       const sign = t.type === 'expense' ? '-' : '+';
       const cat = getCategoryMeta(t.type, t.category);
       const title = getItemTitle(t);
-      return `- ${t.date} | ${title} (${cat.name}) | ${sign}${sym}${formatMoney(t.amount)}`;
+      const displayDesc = title ? `${title} (${cat.name})` : cat.name;
+      return `- ${t.date} | ${displayDesc} | ${sign}${sym}${formatMoney(t.amount)}`;
     }).join('\n') || '本月尚無明細';
 
     promptText = `# 財務健檢與預算分析請求 (來自 PocketFlow 記帳本)
