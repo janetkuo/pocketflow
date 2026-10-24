@@ -391,6 +391,51 @@
             class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/80 rounded-2xl text-xs text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700/80 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
         </div>
 
+        <!-- Recurring Option Toggle Card (Default: No) -->
+        <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 transition-all">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+              <span class="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+              </span>
+              <div>
+                <div id="modal-rec-title" class="text-xs font-bold text-slate-800 dark:text-slate-100">Recurring Transaction</div>
+                <div id="modal-rec-desc" class="text-[10px] text-slate-400">Auto-repeat every month or week</div>
+              </div>
+            </div>
+
+            <!-- Small Toggle Button (Default: No) -->
+            <div class="inline-flex p-1 bg-slate-200/70 dark:bg-slate-700/70 rounded-xl items-center">
+              <button type="button" id="modal-rec-no-btn" class="px-3 py-1 rounded-lg text-xs font-bold bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition">
+                No
+              </button>
+              <button type="button" id="modal-rec-yes-btn" class="px-3 py-1 rounded-lg text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition">
+                Yes
+              </button>
+            </div>
+          </div>
+
+          <!-- Extended Recurring Options (Hidden by Default) -->
+          <div id="modal-recurring-fields" class="hidden mt-3 pt-3 border-t border-slate-200/60 dark:border-slate-700/60 space-y-2.5">
+            <div class="grid grid-cols-2 gap-2.5">
+              <div>
+                <label id="modal-rec-freq-label" class="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1">Frequency</label>
+                <select id="modal-rec-freq" class="w-full px-3 py-2 bg-white dark:bg-slate-800 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                  <option id="modal-rec-freq-monthly" value="monthly">Monthly</option>
+                  <option id="modal-rec-freq-weekly" value="weekly">Weekly</option>
+                </select>
+              </div>
+              <div>
+                <label id="modal-rec-day-label" class="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1">Repeat Day (1-31)</label>
+                <input id="modal-rec-day" type="number" min="1" max="31" value="1" class="w-full px-3 py-2 bg-white dark:bg-slate-800 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              </div>
+            </div>
+            <div id="modal-rec-help-text" class="text-[10px] text-indigo-500 dark:text-indigo-400 font-medium leading-tight">
+              💡 Automatically creates a recurring rule. Future due dates will alert you automatically.
+            </div>
+          </div>
+        </div>
+
         <!-- Submit Button -->
         <button id="modal-submit-btn" type="submit" class="w-full py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm shadow-md shadow-indigo-600/25 hover:opacity-95 active:scale-98 transition">
           Save Transaction
@@ -413,6 +458,16 @@
         </div>
         <button id="close-recurring-modal-btn" class="p-2 text-slate-400 hover:text-slate-600">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <!-- Quick Add Tip & Shortcut -->
+      <div class="mt-3 flex items-center justify-between p-3 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-100/80 dark:border-indigo-900/50">
+        <div id="rec-quick-add-tip" class="text-[11px] text-indigo-700 dark:text-indigo-300 font-medium">
+          💡 You can now set recurring transactions directly inside Quick Add!
+        </div>
+        <button type="button" id="rec-quick-add-btn" class="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-sm transition whitespace-nowrap ml-2">
+          + Quick Add
         </button>
       </div>
 
@@ -447,7 +502,14 @@
             <option id="rec-opt-monthly" value="monthly">Monthly</option>
             <option id="rec-opt-weekly" value="weekly">Weekly</option>
           </select>
-          <input id="rec-day" type="number" min="1" max="31" placeholder="Day of month (1-31)" value="10" required class="px-3 py-2 bg-white dark:bg-slate-800 rounded-xl text-xs border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100">
+          <div class="flex items-center bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 px-2.5 py-2 focus-within:ring-2 focus-within:ring-indigo-500">
+            <label for="rec-day" class="text-xs font-semibold text-slate-500 dark:text-slate-400 whitespace-nowrap mr-1 flex items-center gap-1 shrink-0">
+              <svg class="w-3.5 h-3.5 text-indigo-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+              <span id="rec-day-label">Day</span>
+            </label>
+            <input id="rec-day" type="number" min="1" max="31" placeholder="1-31" value="10" required class="w-full bg-transparent text-xs text-slate-800 dark:text-slate-100 font-bold focus:outline-none min-w-0">
+            <span id="rec-day-suffix" class="text-xs text-slate-400 shrink-0 ml-1">of month</span>
+          </div>
         </div>
         <button id="rec-submit-btn" type="submit" class="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition">
           Add to Recurring List

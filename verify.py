@@ -96,6 +96,15 @@ def check_business_logic():
     const metroIcon = resolveItemIcon('transport', '地鐵通勤週票');
     if (metroIcon !== '🚇') throw new Error('resolveItemIcon metro failed: got ' + metroIcon);
 
+    const shoppingIcon = resolveItemIcon('shopping', '商場生活用品購物', '🛍️');
+    if (shoppingIcon !== '🛍️') throw new Error('resolveItemIcon shopping failed: got ' + shoppingIcon);
+
+    const gamingIcon = resolveItemIcon('entertainment', '遊戲娛樂月費訂閱', '🎮');
+    if (gamingIcon !== '🎮') throw new Error('resolveItemIcon gaming failed: got ' + gamingIcon);
+
+    const healthIcon = resolveItemIcon('health', '常備保健品定期方案', '💊');
+    if (healthIcon !== '💊') throw new Error('resolveItemIcon health failed: got ' + healthIcon);
+
     'OK'
     """
     proc = subprocess.run(['osascript', '-l', 'JavaScript', '-e', test_logic], capture_output=True, text=True)
