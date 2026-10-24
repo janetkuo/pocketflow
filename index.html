@@ -802,6 +802,17 @@
     </div>
   </div>
 
+  <!-- PWA Instant Update Notification Banner -->
+  <div id="pwa-update-banner" class="hidden fixed bottom-24 sm:bottom-6 left-1/2 -translate-x-1/2 z-50 max-w-sm w-[90%] sm:w-auto px-4 py-3 rounded-2xl bg-slate-900/95 dark:bg-slate-800/95 text-white shadow-2xl backdrop-blur-md border border-slate-700/80 flex items-center justify-between gap-3 transition-all duration-300">
+    <div class="flex items-center gap-2.5 min-w-0">
+      <span class="text-base shrink-0">✨</span>
+      <span id="pwa-update-text" class="text-xs font-semibold truncate">發現新版本！點擊立即載入最新功能</span>
+    </div>
+    <button id="pwa-update-btn" type="button" class="shrink-0 px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-sm transition active:scale-95">
+      更新
+    </button>
+  </div>
+
   <script src="./app.js"></script>
 </body>
 </html>

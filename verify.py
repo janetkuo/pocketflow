@@ -15,7 +15,7 @@ def check_js_syntax():
     # Test app.js
     app_test = """
     const localStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
-    const navigator = { serviceWorker: { register: () => Promise.resolve() } };
+    const navigator = { serviceWorker: { register: () => Promise.resolve(), addEventListener: () => {} } };
     const window = { addEventListener: () => {}, innerWidth: 1024, matchMedia: () => ({ matches: false }) };
     const document = {
       documentElement: { classList: { add: () => {}, remove: () => {}, toggle: () => {} } },
@@ -75,7 +75,7 @@ def check_business_logic():
     print("🔍 [3/3] Validating helper functions and core calculations...")
     test_logic = """
     const localStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
-    const navigator = { serviceWorker: { register: () => Promise.resolve() } };
+    const navigator = { serviceWorker: { register: () => Promise.resolve(), addEventListener: () => {} } };
     const window = { addEventListener: () => {}, innerWidth: 1024, matchMedia: () => ({ matches: false }) };
     const document = {
       documentElement: { classList: { add: () => {}, remove: () => {}, toggle: () => {} } },

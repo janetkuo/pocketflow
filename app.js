@@ -202,6 +202,9 @@ const I18N = {
     importInvalid: 'Invalid backup file format.',
     importError: 'Failed to parse JSON file.',
 
+    pwaUpdateText: 'New version ready! Tap to update',
+    pwaUpdateBtn: 'Update Now',
+
     paletteSettingsTitle: 'Appearance & Morandi Palette',
     paletteSettingsDesc: 'Choose your preferred Morandi color theme. Changes apply instantly:',
     paletteToggleTitle: 'Color Palette / 莫蘭迪風格色盤',
@@ -380,6 +383,9 @@ const I18N = {
     importSuccess: '🎉 備份還原成功！',
     importInvalid: '檔案格式不正確，找不到交易紀錄。',
     importError: '解析檔案失敗，請確認是有效的 JSON 備份檔。',
+
+    pwaUpdateText: '發現新版本！點擊立即載入最新功能',
+    pwaUpdateBtn: '立即更新',
 
     paletteSettingsTitle: '外觀風格與莫蘭迪色盤',
     paletteSettingsDesc: '挑選您喜愛的莫蘭迪色系，即時換膚且自動保存：',
@@ -1361,6 +1367,12 @@ function applyLanguage() {
 
   const reloadDemoBtn = document.getElementById('reload-demo-btn');
   if (reloadDemoBtn) reloadDemoBtn.textContent = dict.reloadDemoBtn;
+
+  const pwaUpdateText = document.getElementById('pwa-update-text');
+  if (pwaUpdateText) pwaUpdateText.textContent = dict.pwaUpdateText;
+
+  const pwaUpdateBtn = document.getElementById('pwa-update-btn');
+  if (pwaUpdateBtn) pwaUpdateBtn.textContent = dict.pwaUpdateBtn;
 
   // Re-render UI components with localized text
   renderCategoryPicker();
@@ -3840,21 +3852,83 @@ async function restoreFromGoogleDrive() {
   });
 }
 
-// Register Service Worker for PWA with active update checks
+// Register Service Worker for PWA with aggressive update checks & instant reload
 if ('serviceWorker' in navigator) {
+  let hadController = Boolean(navigator.serviceWorker.controller);
+  let refreshing = false;
+
+  function triggerPwaReload() {
+    if (refreshing) return;
+    refreshing = true;
+    window.location.reload();
+  }
+
+  function showPwaUpdateBanner() {
+    const banner = document.getElementById('pwa-update-banner');
+    if (banner) {
+      banner.classList.remove('hidden');
+    }
+  }
+
+  // When SW claims control, reload immediately if idle, or prompt user
+  if (typeof navigator.serviceWorker.addEventListener === 'function') {
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!hadController) {
+        hadController = true;
+        return;
+      }
+      // Check if user is actively entering an unsaved transaction
+      const modal = document.getElementById('add-modal');
+      const isModalOpen = modal && !modal.classList.contains('hidden');
+      const titleVal = document.getElementById('input-title') ? document.getElementById('input-title').value.trim() : '';
+      const amountVal = document.getElementById('input-amount') ? document.getElementById('input-amount').value.trim() : '';
+      const isDirty = isModalOpen && (Boolean(titleVal) || (Boolean(amountVal) && amountVal !== '0'));
+
+      if (isDirty) {
+        showPwaUpdateBanner();
+      } else {
+        triggerPwaReload();
+      }
+    });
+  }
+
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').then((reg) => {
+    // updateViaCache: 'none' bypasses HTTP caching for sw.js byte checks
+    navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }).then((reg) => {
       // Actively check for SW updates when page loads
       reg.update().catch(() => {});
 
-      // Re-check for updates whenever user returns to the app tab
+      // If an update is downloaded & ready
+      reg.addEventListener('updatefound', () => {
+        const newWorker = reg.installing;
+        if (newWorker) {
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              showPwaUpdateBanner();
+            }
+          });
+        }
+      });
+
+      // Re-check for updates whenever user returns to the app tab or focuses window
       document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') {
           reg.update().catch(() => {});
         }
       });
+      window.addEventListener('focus', () => {
+        reg.update().catch(() => {});
+      });
     }).catch(err => {
       console.log('SW registration note:', err);
     });
+  });
+
+  // Bind update button
+  document.addEventListener('DOMContentLoaded', () => {
+    const updateBtn = document.getElementById('pwa-update-btn');
+    if (updateBtn) {
+      updateBtn.addEventListener('click', triggerPwaReload);
+    }
   });
 }
