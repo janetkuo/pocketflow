@@ -109,6 +109,19 @@ const I18N = {
     editTxBtn: 'Edit',
     deleteTxBtn: 'Delete',
 
+    // Recurring in Add Modal
+    modalRecTitle: 'Recurring Transaction',
+    modalRecDesc: 'Auto-repeat every month or week',
+    modalRecNo: 'No',
+    modalRecYes: 'Yes',
+    modalRecFreqLabel: 'Frequency',
+    modalRecFreqMonthly: 'Monthly',
+    modalRecFreqWeekly: 'Weekly',
+    modalRecDayLabel: 'Repeat Day (1-31)',
+    modalRecHelpText: '💡 Automatically creates a recurring rule. Future due dates will alert you automatically.',
+    recQuickAddTip: '💡 You can now set recurring transactions directly inside Quick Add!',
+    recQuickAddBtn: '+ Quick Add',
+
     // Recurring Modal
     recurringModalTitle: 'Recurring Transactions',
     recurringModalDesc: 'Automatically track monthly fixed expenses (Rent, Subscriptions, Salary)',
@@ -120,7 +133,9 @@ const I18N = {
     recTypeIncome: 'Income (+)',
     recFreqMonthly: 'Monthly',
     recFreqWeekly: 'Weekly',
-    recDayPlaceholder: 'Day of month (1-31)',
+    recDayLabel: 'Day',
+    recDaySuffix: 'of month',
+    recDayPlaceholder: '1-31',
     addRecurringBtn: 'Add to Recurring List',
     updateRecurringBtn: 'Update Recurring Item',
     cancelEditBtn: 'Cancel',
@@ -263,6 +278,19 @@ const I18N = {
     editTxBtn: '編輯',
     deleteTxBtn: '刪除',
 
+    // Recurring in Add Modal
+    modalRecTitle: '固定週期收支 (Recurring)',
+    modalRecDesc: '每月或每週固定重複記錄',
+    modalRecNo: '否',
+    modalRecYes: '是',
+    modalRecFreqLabel: '週期頻率',
+    modalRecFreqMonthly: '每月固定',
+    modalRecFreqWeekly: '每週固定',
+    modalRecDayLabel: '固定扣款/入帳日 (1-31)',
+    modalRecHelpText: '💡 將同步建立固定週期規則，未來的扣款日系統會自動提醒與對帳。',
+    recQuickAddTip: '💡 現在可以直接在「快速記帳」中開啟週期設定！',
+    recQuickAddBtn: '+ 快速記帳新增',
+
     // Recurring Modal
     recurringModalTitle: '固定週期收支 (Recurring)',
     recurringModalDesc: '自動追蹤每月固定開銷 (房租、串流訂閱、薪資)',
@@ -274,7 +302,9 @@ const I18N = {
     recTypeIncome: '收入 (+)',
     recFreqMonthly: '每月固定',
     recFreqWeekly: '每週固定',
-    recDayPlaceholder: '每月幾號 (1-31)',
+    recDayLabel: '每月',
+    recDaySuffix: '號',
+    recDayPlaceholder: '1-31',
     addRecurringBtn: '加入定期清單',
     updateRecurringBtn: '更新定期項目',
     cancelEditBtn: '取消',
@@ -402,11 +432,11 @@ const AUTOCOMPLETE_PRESETS = {
 
 // Initial Sample Data (default English with Traditional Chinese localization)
 const DEMO_TRANSACTIONS = [
-  { id: 'tx_1', title: 'Supermarket Grocery Run', title_tw: '超市日常補貨', amount: 68.5, type: 'expense', category: 'shopping', date: '2026-10-17', currency: 'USD' },
+  { id: 'tx_1', title: 'Shopping & Essentials', title_tw: '商場生活用品購物', amount: 68.5, type: 'expense', category: 'shopping', date: '2026-10-17', currency: 'USD' },
   { id: 'tx_2', title: 'Oat Milk Latte', title_tw: '中杯燕麥熱拿鐵', amount: 5.75, type: 'expense', category: 'drinks', date: '2026-10-17', currency: 'USD' },
   { id: 'tx_3', title: 'Weekly Metro Pass', title_tw: '地鐵通勤週票', amount: 35, type: 'expense', category: 'transport', date: '2026-10-16', currency: 'USD' },
   { id: 'tx_4', title: 'Weekend Dinner with Friends', title_tw: '週末朋友聚餐', amount: 92, type: 'expense', category: 'food', date: '2026-10-15', currency: 'USD' },
-  { id: 'tx_5', title: 'Netflix Subscription', title_tw: 'Netflix 串流訂閱', amount: 15.99, type: 'expense', category: 'entertainment', date: '2026-10-15', recurringId: 'rec_netflix', currency: 'USD' },
+  { id: 'tx_5', title: 'Gaming & Entertainment Subscription', title_tw: '遊戲娛樂月費訂閱', amount: 15.99, type: 'expense', category: 'entertainment', date: '2026-10-15', recurringId: 'rec_netflix', currency: 'USD' },
   { id: 'tx_9', title: 'High-Yield Savings Interest', title_tw: '高利活存利息入帳', amount: 48.5, type: 'income', category: 'interest', date: '2026-10-12', currency: 'USD' },
   { id: 'tx_6', title: 'Monthly Salary Deposit', title_tw: '10月份薪資入帳', amount: 5200, type: 'income', category: 'salary', date: '2026-10-05', recurringId: 'rec_salary', currency: 'USD' },
   { id: 'tx_7', title: 'Apartment Rent & Utilities', title_tw: '公寓房租與水電', amount: 1650, type: 'expense', category: 'housing', date: '2026-10-10', recurringId: 'rec_rent', currency: 'USD' },
@@ -416,8 +446,8 @@ const DEMO_TRANSACTIONS = [
 const DEMO_RECURRING = [
   { id: 'rec_salary', title: 'Monthly Salary Deposit', title_tw: '每月薪資發放', amount: 5200, type: 'income', category: 'salary', freq: 'monthly', day: 5, currency: 'USD' },
   { id: 'rec_rent', title: 'Apartment Rent & Utilities', title_tw: '公寓房租與水電', amount: 1650, type: 'expense', category: 'housing', freq: 'monthly', day: 10, currency: 'USD' },
-  { id: 'rec_netflix', title: 'Netflix Subscription', title_tw: 'Netflix 串流訂閱', amount: 15.99, type: 'expense', category: 'entertainment', freq: 'monthly', day: 15, currency: 'USD' },
-  { id: 'rec_gym', title: 'Gym Membership', title_tw: '健身房月費', amount: 45, type: 'expense', category: 'health', freq: 'monthly', day: 25, currency: 'USD' }
+  { id: 'rec_netflix', title: 'Gaming & Entertainment Subscription', title_tw: '遊戲娛樂月費訂閱', amount: 15.99, type: 'expense', category: 'entertainment', freq: 'monthly', day: 15, currency: 'USD' },
+  { id: 'rec_gym', title: 'Health Supplement Plan', title_tw: '常備保健品定期方案', amount: 45, type: 'expense', category: 'health', freq: 'monthly', day: 25, currency: 'USD' }
 ];
 
 const isDemoMode = localStorage.getItem('pocketflow_is_demo') !== 'false';
@@ -447,8 +477,11 @@ let state = {
   searchQuery: '',
   modalType: 'expense',
   selectedCategory: 'food',
-  chartType: 'expense'
+  chartType: 'expense',
+  modalIsRecurring: false
 };
+
+let modalRecDayTouched = false;
 
 // Normalize demo items if user has demo state
 function normalizeDemoItems() {
@@ -456,17 +489,19 @@ function normalizeDemoItems() {
     state.transactions = state.transactions.map(tx => {
       const demo = DEMO_TRANSACTIONS.find(d => d.id === tx.id);
       if (demo) {
-        return { ...tx, title: demo.title, title_tw: demo.title_tw, currency: tx.currency || demo.currency };
+        return { ...tx, title: demo.title, title_tw: demo.title_tw, category: demo.category, currency: tx.currency || demo.currency };
       }
       return tx;
     });
     state.recurring = state.recurring.map(rec => {
       const demo = DEMO_RECURRING.find(d => d.id === rec.id);
       if (demo) {
-        return { ...rec, title: demo.title, title_tw: demo.title_tw, currency: rec.currency || demo.currency };
+        return { ...rec, title: demo.title, title_tw: demo.title_tw, category: demo.category, currency: rec.currency || demo.currency };
       }
       return rec;
     });
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state.transactions));
+    localStorage.setItem(RECURRING_KEY, JSON.stringify(state.recurring));
   }
 }
 
@@ -654,6 +689,25 @@ function getAutocompleteSuggestions(query) {
     }
   });
 
+  // Search through recurring rules
+  state.recurring.forEach(item => {
+    const title = getItemTitle(item);
+    if (title && title.toLowerCase().includes(q)) {
+      if (!map.has(title)) {
+        map.set(title, {
+          title,
+          category: item.category,
+          amount: item.amount,
+          type: item.type,
+          currency: item.currency || 'USD',
+          isRecurring: true,
+          freq: item.freq,
+          day: item.day
+        });
+      }
+    }
+  });
+
   // Search through transaction history
   state.transactions.forEach(item => {
     const title = getItemTitle(item);
@@ -808,6 +862,41 @@ function applyLanguage() {
   const modalSubmitBtn = document.getElementById('modal-submit-btn');
   if (modalSubmitBtn) modalSubmitBtn.textContent = isEditingTx ? dict.updateTransaction : dict.saveTransaction;
 
+  // Recurring Controls in Add Modal
+  const modalRecTitle = document.getElementById('modal-rec-title');
+  if (modalRecTitle) modalRecTitle.textContent = dict.modalRecTitle;
+
+  const modalRecDesc = document.getElementById('modal-rec-desc');
+  if (modalRecDesc) modalRecDesc.textContent = dict.modalRecDesc;
+
+  const modalRecNoBtn = document.getElementById('modal-rec-no-btn');
+  if (modalRecNoBtn) modalRecNoBtn.textContent = dict.modalRecNo;
+
+  const modalRecYesBtn = document.getElementById('modal-rec-yes-btn');
+  if (modalRecYesBtn) modalRecYesBtn.textContent = dict.modalRecYes;
+
+  const modalRecFreqLabel = document.getElementById('modal-rec-freq-label');
+  if (modalRecFreqLabel) modalRecFreqLabel.textContent = dict.modalRecFreqLabel;
+
+  const modalRecFreqMonthly = document.getElementById('modal-rec-freq-monthly');
+  if (modalRecFreqMonthly) modalRecFreqMonthly.textContent = dict.modalRecFreqMonthly;
+
+  const modalRecFreqWeekly = document.getElementById('modal-rec-freq-weekly');
+  if (modalRecFreqWeekly) modalRecFreqWeekly.textContent = dict.modalRecFreqWeekly;
+
+  const modalRecDayLabel = document.getElementById('modal-rec-day-label');
+  if (modalRecDayLabel) modalRecDayLabel.textContent = dict.modalRecDayLabel;
+
+  const modalRecHelpText = document.getElementById('modal-rec-help-text');
+  if (modalRecHelpText) modalRecHelpText.textContent = dict.modalRecHelpText;
+
+  // Recurring Modal Shortcut Tip & Button
+  const recQuickAddTip = document.getElementById('rec-quick-add-tip');
+  if (recQuickAddTip) recQuickAddTip.textContent = dict.recQuickAddTip;
+
+  const recQuickAddBtn = document.getElementById('rec-quick-add-btn');
+  if (recQuickAddBtn) recQuickAddBtn.textContent = dict.recQuickAddBtn;
+
   // Recurring Modal
   const recModalTitle = document.getElementById('rec-modal-title');
   if (recModalTitle) {
@@ -847,6 +936,12 @@ function applyLanguage() {
 
   const recDay = document.getElementById('rec-day');
   if (recDay) recDay.setAttribute('placeholder', dict.recDayPlaceholder);
+
+  const recDayLabel = document.getElementById('rec-day-label');
+  if (recDayLabel) recDayLabel.textContent = dict.recDayLabel;
+
+  const recDaySuffix = document.getElementById('rec-day-suffix');
+  if (recDaySuffix) recDaySuffix.textContent = dict.recDaySuffix;
 
   const recSubmitBtn = document.getElementById('rec-submit-btn');
   if (recSubmitBtn) recSubmitBtn.textContent = isEditingRec ? dict.updateRecurringBtn : dict.addRecurringBtn;
@@ -1060,22 +1155,33 @@ function initEvents() {
   });
 
   // Modal Open, Edit & Close
-  window.openModal = function() {
+  window.openModal = function(prefillRecurring = false) {
     document.getElementById('transaction-form').reset();
     document.getElementById('edit-id').value = '';
+    modalRecDayTouched = false;
     const dict = I18N[state.lang] || I18N.en;
     const modalHeading = document.getElementById('modal-heading-text');
     if (modalHeading) modalHeading.textContent = dict.modalNewTitle;
     const modalSubmitBtn = document.getElementById('modal-submit-btn');
     if (modalSubmitBtn) modalSubmitBtn.textContent = dict.saveTransaction;
 
-    document.getElementById('input-date').value = getLocalDateString();
+    const todayStr = getLocalDateString();
+    document.getElementById('input-date').value = todayStr;
     setModalType('expense');
     
     // Set default currency to last used in modal
     const lastCurr = localStorage.getItem(DEFAULT_CURR_KEY) || 'USD';
     const modalCurrSelect = document.getElementById('modal-currency-select');
     if (modalCurrSelect) modalCurrSelect.value = lastCurr;
+
+    setModalRecurring(Boolean(prefillRecurring));
+    const modalRecFreq = document.getElementById('modal-rec-freq');
+    if (modalRecFreq) modalRecFreq.value = 'monthly';
+    const modalRecDay = document.getElementById('modal-rec-day');
+    if (modalRecDay) {
+      const parts = todayStr.split('-');
+      modalRecDay.value = parts.length === 3 ? parseInt(parts[2], 10) : new Date().getDate();
+    }
 
     document.getElementById('add-modal').classList.remove('hidden');
     document.getElementById('add-modal').classList.add('flex');
@@ -1095,6 +1201,7 @@ function initEvents() {
 
     document.getElementById('transaction-form').reset();
     document.getElementById('edit-id').value = tx.id;
+    modalRecDayTouched = false;
 
     const modalHeading = document.getElementById('modal-heading-text');
     if (modalHeading) modalHeading.textContent = dict.modalEditTitle;
@@ -1114,18 +1221,77 @@ function initEvents() {
     setModalType(tx.type);
     selectCategory(tx.category);
 
+    const modalRecFreq = document.getElementById('modal-rec-freq');
+    const modalRecDay = document.getElementById('modal-rec-day');
+
+    if (tx.recurringId) {
+      setModalRecurring(true);
+      const rule = state.recurring.find(r => r.id === tx.recurringId);
+      if (rule) {
+        if (modalRecFreq) modalRecFreq.value = rule.freq || 'monthly';
+        if (modalRecDay) modalRecDay.value = rule.day || 1;
+      } else {
+        if (modalRecFreq) modalRecFreq.value = 'monthly';
+        if (modalRecDay) {
+          const d = tx.date ? parseInt(tx.date.split('-')[2], 10) : 1;
+          modalRecDay.value = d;
+        }
+      }
+    } else {
+      setModalRecurring(false);
+      if (modalRecFreq) modalRecFreq.value = 'monthly';
+      if (modalRecDay) {
+        const d = tx.date ? parseInt(tx.date.split('-')[2], 10) : 1;
+        modalRecDay.value = d;
+      }
+    }
+
     document.getElementById('add-modal').classList.remove('hidden');
     document.getElementById('add-modal').classList.add('flex');
     setTimeout(() => document.getElementById('input-amount').focus(), 100);
   };
 
-  document.getElementById('open-add-modal-btn').addEventListener('click', window.openModal);
-  document.getElementById('desktop-add-btn').addEventListener('click', window.openModal);
+  document.getElementById('open-add-modal-btn').addEventListener('click', () => window.openModal(false));
+  document.getElementById('desktop-add-btn').addEventListener('click', () => window.openModal(false));
   document.getElementById('close-add-modal-btn').addEventListener('click', window.closeModal);
 
   // Modal Type Switchers
   document.getElementById('type-expense-btn').addEventListener('click', () => setModalType('expense'));
   document.getElementById('type-income-btn').addEventListener('click', () => setModalType('income'));
+
+  // Recurring toggle buttons in Quick Add Modal
+  const modalRecNoBtn = document.getElementById('modal-rec-no-btn');
+  if (modalRecNoBtn) {
+    modalRecNoBtn.addEventListener('click', () => setModalRecurring(false));
+  }
+  const modalRecYesBtn = document.getElementById('modal-rec-yes-btn');
+  if (modalRecYesBtn) {
+    modalRecYesBtn.addEventListener('click', () => setModalRecurring(true));
+  }
+
+  // Date change syncs to recurring day
+  const inputDate = document.getElementById('input-date');
+  if (inputDate) {
+    inputDate.addEventListener('change', () => {
+      if (!modalRecDayTouched && inputDate.value) {
+        const parts = inputDate.value.split('-');
+        if (parts.length === 3) {
+          const d = parseInt(parts[2], 10);
+          const modalRecDay = document.getElementById('modal-rec-day');
+          if (modalRecDay && d >= 1 && d <= 31) {
+            modalRecDay.value = d;
+          }
+        }
+      }
+    });
+  }
+
+  const modalRecDayInput = document.getElementById('modal-rec-day');
+  if (modalRecDayInput) {
+    modalRecDayInput.addEventListener('input', () => {
+      modalRecDayTouched = true;
+    });
+  }
 
   // Autocomplete Input Handling
   const titleInput = document.getElementById('input-title');
@@ -1145,15 +1311,17 @@ function initEvents() {
       const typeLabel = item.type === 'expense' 
         ? (state.lang === 'en' ? 'Expense' : '支出') 
         : (state.lang === 'en' ? 'Income' : '收入');
+      const recBadge = item.isRecurring ? (state.lang === 'en' ? ' · 🔄 Recurring' : ' · 🔄 固定週期') : '';
 
       return `
         <div class="auto-item px-3 py-2.5 hover:bg-indigo-50 dark:hover:bg-slate-700/80 cursor-pointer flex items-center justify-between transition"
-             data-title="${item.title}" data-category="${item.category}" data-type="${item.type}" data-amount="${item.amount}" data-currency="${item.currency || 'USD'}">
+             data-title="${item.title}" data-category="${item.category}" data-type="${item.type}" data-amount="${item.amount}" data-currency="${item.currency || 'USD'}"
+             data-is-recurring="${item.isRecurring ? 'true' : 'false'}" data-freq="${item.freq || 'monthly'}" data-day="${item.day || ''}">
           <div class="flex items-center gap-2">
             <span class="w-7 h-7 rounded-lg flex items-center justify-center text-sm" style="background:${cat.bg}">${cat.icon}</span>
             <div>
               <div class="text-xs font-bold text-slate-800 dark:text-slate-100">${item.title}</div>
-              <div class="text-[10px] text-slate-400">${cat.name} · ${typeLabel}</div>
+              <div class="text-[10px] text-slate-400">${cat.name} · ${typeLabel}${recBadge}</div>
             </div>
           </div>
           <div class="text-xs font-semibold ${item.type === 'expense' ? 'text-rose-500' : 'text-emerald-500'}">
@@ -1181,6 +1349,14 @@ function initEvents() {
           modalCurrSelect.value = itemCurr;
         }
 
+        if (el.getAttribute('data-is-recurring') === 'true') {
+          setModalRecurring(true);
+          const f = el.getAttribute('data-freq');
+          const d = el.getAttribute('data-day');
+          if (f && document.getElementById('modal-rec-freq')) document.getElementById('modal-rec-freq').value = f;
+          if (d && document.getElementById('modal-rec-day')) document.getElementById('modal-rec-day').value = d;
+        }
+
         if (!document.getElementById('input-amount').value || document.getElementById('input-amount').value === '0') {
           document.getElementById('input-amount').value = recentAmt;
         }
@@ -1203,6 +1379,13 @@ function initEvents() {
     const amount = parseFloat(document.getElementById('input-amount').value) || 0;
     const date = document.getElementById('input-date').value;
     const currency = document.getElementById('modal-currency-select').value || 'USD';
+    const isRecurring = Boolean(state.modalIsRecurring);
+    const recFreq = document.getElementById('modal-rec-freq')?.value || 'monthly';
+    let recDay = parseInt(document.getElementById('modal-rec-day')?.value, 10);
+    if (isNaN(recDay) || recDay < 1) {
+      recDay = date ? parseInt(date.split('-')[2], 10) : 1;
+    }
+    if (recDay > 31) recDay = 31;
 
     // Remember currency for next time
     localStorage.setItem(DEFAULT_CURR_KEY, currency);
@@ -1210,6 +1393,60 @@ function initEvents() {
     if (editId) {
       const idx = state.transactions.findIndex(t => t.id === editId);
       if (idx !== -1) {
+        let recId = state.transactions[idx].recurringId;
+
+        if (isRecurring) {
+          if (recId) {
+            const rIdx = state.recurring.findIndex(r => r.id === recId);
+            if (rIdx !== -1) {
+              state.recurring[rIdx] = {
+                ...state.recurring[rIdx],
+                title,
+                currency,
+                amount,
+                type: state.modalType,
+                category: state.selectedCategory,
+                freq: recFreq,
+                day: recDay
+              };
+              if (state.lang === 'zh-TW') {
+                state.recurring[rIdx].title_tw = title;
+              } else {
+                state.recurring[rIdx].title = title;
+              }
+            } else {
+              const newRule = {
+                id: recId,
+                title,
+                currency,
+                amount,
+                type: state.modalType,
+                category: state.selectedCategory,
+                freq: recFreq,
+                day: recDay
+              };
+              if (state.lang === 'zh-TW') newRule.title_tw = title;
+              state.recurring.push(newRule);
+            }
+          } else {
+            recId = 'rec_' + Date.now();
+            const newRule = {
+              id: recId,
+              title,
+              currency,
+              amount,
+              type: state.modalType,
+              category: state.selectedCategory,
+              freq: recFreq,
+              day: recDay
+            };
+            if (state.lang === 'zh-TW') newRule.title_tw = title;
+            state.recurring.push(newRule);
+          }
+        } else {
+          recId = undefined;
+        }
+
         state.transactions[idx] = {
           ...state.transactions[idx],
           title,
@@ -1219,6 +1456,13 @@ function initEvents() {
           currency,
           date
         };
+
+        if (recId) {
+          state.transactions[idx].recurringId = recId;
+        } else {
+          delete state.transactions[idx].recurringId;
+        }
+
         if (state.lang === 'zh-TW') {
           state.transactions[idx].title_tw = title;
         } else {
@@ -1226,6 +1470,25 @@ function initEvents() {
         }
       }
     } else {
+      let recId = undefined;
+      if (isRecurring) {
+        recId = 'rec_' + Date.now();
+        const newRule = {
+          id: recId,
+          title,
+          currency,
+          amount,
+          type: state.modalType,
+          category: state.selectedCategory,
+          freq: recFreq,
+          day: recDay
+        };
+        if (state.lang === 'zh-TW') {
+          newRule.title_tw = title;
+        }
+        state.recurring.push(newRule);
+      }
+
       const newTx = {
         id: 'tx_' + Date.now(),
         title,
@@ -1235,6 +1498,9 @@ function initEvents() {
         currency,
         date
       };
+      if (recId) {
+        newTx.recurringId = recId;
+      }
       if (state.lang === 'zh-TW') {
         newTx.title_tw = title;
       }
@@ -1246,6 +1512,8 @@ function initEvents() {
     updateDemoBanner();
 
     persistData();
+    renderRecurringList();
+    checkDueRecurring();
     window.closeModal();
   });
 
@@ -1266,6 +1534,14 @@ function initEvents() {
   document.getElementById('open-recurring-modal-btn').addEventListener('click', openRecModal);
   document.getElementById('nav-recurring').addEventListener('click', openRecModal);
   document.getElementById('close-recurring-modal-btn').addEventListener('click', closeRecModal);
+
+  const recQuickAddBtn = document.getElementById('rec-quick-add-btn');
+  if (recQuickAddBtn) {
+    recQuickAddBtn.addEventListener('click', () => {
+      closeRecModal();
+      window.openModal(true);
+    });
+  }
 
   // Recurring Type change updates category dropdown
   const recTypeSelect = document.getElementById('rec-type');
@@ -1495,6 +1771,35 @@ function setModalType(type) {
   }
 
   renderCategoryPicker();
+}
+
+function setModalRecurring(isRecurring) {
+  state.modalIsRecurring = Boolean(isRecurring);
+  const noBtn = document.getElementById('modal-rec-no-btn');
+  const yesBtn = document.getElementById('modal-rec-yes-btn');
+  const fields = document.getElementById('modal-recurring-fields');
+
+  if (state.modalIsRecurring) {
+    if (noBtn) {
+      noBtn.className = 'px-3 py-1 rounded-lg text-xs font-medium text-slate-400 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition';
+    }
+    if (yesBtn) {
+      yesBtn.className = 'px-3 py-1 rounded-lg text-xs font-bold bg-indigo-600 text-white shadow-sm transition';
+    }
+    if (fields) {
+      fields.classList.remove('hidden');
+    }
+  } else {
+    if (noBtn) {
+      noBtn.className = 'px-3 py-1 rounded-lg text-xs font-bold bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition';
+    }
+    if (yesBtn) {
+      yesBtn.className = 'px-3 py-1 rounded-lg text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition';
+    }
+    if (fields) {
+      fields.classList.add('hidden');
+    }
+  }
 }
 
 function renderCategoryPicker() {
