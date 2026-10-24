@@ -1295,6 +1295,22 @@ function updateScreenMode() {
   if (textEl) {
     textEl.textContent = isDualPane ? dict.screenModeDual : dict.screenModeSingle;
   }
+  updateMonthLabel();
+}
+
+function updateMonthLabel() {
+  const monthLabel = document.getElementById('current-month-label');
+  if (!monthLabel) return;
+  const year = state.currentDate.getFullYear();
+  const month = state.currentDate.getMonth() + 1;
+  const dict = I18N[state.lang] || I18N.en;
+  if (state.lang === 'en') {
+    const isMobile = window.innerWidth < 640;
+    const monthName = isMobile && dict.shortMonths ? dict.shortMonths[month - 1] : dict.months[month - 1];
+    monthLabel.textContent = `${monthName} ${year}`;
+  } else {
+    monthLabel.textContent = `${year}年${month}月`;
+  }
 }
 
 // Currency Symbol Init
@@ -2417,14 +2433,7 @@ function render() {
   const dict = I18N[state.lang] || I18N.en;
 
   // Month Navigator text
-  const monthLabel = document.getElementById('current-month-label');
-  if (monthLabel) {
-    if (state.lang === 'en') {
-      monthLabel.textContent = `${dict.months[month - 1]} ${year}`;
-    } else {
-      monthLabel.textContent = `${year}年 ${month}月`;
-    }
-  }
+  updateMonthLabel();
 
   const monthTxs = state.transactions.filter(t => t.date.startsWith(monthStr));
 
