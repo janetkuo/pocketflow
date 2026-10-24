@@ -107,6 +107,10 @@ const I18N = {
     dateLabel: 'Date',
     saveTransaction: 'Save Transaction',
     updateTransaction: 'Update Transaction',
+    calcToggleShow: 'Show Calculator',
+    calcToggleHide: 'Hide Calculator',
+    calcDivZero: '⚠️ Cannot divide by 0',
+    calcInvalidExpr: '⚠️ Invalid calculation',
     editTxBtn: 'Edit',
     deleteTxBtn: 'Delete',
 
@@ -282,6 +286,10 @@ const I18N = {
     dateLabel: '消費日期',
     saveTransaction: '儲存紀錄',
     updateTransaction: '更新紀錄',
+    calcToggleShow: '顯示計算機',
+    calcToggleHide: '收合計算機',
+    calcDivZero: '⚠️ 除數不能為 0',
+    calcInvalidExpr: '⚠️ 計算式有誤',
     editTxBtn: '編輯',
     deleteTxBtn: '刪除',
 
@@ -706,7 +714,8 @@ let state = {
   modalType: 'expense',
   selectedCategory: 'food',
   chartType: 'expense',
-  modalIsRecurring: false
+  modalIsRecurring: false,
+  isKeypadVisible: true
 };
 
 let modalRecDayTouched = false;
@@ -1071,6 +1080,11 @@ function applyLanguage() {
 
   const modalAmtLabel = document.getElementById('modal-amount-label');
   if (modalAmtLabel) modalAmtLabel.textContent = dict.amountLabel;
+
+  const toggleKeypadText = document.getElementById('toggle-keypad-text');
+  if (toggleKeypadText) {
+    toggleKeypadText.textContent = state.isKeypadVisible !== false ? dict.calcToggleHide : dict.calcToggleShow;
+  }
 
   const modalDescText = document.getElementById('modal-desc-text');
   if (modalDescText) modalDescText.textContent = dict.descLabel;
@@ -1475,6 +1489,300 @@ function updateDemoBanner() {
   }
 }
 
+// ================= CALCULATOR KEYPAD CONTROLLER =================
+
+// Safe arithmetic evaluator supporting +, -, ×, ÷ (*, /) with order of operations
+function evaluateExpression(exprStr) {
+  if (!exprStr || typeof exprStr !== 'string') return null;
+  var s = exprStr.replace(/×/g, '*').replace(/÷/g, '/').replace(/−/g, '-').replace(/\s+/g, '');
+  if (!s) return null;
+  s = s.replace(/[+\-*/.]+$/, ''); // Strip trailing operators for partial evaluation
+  if (!s) return null;
+
+  var tokens = [];
+  var i = 0;
+  while (i < s.length) {
+    var ch = s[i];
+    if ('+-*/'.indexOf(ch) !== -1) {
+      if (ch === '-' && (tokens.length === 0 || ['+', '-', '*', '/'].indexOf(tokens[tokens.length - 1]) !== -1)) {
+        var numStr = '-';
+        i++;
+        while (i < s.length && /[0-9.]/.test(s[i])) {
+          numStr += s[i];
+          i++;
+        }
+        var val = parseFloat(numStr);
+        if (isNaN(val)) return null;
+        tokens.push(val);
+        continue;
+      }
+      tokens.push(ch);
+      i++;
+    } else if (/[0-9.]/.test(ch)) {
+      var numStr = '';
+      while (i < s.length && /[0-9.]/.test(s[i])) {
+        numStr += s[i];
+        i++;
+      }
+      var val = parseFloat(numStr);
+      if (isNaN(val)) return null;
+      tokens.push(val);
+    } else {
+      return null;
+    }
+  }
+
+  if (tokens.length === 0) return null;
+
+  // Pass 1: Multiplication and Division
+  var pass1 = [];
+  var k = 0;
+  while (k < tokens.length) {
+    var token = tokens[k];
+    if (token === '*' || token === '/') {
+      var prev = pass1.pop();
+      var next = tokens[k + 1];
+      if (typeof prev !== 'number' || typeof next !== 'number') return null;
+      if (token === '/' && next === 0) return null; // Division by zero
+      var res = token === '*' ? prev * next : prev / next;
+      pass1.push(res);
+      k += 2;
+    } else {
+      pass1.push(token);
+      k++;
+    }
+  }
+
+  // Pass 2: Addition and Subtraction
+  var result = pass1[0];
+  if (typeof result !== 'number') return null;
+  var m = 1;
+  while (m < pass1.length) {
+    var op = pass1[m];
+    var next = pass1[m + 1];
+    if (typeof next !== 'number') return null;
+    if (op === '+') result += next;
+    else if (op === '-') result -= next;
+    else return null;
+    m += 2;
+  }
+
+  if (isNaN(result) || !isFinite(result)) return null;
+  return Math.round(result * 10000) / 10000;
+}
+
+// Updates live calculation preview under amount input
+function updateCalcPreview() {
+  const input = document.getElementById('input-amount');
+  const preview = document.getElementById('calc-preview');
+  if (!input || !preview) return;
+
+  const val = (input.value || '').trim();
+  const dict = I18N[state?.lang || 'en'] || I18N.en;
+
+  if (!val) {
+    preview.textContent = '';
+    return;
+  }
+
+  // Check if expression contains an operator (besides standalone leading minus)
+  const hasOperator = /[+\-×÷*/]/.test(val) && val !== '-';
+  if (!hasOperator) {
+    preview.textContent = '';
+    return;
+  }
+
+  // Division by zero check
+  if (/[÷/]\s*0(\.0*)?($|\s|[+\-×÷*/])/.test(val)) {
+    preview.textContent = dict.calcDivZero;
+    return;
+  }
+
+  const result = evaluateExpression(val);
+  if (result !== null && !isNaN(result)) {
+    const cleanNum = parseFloat(result.toFixed(2));
+    preview.textContent = `= ${cleanNum.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+  } else {
+    preview.textContent = '';
+  }
+}
+
+// Toggles visibility of the interactive keypad and updates input mode
+function setKeypadVisible(visible) {
+  state.isKeypadVisible = visible;
+  const keypad = document.getElementById('calc-keypad');
+  const toggleText = document.getElementById('toggle-keypad-text');
+  const inputAmount = document.getElementById('input-amount');
+  const dict = I18N[state?.lang || 'en'] || I18N.en;
+
+  if (keypad && keypad.classList) {
+    if (visible) {
+      keypad.classList.remove('hidden');
+    } else {
+      keypad.classList.add('hidden');
+    }
+  }
+
+  if (toggleText) {
+    toggleText.textContent = visible ? dict.calcToggleHide : dict.calcToggleShow;
+  }
+
+  if (inputAmount && typeof inputAmount.setAttribute === 'function') {
+    inputAmount.setAttribute('inputmode', visible ? 'none' : 'decimal');
+  }
+}
+
+// Handles tap/click on calculator keys
+function handleCalcInput(key) {
+  const input = document.getElementById('input-amount');
+  if (!input) return;
+
+  let val = input.value || '';
+
+  if (key === 'clear') {
+    input.value = '';
+    updateCalcPreview();
+    return;
+  }
+
+  if (key === 'backspace') {
+    if (val.length > 0) {
+      if (/\s[+\-×÷*/]\s$/.test(val)) {
+        val = val.slice(0, -3);
+      } else if (/\s$/.test(val)) {
+        val = val.trimEnd().slice(0, -1);
+      } else {
+        val = val.slice(0, -1);
+      }
+      input.value = val;
+    }
+    updateCalcPreview();
+    return;
+  }
+
+  if (key === '=') {
+    const trimmed = val.trim();
+    if (!trimmed) return;
+    const evaluated = evaluateExpression(trimmed);
+    if (evaluated !== null && !isNaN(evaluated)) {
+      const cleanNum = parseFloat(evaluated.toFixed(2));
+      input.value = cleanNum.toString();
+      const preview = document.getElementById('calc-preview');
+      if (preview) preview.textContent = '';
+    }
+    return;
+  }
+
+  // Operators (+, -, ×, ÷)
+  const isOperator = ['+', '-', '×', '÷', '*', '/'].indexOf(key) !== -1;
+  const displayOp = key === '*' ? '×' : key === '/' ? '÷' : key;
+
+  if (isOperator) {
+    const trimmed = val.trim();
+    if (!trimmed || trimmed === '0') {
+      if (key === '-') {
+        input.value = '-';
+        updateCalcPreview();
+      }
+      return;
+    }
+    // If ends with an operator, replace it
+    if (/\s[+\-×÷*/]\s$/.test(val)) {
+      val = val.replace(/\s[+\-×÷*/]\s$/, ` ${displayOp} `);
+      input.value = val;
+      updateCalcPreview();
+      return;
+    }
+    if (/[+\-×÷*/]$/.test(trimmed)) {
+      val = trimmed.replace(/[+\-×÷*/]$/, `${displayOp}`);
+      input.value = val + ' ';
+      updateCalcPreview();
+      return;
+    }
+    // Append operator with spacing for readability
+    input.value = trimmed + ` ${displayOp} `;
+    updateCalcPreview();
+    return;
+  }
+
+  // Decimal point (.)
+  if (key === '.') {
+    const trimmed = val.trim();
+    if (!trimmed || trimmed === '0' || /\s[+\-×÷*/]\s$/.test(val)) {
+      input.value = (!trimmed || trimmed === '0') ? '0.' : val + '0.';
+      updateCalcPreview();
+      return;
+    }
+    // Check if current number segment already has a decimal
+    const parts = trimmed.split(/[+\-×÷*/\s]+/);
+    const lastPart = parts[parts.length - 1];
+    if (lastPart.indexOf('.') !== -1) {
+      return;
+    }
+    input.value = val + '.';
+    updateCalcPreview();
+    return;
+  }
+
+  // Digits (0-9)
+  if (/^[0-9]$/.test(key)) {
+    if (val === '0') {
+      input.value = key;
+    } else {
+      input.value = val + key;
+    }
+    updateCalcPreview();
+  }
+}
+
+// Initialize Calculator Keypad Event Listeners
+function initCalcKeypad() {
+  const toggleBtn = document.getElementById('toggle-keypad-btn');
+  if (toggleBtn) {
+    toggleBtn.addEventListener('click', () => {
+      setKeypadVisible(!state.isKeypadVisible);
+    });
+  }
+
+  const calcKeypad = document.getElementById('calc-keypad');
+  if (calcKeypad) {
+    calcKeypad.addEventListener('click', (e) => {
+      const btn = e.target.closest && e.target.closest('.calc-key');
+      if (!btn) return;
+      const key = btn.getAttribute('data-calc');
+      if (key) {
+        handleCalcInput(key);
+      }
+    });
+  }
+
+  const inputAmount = document.getElementById('input-amount');
+  if (inputAmount) {
+    inputAmount.addEventListener('input', () => {
+      updateCalcPreview();
+    });
+
+    inputAmount.addEventListener('focus', () => {
+      if (!state.isKeypadVisible) {
+        setKeypadVisible(true);
+      }
+    });
+
+    inputAmount.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        const val = (inputAmount.value || '').trim();
+        if (/[+\-×÷*/]/.test(val)) {
+          e.preventDefault();
+          handleCalcInput('=');
+        }
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        handleCalcInput('clear');
+      }
+    });
+  }
+}
+
 // Initialize Elements
 document.addEventListener('DOMContentLoaded', () => {
   normalizeDemoItems();
@@ -1489,6 +1797,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Event Listeners Setup
 function initEvents() {
+  initCalcKeypad();
+
   // Language Switcher Toggle
   const langToggleBtn = document.getElementById('lang-toggle-btn');
   if (langToggleBtn) {
@@ -1577,12 +1887,19 @@ function initEvents() {
       modalRecDay.value = parts.length === 3 ? parseInt(parts[2], 10) : new Date().getDate();
     }
 
+    document.getElementById('input-amount').value = '';
+    const calcPrev = document.getElementById('calc-preview');
+    if (calcPrev) calcPrev.textContent = '';
+    setKeypadVisible(true);
+
     document.getElementById('add-modal').classList.remove('hidden');
     document.getElementById('add-modal').classList.add('flex');
     setTimeout(() => document.getElementById('input-amount').focus(), 100);
   };
 
   window.closeModal = function() {
+    const calcPrev = document.getElementById('calc-preview');
+    if (calcPrev) calcPrev.textContent = '';
     document.getElementById('add-modal').classList.add('hidden');
     document.getElementById('add-modal').classList.remove('flex');
     document.getElementById('autocomplete-list').classList.add('hidden');
@@ -1596,6 +1913,10 @@ function initEvents() {
     document.getElementById('transaction-form').reset();
     document.getElementById('edit-id').value = tx.id;
     modalRecDayTouched = false;
+
+    const calcPrev = document.getElementById('calc-preview');
+    if (calcPrev) calcPrev.textContent = '';
+    setKeypadVisible(true);
 
     const modalHeading = document.getElementById('modal-heading-text');
     if (modalHeading) modalHeading.textContent = dict.modalEditTitle;
@@ -1753,6 +2074,7 @@ function initEvents() {
 
         if (!document.getElementById('input-amount').value || document.getElementById('input-amount').value === '0') {
           document.getElementById('input-amount').value = recentAmt;
+          updateCalcPreview();
         }
         autocompleteList.classList.add('hidden');
       });
@@ -1770,7 +2092,23 @@ function initEvents() {
     e.preventDefault();
     const editId = document.getElementById('edit-id').value;
     const title = document.getElementById('input-title').value.trim();
-    const amount = parseFloat(document.getElementById('input-amount').value) || 0;
+    const rawAmt = (document.getElementById('input-amount').value || '').trim();
+    const dict = I18N[state.lang] || I18N.en;
+
+    // Check division by zero
+    if (/[÷/]\s*0(\.0*)?($|\s|[+\-×÷*/])/.test(rawAmt)) {
+      alert(dict.calcDivZero);
+      return;
+    }
+
+    let amount = 0;
+    if (rawAmt) {
+      const evaluated = evaluateExpression(rawAmt);
+      amount = (evaluated !== null && !isNaN(evaluated)) ? evaluated : (parseFloat(rawAmt) || 0);
+    }
+    if (amount > 0) {
+      document.getElementById('input-amount').value = parseFloat(amount.toFixed(2));
+    }
     const date = document.getElementById('input-date').value;
     const currency = document.getElementById('modal-currency-select').value || 'USD';
     const isRecurring = Boolean(state.modalIsRecurring);
