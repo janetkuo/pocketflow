@@ -7,7 +7,7 @@
   
   <!-- PWA Meta Tags -->
   <link rel="manifest" href="./manifest.json">
-  <meta name="theme-color" content="#0f172a">
+  <meta name="theme-color" content="#5B7C75">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="icon" type="image/svg+xml" href="./icon.svg">
@@ -21,10 +21,35 @@
       theme: {
         extend: {
           colors: {
+            indigo: {
+              50: 'rgb(var(--pf-primary-rgb) / 0.12)',
+              100: 'rgb(var(--pf-primary-rgb) / 0.2)',
+              200: 'rgb(var(--pf-primary-rgb) / 0.35)',
+              300: 'rgb(var(--pf-primary-rgb) / 0.5)',
+              400: 'rgb(var(--pf-primary-rgb) / 0.7)',
+              500: 'rgb(var(--pf-primary-rgb) / <alpha-value>)',
+              600: 'rgb(var(--pf-primary-rgb) / <alpha-value>)',
+              700: 'rgb(var(--pf-primary-dark-rgb) / <alpha-value>)',
+              800: 'rgb(var(--pf-primary-dark-rgb) / 0.85)',
+              900: 'rgb(var(--pf-primary-dark-rgb) / 0.95)',
+              950: 'rgb(var(--pf-primary-dark-rgb) / 0.4)',
+            },
+            emerald: {
+              300: 'rgb(var(--pf-income-rgb) / 0.65)',
+              400: 'rgb(var(--pf-income-rgb) / 0.85)',
+              500: 'rgb(var(--pf-income-rgb) / <alpha-value>)',
+              600: 'rgb(var(--pf-income-rgb) / <alpha-value>)',
+            },
+            rose: {
+              300: 'rgb(var(--pf-expense-rgb) / 0.65)',
+              400: 'rgb(var(--pf-expense-rgb) / 0.85)',
+              500: 'rgb(var(--pf-expense-rgb) / <alpha-value>)',
+              600: 'rgb(var(--pf-expense-rgb) / <alpha-value>)',
+            },
             pocket: {
-              primary: '#6366f1',
-              income: '#10b981',
-              expense: '#f43f5e',
+              primary: 'var(--pf-primary, #5B7C75)',
+              income: 'var(--pf-income, #5E8C78)',
+              expense: 'var(--pf-expense, #B86968)',
               card: '#ffffff',
               darkcard: '#1e293b'
             }
@@ -37,9 +62,26 @@
     }
   </script>
   <style>
+    :root {
+      --pf-primary: #5B7C75;
+      --pf-primary-rgb: 91 124 117;
+      --pf-primary-dark: #4A6862;
+      --pf-primary-dark-rgb: 74 104 98;
+      --pf-income: #5E8C78;
+      --pf-income-rgb: 94 140 120;
+      --pf-expense: #B86968;
+      --pf-expense-rgb: 184 105 104;
+      --pf-bg-light: #F5F3EF;
+      --pf-bg-dark: #1C2323;
+    }
     body {
       -webkit-tap-highlight-color: transparent;
       overscroll-behavior-y: none;
+      background-color: var(--pf-bg-light, #F5F3EF);
+      transition: background-color 0.25s ease;
+    }
+    html.dark body {
+      background-color: var(--pf-bg-dark, #1C2323);
     }
     .hide-scrollbar::-webkit-scrollbar {
       display: none;
@@ -55,13 +97,22 @@
     }
     .donut-slice:hover {
       opacity: 0.85;
-      filter: drop-shadow(0 0 5px rgba(99, 102, 241, 0.4));
+      filter: drop-shadow(0 0 5px rgba(91, 124, 117, 0.4));
       transform: scale(1.03);
+    }
+    .palette-btn {
+      transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+    }
+    .palette-btn:hover {
+      transform: translateY(-1px);
+    }
+    .palette-btn:active {
+      transform: scale(0.97);
     }
   </style>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
-<body class="bg-slate-100 text-slate-800 dark:bg-slate-950 dark:text-slate-100 font-sans min-h-screen flex flex-col antialiased selection:bg-indigo-500 selection:text-white">
+<body class="text-slate-800 dark:text-slate-100 font-sans min-h-screen flex flex-col antialiased selection:bg-indigo-500 selection:text-white">
 
   <!-- Top Navigation Bar -->
   <header class="sticky top-0 z-30 bg-white/85 dark:bg-slate-900/85 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 px-4 py-3">
@@ -103,6 +154,12 @@
         <button id="lang-toggle-btn" title="Switch Language / 切換語言" class="px-2.5 py-1.5 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition flex items-center gap-1 text-xs font-bold border border-slate-200 dark:border-slate-700/60">
           <svg class="w-3.5 h-3.5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/></svg>
           <span id="lang-label">繁中</span>
+        </button>
+
+        <!-- Morandi Palette Quick Switcher Button -->
+        <button id="palette-toggle-btn" title="Morandi Palette / 莫蘭迪色盤" class="px-2.5 py-1.5 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition flex items-center gap-1.5 text-xs font-bold border border-slate-200 dark:border-slate-700/60">
+          <span id="palette-quick-dot" class="w-3 h-3 rounded-full shadow-sm shrink-0" style="background-color: var(--pf-primary, #5B7C75)"></span>
+          <span id="palette-quick-label" class="hidden sm:inline text-[11px] font-semibold text-slate-600 dark:text-slate-300">色盤</span>
         </button>
 
         <!-- Settings / Data Reset Modal Button -->
@@ -537,6 +594,25 @@
 
       <div class="mt-4 space-y-4">
         
+        <!-- FEATURE: Morandi Color Palette Theme Picker -->
+        <div id="palette-settings-section" class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-800 space-y-3">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2 text-xs font-bold text-indigo-600 dark:text-indigo-400">
+              <span class="text-base">🎨</span>
+              <span id="palette-settings-title">Appearance & Morandi Palette</span>
+            </div>
+            <span id="palette-active-badge" class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 border border-indigo-200/70 dark:border-indigo-800/50">
+              Classic
+            </span>
+          </div>
+          <p id="palette-settings-desc" class="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+            Choose your preferred Morandi theme. Changes apply instantly:
+          </p>
+          <div id="palette-options-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1">
+            <!-- Populated dynamically via app.js -->
+          </div>
+        </div>
+
         <!-- FEATURE: AI Prompt Exporter -->
         <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-800">
           <div class="flex items-center gap-2 text-xs font-bold text-indigo-600 dark:text-indigo-400">

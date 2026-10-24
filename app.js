@@ -4,6 +4,7 @@
 const STORAGE_KEY = 'pocketflow_transactions_v1';
 const RECURRING_KEY = 'pocketflow_recurring_v1';
 const THEME_KEY = 'pocketflow_theme_v1';
+const PALETTE_KEY = 'pocketflow_palette_v1';
 const CURRENCY_KEY = 'pocketflow_currency_v1';
 const LANG_KEY = 'pocketflow_lang_v1';
 const DEFAULT_CURR_KEY = 'pocketflow_default_currency';
@@ -197,6 +198,12 @@ const I18N = {
     importInvalid: 'Invalid backup file format.',
     importError: 'Failed to parse JSON file.',
 
+    paletteSettingsTitle: 'Appearance & Morandi Palette',
+    paletteSettingsDesc: 'Choose your preferred Morandi color theme. Changes apply instantly:',
+    paletteToggleTitle: 'Color Palette / 莫蘭迪風格色盤',
+    paletteQuickLabel: 'Palette',
+    paletteActiveBadge: 'Active',
+
     months: [
       'January', 'February', 'March', 'April', 'May', 'June',
       'July', 'August', 'September', 'October', 'November', 'December'
@@ -366,6 +373,12 @@ const I18N = {
     importInvalid: '檔案格式不正確，找不到交易紀錄。',
     importError: '解析檔案失敗，請確認是有效的 JSON 備份檔。',
 
+    paletteSettingsTitle: '外觀風格與莫蘭迪色盤',
+    paletteSettingsDesc: '挑選您喜愛的莫蘭迪色系，即時換膚且自動保存：',
+    paletteToggleTitle: '切換風格色盤',
+    paletteQuickLabel: '色盤',
+    paletteActiveBadge: '使用中',
+
     months: [
       '1月', '2月', '3月', '4月', '5月', '6月',
       '7月', '8月', '9月', '10月', '11月', '12月'
@@ -378,26 +391,240 @@ const I18N = {
   }
 };
 
-// Category Definitions with distinct color palette & icons
+// Curated Morandi Color Palettes
+const MORANDI_PALETTES = {
+  sage: {
+    id: 'sage',
+    name: { en: 'Sage & Terracotta', 'zh-TW': '鼠尾草與陶土' },
+    desc: { en: 'Classic Morandi herb, calming & natural', 'zh-TW': '經典草木靜物，自然療癒耐看' },
+    badge: { en: 'Classic ⭐', 'zh-TW': '經典 ⭐' },
+    primary: '#5B7C75',
+    primaryDark: '#4A6862',
+    primaryRgb: '91 124 117',
+    primaryDarkRgb: '74 104 98',
+    income: '#5E8C78',
+    incomeRgb: '94 140 120',
+    expense: '#B86968',
+    expenseRgb: '184 105 104',
+    bgLight: '#F5F3EF',
+    bgDark: '#1C2323',
+    cardDark: '#242D2D',
+    borderDark: '#333E3E',
+    categories: {
+      food: { color: '#CB8364', bg: 'rgba(203, 131, 100, 0.15)' },
+      drinks: { color: '#8C6C58', bg: 'rgba(140, 108, 88, 0.15)' },
+      transport: { color: '#6A839A', bg: 'rgba(106, 131, 154, 0.15)' },
+      shopping: { color: '#9E778E', bg: 'rgba(158, 119, 142, 0.15)' },
+      entertainment: { color: '#837B97', bg: 'rgba(131, 123, 151, 0.15)' },
+      housing: { color: '#5A8485', bg: 'rgba(90, 132, 133, 0.15)' },
+      health: { color: '#AB5F5F', bg: 'rgba(171, 95, 95, 0.15)' },
+      education: { color: '#BF9F5F', bg: 'rgba(191, 159, 95, 0.15)' },
+      other_exp: { color: '#788282', bg: 'rgba(120, 130, 130, 0.15)' },
+      salary: { color: '#5E8C78', bg: 'rgba(94, 140, 120, 0.15)' },
+      interest: { color: '#5F828F', bg: 'rgba(95, 130, 143, 0.15)' },
+      invest: { color: '#5B7C75', bg: 'rgba(91, 124, 117, 0.15)' },
+      bonus: { color: '#6A9484', bg: 'rgba(106, 148, 132, 0.15)' },
+      parttime: { color: '#B08852', bg: 'rgba(176, 136, 82, 0.15)' },
+      other_inc: { color: '#837B97', bg: 'rgba(131, 123, 151, 0.15)' }
+    }
+  },
+  slate: {
+    id: 'slate',
+    name: { en: 'Nordic Slate & Clay', 'zh-TW': '北歐煙燻岩藍' },
+    desc: { en: 'Modern concrete & cool bay, rational & sleek', 'zh-TW': '現代極簡清水模，理性冷靜' },
+    badge: { en: 'Nordic', 'zh-TW': '冷淡風' },
+    primary: '#4F6B84',
+    primaryDark: '#3F566B',
+    primaryRgb: '79 107 132',
+    primaryDarkRgb: '63 86 107',
+    income: '#568266',
+    incomeRgb: '86 130 102',
+    expense: '#B56767',
+    expenseRgb: '181 103 103',
+    bgLight: '#F1F3F6',
+    bgDark: '#181F28',
+    cardDark: '#222A36',
+    borderDark: '#313C4D',
+    categories: {
+      food: { color: '#C27D66', bg: 'rgba(194, 125, 102, 0.15)' },
+      drinks: { color: '#887063', bg: 'rgba(136, 112, 99, 0.15)' },
+      transport: { color: '#5B7A99', bg: 'rgba(91, 122, 153, 0.15)' },
+      shopping: { color: '#9A758B', bg: 'rgba(154, 117, 139, 0.15)' },
+      entertainment: { color: '#777594', bg: 'rgba(119, 117, 148, 0.15)' },
+      housing: { color: '#568087', bg: 'rgba(86, 128, 135, 0.15)' },
+      health: { color: '#A85E60', bg: 'rgba(168, 94, 96, 0.15)' },
+      education: { color: '#B59C63', bg: 'rgba(181, 156, 99, 0.15)' },
+      other_exp: { color: '#737C87', bg: 'rgba(115, 124, 135, 0.15)' },
+      salary: { color: '#568266', bg: 'rgba(86, 130, 102, 0.15)' },
+      interest: { color: '#4F6B84', bg: 'rgba(79, 107, 132, 0.15)' },
+      invest: { color: '#5B7A99', bg: 'rgba(91, 122, 153, 0.15)' },
+      bonus: { color: '#5E8C77', bg: 'rgba(94, 140, 119, 0.15)' },
+      parttime: { color: '#A87D56', bg: 'rgba(168, 125, 86, 0.15)' },
+      other_inc: { color: '#777594', bg: 'rgba(119, 117, 148, 0.15)' }
+    }
+  },
+  taupe: {
+    id: 'taupe',
+    name: { en: 'Linen Taupe & Greige', 'zh-TW': '亞麻灰褐燕麥' },
+    desc: { en: 'Pure neutral greige, warm cashmere paper texture', 'zh-TW': '去黃純粹冷灰褐，手帳羊絨紙感' },
+    badge: { en: 'Neutral', 'zh-TW': '去黃純粹' },
+    primary: '#706458',
+    primaryDark: '#5A4F44',
+    primaryRgb: '112 100 88',
+    primaryDarkRgb: '90 79 68',
+    income: '#62876F',
+    incomeRgb: '98 135 111',
+    expense: '#A85F64',
+    expenseRgb: '168 95 100',
+    bgLight: '#F5F3EF',
+    bgDark: '#1E1C1A',
+    cardDark: '#272421',
+    borderDark: '#38332E',
+    categories: {
+      food: { color: '#B5745E', bg: 'rgba(181, 116, 94, 0.15)' },
+      drinks: { color: '#826556', bg: 'rgba(130, 101, 86, 0.15)' },
+      transport: { color: '#6A7885', bg: 'rgba(106, 120, 133, 0.15)' },
+      shopping: { color: '#9E6F7C', bg: 'rgba(158, 111, 124, 0.15)' },
+      entertainment: { color: '#7E6F85', bg: 'rgba(126, 111, 133, 0.15)' },
+      housing: { color: '#627D7C', bg: 'rgba(98, 125, 124, 0.15)' },
+      health: { color: '#A35A62', bg: 'rgba(163, 90, 98, 0.15)' },
+      education: { color: '#AD9261', bg: 'rgba(173, 146, 97, 0.15)' },
+      other_exp: { color: '#756D67', bg: 'rgba(117, 109, 103, 0.15)' },
+      salary: { color: '#62876F', bg: 'rgba(98, 135, 111, 0.15)' },
+      interest: { color: '#5E7A85', bg: 'rgba(94, 122, 133, 0.15)' },
+      invest: { color: '#706458', bg: 'rgba(112, 100, 88, 0.15)' },
+      bonus: { color: '#6F8C78', bg: 'rgba(111, 140, 120, 0.15)' },
+      parttime: { color: '#A67954', bg: 'rgba(166, 121, 84, 0.15)' },
+      other_inc: { color: '#7E6F85', bg: 'rgba(126, 111, 133, 0.15)' }
+    }
+  },
+  periwinkle: {
+    id: 'periwinkle',
+    name: { en: 'Muted Periwinkle', 'zh-TW': '微調灰霧靛青' },
+    desc: { en: 'Soft lavender-blue, desaturated tech indigo', 'zh-TW': '保留原版識別，低飽和灰紫藍' },
+    badge: { en: 'Original', 'zh-TW': '原版灰調' },
+    primary: '#68769F',
+    primaryDark: '#55638A',
+    primaryRgb: '104 118 159',
+    primaryDarkRgb: '85 99 138',
+    income: '#598E7B',
+    incomeRgb: '89 142 123',
+    expense: '#BE6C7A',
+    expenseRgb: '190 108 122',
+    bgLight: '#F2F4F8',
+    bgDark: '#171A24',
+    cardDark: '#202534',
+    borderDark: '#2E354A',
+    categories: {
+      food: { color: '#C77D6A', bg: 'rgba(199, 125, 106, 0.15)' },
+      drinks: { color: '#8D7068', bg: 'rgba(141, 112, 104, 0.15)' },
+      transport: { color: '#6281A6', bg: 'rgba(98, 129, 166, 0.15)' },
+      shopping: { color: '#A36E8F', bg: 'rgba(163, 110, 143, 0.15)' },
+      entertainment: { color: '#7E769E', bg: 'rgba(126, 118, 158, 0.15)' },
+      housing: { color: '#56848E', bg: 'rgba(86, 132, 142, 0.15)' },
+      health: { color: '#AC6369', bg: 'rgba(172, 99, 105, 0.15)' },
+      education: { color: '#B89B66', bg: 'rgba(184, 155, 102, 0.15)' },
+      other_exp: { color: '#777E90', bg: 'rgba(119, 126, 144, 0.15)' },
+      salary: { color: '#598E7B', bg: 'rgba(89, 142, 123, 0.15)' },
+      interest: { color: '#5A7F9D', bg: 'rgba(90, 127, 157, 0.15)' },
+      invest: { color: '#68769F', bg: 'rgba(104, 118, 159, 0.15)' },
+      bonus: { color: '#649685', bg: 'rgba(100, 150, 133, 0.15)' },
+      parttime: { color: '#B0835D', bg: 'rgba(176, 131, 93, 0.15)' },
+      other_inc: { color: '#7E769E', bg: 'rgba(126, 118, 158, 0.15)' }
+    }
+  },
+  rose: {
+    id: 'rose',
+    name: { en: 'Dusty Rose & Mauve', 'zh-TW': '煙燻暮粉' },
+    desc: { en: 'French dried rose, soft, soothing & romantic', 'zh-TW': '乾燥玫瑰柔粉，法式優雅浪漫' },
+    badge: { en: 'Pink 🌸', 'zh-TW': '偏粉色 🌸' },
+    primary: '#A66A78',
+    primaryDark: '#8F5563',
+    primaryRgb: '166 106 120',
+    primaryDarkRgb: '143 85 99',
+    income: '#5E8E7C',
+    incomeRgb: '94 142 124',
+    expense: '#BA5C6E',
+    expenseRgb: '186 92 110',
+    bgLight: '#F8F4F4',
+    bgDark: '#221B1D',
+    cardDark: '#2C2326',
+    borderDark: '#3D3135',
+    categories: {
+      food: { color: '#C97D66', bg: 'rgba(201, 125, 102, 0.15)' },
+      drinks: { color: '#8A6B5C', bg: 'rgba(138, 107, 92, 0.15)' },
+      transport: { color: '#717E96', bg: 'rgba(113, 126, 150, 0.15)' },
+      shopping: { color: '#B56F84', bg: 'rgba(181, 111, 132, 0.15)' },
+      entertainment: { color: '#8E7591', bg: 'rgba(142, 117, 145, 0.15)' },
+      housing: { color: '#5E8284', bg: 'rgba(94, 130, 132, 0.15)' },
+      health: { color: '#AB5C64', bg: 'rgba(171, 92, 100, 0.15)' },
+      education: { color: '#B89C67', bg: 'rgba(184, 156, 103, 0.15)' },
+      other_exp: { color: '#80777B', bg: 'rgba(128, 119, 123, 0.15)' },
+      salary: { color: '#5E8E7C', bg: 'rgba(94, 142, 124, 0.15)' },
+      interest: { color: '#607D8F', bg: 'rgba(96, 125, 143, 0.15)' },
+      invest: { color: '#A66A78', bg: 'rgba(166, 106, 120, 0.15)' },
+      bonus: { color: '#6A9684', bg: 'rgba(106, 150, 132, 0.15)' },
+      parttime: { color: '#B07F60', bg: 'rgba(176, 127, 96, 0.15)' },
+      other_inc: { color: '#8E7591', bg: 'rgba(142, 117, 145, 0.15)' }
+    }
+  },
+  ginkgo: {
+    id: 'ginkgo',
+    name: { en: 'Ginkgo Gold & Amber', 'zh-TW': '明亮銀杏金黃' },
+    desc: { en: 'Radiant autumn ginkgo gold, sunny & vibrant', 'zh-TW': '璀璨銀杏金黃，鮮明暖陽活力' },
+    badge: { en: 'Yellow ☀️', 'zh-TW': '偏亮黃 ☀️' },
+    primary: '#BD8420',
+    primaryDark: '#9E6D18',
+    primaryRgb: '189 132 32',
+    primaryDarkRgb: '158 109 24',
+    income: '#4F8A67',
+    incomeRgb: '79 138 103',
+    expense: '#BE5448',
+    expenseRgb: '190 84 72',
+    bgLight: '#FAF7EE',
+    bgDark: '#1F1C12',
+    cardDark: '#2A2518',
+    borderDark: '#3B3421',
+    categories: {
+      food: { color: '#D47E35', bg: 'rgba(212, 126, 53, 0.15)' },
+      drinks: { color: '#996F40', bg: 'rgba(153, 111, 64, 0.15)' },
+      transport: { color: '#547E95', bg: 'rgba(84, 126, 149, 0.15)' },
+      shopping: { color: '#A86C78', bg: 'rgba(168, 108, 120, 0.15)' },
+      entertainment: { color: '#816F8C', bg: 'rgba(129, 111, 140, 0.15)' },
+      housing: { color: '#58807C', bg: 'rgba(88, 128, 124, 0.15)' },
+      health: { color: '#B35750', bg: 'rgba(179, 87, 80, 0.15)' },
+      education: { color: '#BD8420', bg: 'rgba(189, 132, 32, 0.15)' },
+      other_exp: { color: '#7D7668', bg: 'rgba(125, 118, 104, 0.15)' },
+      salary: { color: '#4F8A67', bg: 'rgba(79, 138, 103, 0.15)' },
+      interest: { color: '#507D8C', bg: 'rgba(80, 125, 140, 0.15)' },
+      invest: { color: '#BD8420', bg: 'rgba(189, 132, 32, 0.15)' },
+      bonus: { color: '#5E9473', bg: 'rgba(94, 148, 115, 0.15)' },
+      parttime: { color: '#B8783B', bg: 'rgba(184, 120, 59, 0.15)' },
+      other_inc: { color: '#816F8C', bg: 'rgba(129, 111, 140, 0.15)' }
+    }
+  }
+};
+
+// Category Definitions with distinct color palette & icons (defaults to Sage)
 const CATEGORIES = {
   expense: [
-    { id: 'food', name: { en: 'Food & Meals', 'zh-TW': '餐飲正餐' }, icon: '🍽️', color: '#f97316', bg: 'rgba(249, 115, 22, 0.15)' },
-    { id: 'drinks', name: { en: 'Drinks & Coffee', 'zh-TW': '咖啡手搖' }, icon: '☕', color: '#ea580c', bg: 'rgba(234, 88, 12, 0.15)' },
-    { id: 'transport', name: { en: 'Transportation', 'zh-TW': '通勤交通' }, icon: '🚇', color: '#3b82f6', bg: 'rgba(59, 130, 246, 0.15)' },
-    { id: 'shopping', name: { en: 'Shopping', 'zh-TW': '購物消費' }, icon: '🛍️', color: '#ec4899', bg: 'rgba(236, 72, 153, 0.15)' },
-    { id: 'entertainment', name: { en: 'Entertainment', 'zh-TW': '休閒娛樂' }, icon: '🎮', color: '#8b5cf6', bg: 'rgba(139, 92, 246, 0.15)' },
-    { id: 'housing', name: { en: 'Housing & Utilities', 'zh-TW': '居住水電' }, icon: '🏠', color: '#06b6d4', bg: 'rgba(6, 182, 212, 0.15)' },
-    { id: 'health', name: { en: 'Health & Medical', 'zh-TW': '醫療保健' }, icon: '💊', color: '#ef4444', bg: 'rgba(239, 68, 68, 0.15)' },
-    { id: 'education', name: { en: 'Education & Growth', 'zh-TW': '學習進修' }, icon: '📚', color: '#eab308', bg: 'rgba(234, 179, 8, 0.15)' },
-    { id: 'other_exp', name: { en: 'Other Expense', 'zh-TW': '其他支出' }, icon: '✨', color: '#64748b', bg: 'rgba(100, 116, 139, 0.15)' }
+    { id: 'food', name: { en: 'Food & Meals', 'zh-TW': '餐飲正餐' }, icon: '🍽️', color: '#CB8364', bg: 'rgba(203, 131, 100, 0.15)' },
+    { id: 'drinks', name: { en: 'Drinks & Coffee', 'zh-TW': '咖啡手搖' }, icon: '☕', color: '#8C6C58', bg: 'rgba(140, 108, 88, 0.15)' },
+    { id: 'transport', name: { en: 'Transportation', 'zh-TW': '通勤交通' }, icon: '🚇', color: '#6A839A', bg: 'rgba(106, 131, 154, 0.15)' },
+    { id: 'shopping', name: { en: 'Shopping', 'zh-TW': '購物消費' }, icon: '🛍️', color: '#9E778E', bg: 'rgba(158, 119, 142, 0.15)' },
+    { id: 'entertainment', name: { en: 'Entertainment', 'zh-TW': '休閒娛樂' }, icon: '🎮', color: '#837B97', bg: 'rgba(131, 123, 151, 0.15)' },
+    { id: 'housing', name: { en: 'Housing & Utilities', 'zh-TW': '居住水電' }, icon: '🏠', color: '#5A8485', bg: 'rgba(90, 132, 133, 0.15)' },
+    { id: 'health', name: { en: 'Health & Medical', 'zh-TW': '醫療保健' }, icon: '💊', color: '#AB5F5F', bg: 'rgba(171, 95, 95, 0.15)' },
+    { id: 'education', name: { en: 'Education & Growth', 'zh-TW': '學習進修' }, icon: '📚', color: '#BF9F5F', bg: 'rgba(191, 159, 95, 0.15)' },
+    { id: 'other_exp', name: { en: 'Other Expense', 'zh-TW': '其他支出' }, icon: '✨', color: '#788282', bg: 'rgba(120, 130, 130, 0.15)' }
   ],
   income: [
-    { id: 'salary', name: { en: 'Salary & Wages', 'zh-TW': '薪資收入' }, icon: '💰', color: '#10b981', bg: 'rgba(16, 185, 129, 0.15)' },
-    { id: 'interest', name: { en: 'Interest Income', 'zh-TW': '利息收入' }, icon: '🏦', color: '#0ea5e9', bg: 'rgba(14, 165, 233, 0.15)' },
-    { id: 'invest', name: { en: 'Investments', 'zh-TW': '投資回報' }, icon: '📈', color: '#6366f1', bg: 'rgba(99, 102, 241, 0.15)' },
-    { id: 'bonus', name: { en: 'Bonus & Incentives', 'zh-TW': '獎金分紅' }, icon: '🎉', color: '#14b8a6', bg: 'rgba(20, 184, 166, 0.15)' },
-    { id: 'parttime', name: { en: 'Freelance & Side-gig', 'zh-TW': '副業接案' }, icon: '💻', color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.15)' },
-    { id: 'other_inc', name: { en: 'Other Income', 'zh-TW': '其他收入' }, icon: '🧧', color: '#8b5cf6', bg: 'rgba(139, 92, 246, 0.15)' }
+    { id: 'salary', name: { en: 'Salary & Wages', 'zh-TW': '薪資收入' }, icon: '💰', color: '#5E8C78', bg: 'rgba(94, 140, 120, 0.15)' },
+    { id: 'interest', name: { en: 'Interest Income', 'zh-TW': '利息收入' }, icon: '🏦', color: '#5F828F', bg: 'rgba(95, 130, 143, 0.15)' },
+    { id: 'invest', name: { en: 'Investments', 'zh-TW': '投資回報' }, icon: '📈', color: '#5B7C75', bg: 'rgba(91, 124, 117, 0.15)' },
+    { id: 'bonus', name: { en: 'Bonus & Incentives', 'zh-TW': '獎金分紅' }, icon: '🎉', color: '#6A9484', bg: 'rgba(106, 148, 132, 0.15)' },
+    { id: 'parttime', name: { en: 'Freelance & Side-gig', 'zh-TW': '副業接案' }, icon: '💻', color: '#B08852', bg: 'rgba(176, 136, 82, 0.15)' },
+    { id: 'other_inc', name: { en: 'Other Income', 'zh-TW': '其他收入' }, icon: '🧧', color: '#837B97', bg: 'rgba(131, 123, 151, 0.15)' }
   ]
 };
 
@@ -468,6 +695,7 @@ function loadInitialData(key, fallback) {
 // App State
 let state = {
   lang: localStorage.getItem(LANG_KEY) || 'en', // Default to English as requested
+  palette: localStorage.getItem(PALETTE_KEY) || 'sage', // Default to classic Morandi Sage
   transactions: loadInitialData(STORAGE_KEY, DEMO_TRANSACTIONS),
   recurring: loadInitialData(RECURRING_KEY, DEMO_RECURRING),
   currency: localStorage.getItem(CURRENCY_KEY) || 'USD',
@@ -621,8 +849,8 @@ function getCategoryMeta(type, catId, title = '') {
     id: catId,
     name: state.lang === 'en' ? 'Other' : '其他',
     icon: resolvedIcon,
-    color: '#64748b',
-    bg: 'rgba(100, 116, 139, 0.15)'
+    color: '#788282',
+    bg: 'rgba(120, 130, 130, 0.15)'
   };
 }
 
@@ -948,6 +1176,21 @@ function applyLanguage() {
 
   updateRecCategoryOptions();
 
+  // Settings Modal - Morandi Palette Section
+  const paletteSettingsTitle = document.getElementById('palette-settings-title');
+  if (paletteSettingsTitle) paletteSettingsTitle.textContent = dict.paletteSettingsTitle;
+
+  const paletteSettingsDesc = document.getElementById('palette-settings-desc');
+  if (paletteSettingsDesc) paletteSettingsDesc.textContent = dict.paletteSettingsDesc;
+
+  const paletteToggleBtn = document.getElementById('palette-toggle-btn');
+  if (paletteToggleBtn) paletteToggleBtn.setAttribute('title', dict.paletteToggleTitle);
+
+  const paletteQuickLabel = document.getElementById('palette-quick-label');
+  if (paletteQuickLabel) paletteQuickLabel.textContent = dict.paletteQuickLabel;
+
+  renderPaletteSelectorUI();
+
   // Settings Modal
   const settingsTitle = document.getElementById('settings-modal-title');
   if (settingsTitle) settingsTitle.textContent = dict.settingsTitle;
@@ -1078,7 +1321,130 @@ function initTheme() {
     localStorage.setItem(THEME_KEY, dark ? 'dark' : 'light');
     document.getElementById('moon-icon').classList.toggle('hidden', dark);
     document.getElementById('sun-icon').classList.toggle('hidden', !dark);
+    const p = MORANDI_PALETTES[state.palette] || MORANDI_PALETTES.sage;
+    const metaTheme = document.querySelector && document.querySelector('meta[name="theme-color"]');
+    if (metaTheme && typeof metaTheme.setAttribute === 'function') {
+      metaTheme.setAttribute('content', dark ? p.bgDark : p.primary);
+    }
   });
+}
+
+// Morandi Palette Controller
+function applyPalette(paletteKey, save = true) {
+  const p = MORANDI_PALETTES[paletteKey] || MORANDI_PALETTES.sage;
+  state.palette = p.id;
+  if (save) {
+    try {
+      localStorage.setItem(PALETTE_KEY, p.id);
+    } catch (_) {}
+  }
+
+  // Set CSS Custom Properties on documentElement safely
+  if (document.documentElement && document.documentElement.style && typeof document.documentElement.style.setProperty === 'function') {
+    document.documentElement.style.setProperty('--pf-primary', p.primary);
+    document.documentElement.style.setProperty('--pf-primary-rgb', p.primaryRgb);
+    document.documentElement.style.setProperty('--pf-primary-dark', p.primaryDark);
+    document.documentElement.style.setProperty('--pf-primary-dark-rgb', p.primaryDarkRgb);
+    document.documentElement.style.setProperty('--pf-income', p.income);
+    document.documentElement.style.setProperty('--pf-income-rgb', p.incomeRgb);
+    document.documentElement.style.setProperty('--pf-expense', p.expense);
+    document.documentElement.style.setProperty('--pf-expense-rgb', p.expenseRgb);
+    document.documentElement.style.setProperty('--pf-bg-light', p.bgLight);
+    document.documentElement.style.setProperty('--pf-bg-dark', p.bgDark);
+    document.documentElement.style.setProperty('--pf-card-dark', p.cardDark);
+    document.documentElement.style.setProperty('--pf-border-dark', p.borderDark);
+  }
+
+  // Update Category colors dynamically
+  if (CATEGORIES && CATEGORIES.expense && CATEGORIES.income) {
+    CATEGORIES.expense.forEach(c => {
+      if (p.categories[c.id]) {
+        c.color = p.categories[c.id].color;
+        c.bg = p.categories[c.id].bg;
+      }
+    });
+    CATEGORIES.income.forEach(c => {
+      if (p.categories[c.id]) {
+        c.color = p.categories[c.id].color;
+        c.bg = p.categories[c.id].bg;
+      }
+    });
+  }
+
+  // Update mobile browser toolbar color
+  const isDark = document.documentElement && document.documentElement.classList && document.documentElement.classList.contains && document.documentElement.classList.contains('dark');
+  const metaTheme = document.querySelector && document.querySelector('meta[name="theme-color"]');
+  if (metaTheme && typeof metaTheme.setAttribute === 'function') {
+    metaTheme.setAttribute('content', isDark ? p.bgDark : p.primary);
+  }
+
+  // Update quick dot in header
+  const quickDot = document.getElementById('palette-quick-dot');
+  if (quickDot && quickDot.style) {
+    quickDot.style.backgroundColor = p.primary;
+  }
+
+  // Render selector grid in Settings modal
+  renderPaletteSelectorUI();
+
+  // If UI components exist, refresh views that depend on palette colors
+  if (typeof render === 'function' && document.getElementById('net-balance')) {
+    render();
+  }
+  if (typeof renderCategoryPicker === 'function' && document.getElementById('category-grid')) {
+    renderCategoryPicker();
+  }
+  if (typeof renderRecurringList === 'function' && document.getElementById('recurring-rules-list')) {
+    renderRecurringList();
+  }
+}
+
+function renderPaletteSelectorUI() {
+  const grid = document.getElementById('palette-options-grid');
+  if (!grid) return;
+  const isEn = state.lang === 'en';
+
+  const badgeEl = document.getElementById('palette-active-badge');
+  const activePalette = MORANDI_PALETTES[state.palette] || MORANDI_PALETTES.sage;
+  if (badgeEl) {
+    badgeEl.textContent = isEn ? activePalette.badge.en : activePalette.badge['zh-TW'];
+  }
+
+  grid.innerHTML = Object.values(MORANDI_PALETTES).map(p => {
+    const isActive = p.id === state.palette;
+    const name = isEn ? p.name.en : p.name['zh-TW'];
+    const badge = isEn ? p.badge.en : p.badge['zh-TW'];
+    const activeClasses = isActive 
+      ? 'border-indigo-500 bg-indigo-50/70 dark:bg-indigo-950/50 shadow-sm ring-2 ring-indigo-500/20' 
+      : 'border-slate-200/80 dark:border-slate-800 hover:bg-slate-100/70 dark:hover:bg-slate-800/60';
+
+    return `
+      <button type="button" data-palette-id="${p.id}" class="palette-option-btn text-left p-2.5 rounded-2xl border transition-all flex flex-col justify-between ${activeClasses}">
+        <div class="flex items-center justify-between w-full mb-1.5">
+          <span class="w-3.5 h-3.5 rounded-full shadow-inner border border-black/10 shrink-0" style="background-color: ${p.primary}"></span>
+          <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-md ${isActive ? 'bg-indigo-600 text-white' : 'bg-slate-200/70 dark:bg-slate-700 text-slate-600 dark:text-slate-300'}">
+            ${badge}
+          </span>
+        </div>
+        <div class="text-[11px] font-bold text-slate-800 dark:text-slate-100 truncate">${name}</div>
+      </button>
+    `;
+  }).join('');
+
+  if (typeof grid.querySelectorAll === 'function') {
+    grid.querySelectorAll('.palette-option-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const pId = btn.getAttribute('data-palette-id');
+        if (pId) {
+          applyPalette(pId);
+        }
+      });
+    });
+  }
+}
+
+function initPalette() {
+  applyPalette(state.palette, false);
 }
 
 // Demo Preview Banner controller
@@ -1097,6 +1463,7 @@ function updateDemoBanner() {
 document.addEventListener('DOMContentLoaded', () => {
   normalizeDemoItems();
   initTheme();
+  initPalette();
   initCurrency();
   initFoldScreenObserver();
   initEvents();
@@ -1110,6 +1477,17 @@ function initEvents() {
   const langToggleBtn = document.getElementById('lang-toggle-btn');
   if (langToggleBtn) {
     langToggleBtn.addEventListener('click', toggleLanguage);
+  }
+
+  // Morandi Palette Quick Switcher button in header: cycles to next palette
+  const paletteToggleBtn = document.getElementById('palette-toggle-btn');
+  if (paletteToggleBtn) {
+    paletteToggleBtn.addEventListener('click', () => {
+      const keys = Object.keys(MORANDI_PALETTES);
+      const currIdx = keys.indexOf(state.palette);
+      const nextIdx = (currIdx + 1) % keys.length;
+      applyPalette(keys[nextIdx]);
+    });
   }
 
   // Month Navigator
