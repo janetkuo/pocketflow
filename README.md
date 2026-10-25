@@ -29,9 +29,9 @@ Experience PocketFlow immediately in your browser (no registration or install re
 
 | Category | Highlight Features |
 | :--- | :--- |
-| 📱 **Foldable & Responsive** | Dual-pane dashboard on unfolded screens ($\ge$ 768px); ergonomic single-column view with bottom navigation on folded screens (< 768px). |
+| 📱 **Foldable & Responsive** | Dual-pane dashboard on unfolded screens (≥ 768px); ergonomic single-column view with bottom navigation on folded screens (< 768px). |
 | 🔒 **100% Client-Side Privacy** | Zero tracking, zero ads, zero required login. All transaction records and settings remain strictly in local storage (`localStorage`). |
-| 📊 **Interactive Donut Chart** | Mathematical SVG circular arcs with min-degree protection ($6^\circ$) preventing tiny slice glitches; interactive hover & tap inspection. |
+| 📊 **Interactive Donut Chart** | Mathematical SVG circular arcs with min-degree protection (6°) preventing tiny slice glitches; interactive hover & tap inspection. |
 | 🧮 **In-Modal Calculator** | Built-in keypad calculator for quick arithmetic directly inside transaction entry; smart autocomplete with emoji matching. |
 | 🔄 **Recurring Automation** | Monthly & weekly recurring subscriptions/bills (Netflix, Rent, Salary) with automatic due checking and 1-click batch entry. |
 | 🤖 **AI Financial Advisor** | One-click prompt generator formatting totals, savings rate, and category breakdowns ready for Google Gemini, ChatGPT, or Claude. |
@@ -45,7 +45,7 @@ Experience PocketFlow immediately in your browser (no registration or install re
 ## ✨ Detailed Features
 
 ### 📱 1. Foldable & Dual-Pane Architecture
-- **Unfolded Inner Screen / Wide Displays ($\ge$ 768px)**:
+- **Unfolded Inner Screen / Wide Displays (≥ 768px)**:
   - **Left Pane**: Monthly balance card, savings rate progress indicator, and interactive SVG donut chart.
   - **Right Pane**: Instant search bar, category/type filter tabs (All, Expense, Income), and chronological transaction feed.
 - **Folded Outer Screen / Mobile Displays (< 768px)**:
@@ -60,7 +60,7 @@ Experience PocketFlow immediately in your browser (no registration or install re
 
 ### 📊 3. Precision Analytics & Interactive Donut Chart
 - **Mathematical SVG Arc Engine**: Custom vector donut chart calculating proportional angles dynamically.
-- **Min-Degree Safeguard ($6.0^\circ$)**: Ensures tiny spending categories ($< 1\%$) remain visible, selectable, and interactive without overlapping glitches.
+- **Min-Degree Safeguard (6.0°)**: Ensures tiny spending categories (< 1%) remain visible, selectable, and interactive without overlapping glitches.
 - **Hover & Touch Breakdown**: Tap any slice to inspect category amounts, percentages, and status instantly in the center ring.
 - **Savings Rate & Financial Health**: Real-time calculation of net savings rate with automatic surplus/deficit status badges.
 
@@ -137,9 +137,3 @@ Checks performed:
 2. **DOM ID Consistency**: Validates that all element IDs referenced in `app.js` exist in `index.html`.
 3. **Core Calculations**: Validates currency formatting (`formatMoney`) and category icon resolution.
 4. **Branding & Assets**: Verifies icon assets and metadata consistency.
-
----
-
-## 📄 License
-
-This project is licensed under the [MIT License](LICENSE).
