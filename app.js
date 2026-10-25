@@ -111,6 +111,7 @@ const I18N = {
     calcToggleHide: 'Hide Calculator',
     calcDivZero: '⚠️ Cannot divide by 0',
     calcInvalidExpr: '⚠️ Invalid calculation',
+    calcKeypadSave: 'Save',
     editTxBtn: 'Edit',
     deleteTxBtn: 'Delete',
 
@@ -293,6 +294,7 @@ const I18N = {
     calcToggleHide: '收合計算機',
     calcDivZero: '⚠️ 除數不能為 0',
     calcInvalidExpr: '⚠️ 計算式有誤',
+    calcKeypadSave: '儲存',
     editTxBtn: '編輯',
     deleteTxBtn: '刪除',
 
@@ -1188,6 +1190,8 @@ function applyLanguage() {
   const modalSubmitBtn = document.getElementById('modal-submit-btn');
   if (modalSubmitBtn) modalSubmitBtn.textContent = isEditingTx ? dict.updateTransaction : dict.saveTransaction;
 
+  updateKeypadEqualBtn();
+
   // Recurring Controls in Add Modal
   const modalRecTitle = document.getElementById('modal-rec-title');
   if (modalRecTitle) modalRecTitle.textContent = dict.modalRecTitle;
@@ -1670,6 +1674,8 @@ function updateCalcPreview() {
   const val = (input.value || '').trim();
   const dict = I18N[state?.lang || 'en'] || I18N.en;
 
+  updateKeypadEqualBtn();
+
   if (!val) {
     preview.textContent = '';
     return;
@@ -1694,6 +1700,44 @@ function updateCalcPreview() {
     preview.textContent = `= ${cleanNum.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
   } else {
     preview.textContent = '';
+  }
+}
+
+// Dynamically updates calculator equal button between Calculate (=) and Save (✓)
+function updateKeypadEqualBtn() {
+  const input = document.getElementById('input-amount');
+  const equalBtn = document.getElementById('calc-key-equal');
+  const icon = document.getElementById('calc-key-equal-icon');
+  const label = document.getElementById('calc-key-equal-label');
+  if (!equalBtn || !input) return;
+
+  const val = (input.value || '').trim();
+  const dict = I18N[state?.lang || 'en'] || I18N.en;
+  const hasOperator = /[+\-×÷*/]/.test(val) && val !== '-';
+
+  if (hasOperator) {
+    equalBtn.setAttribute('data-calc', '=');
+    equalBtn.setAttribute('aria-label', 'Calculate');
+    equalBtn.className = 'calc-key row-span-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xl shadow-md shadow-indigo-600/30 active:scale-95 transition flex flex-col items-center justify-center cursor-pointer';
+    if (icon) {
+      icon.textContent = '=';
+      icon.className = 'text-xl font-black leading-none';
+    }
+    if (label) {
+      label.classList.add('hidden');
+    }
+  } else {
+    equalBtn.setAttribute('data-calc', 'save');
+    equalBtn.setAttribute('aria-label', dict.saveTransaction || 'Save Transaction');
+    equalBtn.className = 'calc-key row-span-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-md shadow-emerald-600/30 active:scale-95 transition flex flex-col items-center justify-center gap-0.5 cursor-pointer border border-emerald-500/40';
+    if (icon) {
+      icon.textContent = '✓';
+      icon.className = 'text-base font-black leading-none';
+    }
+    if (label) {
+      label.classList.remove('hidden');
+      label.textContent = dict.calcKeypadSave || (state?.lang === 'zh-TW' ? '儲存' : 'Save');
+    }
   }
 }
 
@@ -1732,6 +1776,7 @@ function handleCalcInput(key) {
   if (key === 'clear') {
     input.value = '';
     updateCalcPreview();
+    updateKeypadEqualBtn();
     return;
   }
 
@@ -1747,6 +1792,7 @@ function handleCalcInput(key) {
       input.value = val;
     }
     updateCalcPreview();
+    updateKeypadEqualBtn();
     return;
   }
 
@@ -1759,6 +1805,26 @@ function handleCalcInput(key) {
       input.value = cleanNum.toString();
       const preview = document.getElementById('calc-preview');
       if (preview) preview.textContent = '';
+    }
+    updateKeypadEqualBtn();
+    return;
+  }
+
+  if (key === 'save') {
+    const trimmed = val.trim();
+    if (/[+\-×÷*/]/.test(trimmed) && trimmed !== '-') {
+      const evaluated = evaluateExpression(trimmed);
+      if (evaluated !== null && !isNaN(evaluated)) {
+        input.value = parseFloat(evaluated.toFixed(2)).toString();
+      }
+    }
+    const form = document.getElementById('transaction-form');
+    if (form) {
+      if (typeof form.requestSubmit === 'function') {
+        form.requestSubmit();
+      } else {
+        form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+      }
     }
     return;
   }
@@ -1773,6 +1839,7 @@ function handleCalcInput(key) {
       if (key === '-') {
         input.value = '-';
         updateCalcPreview();
+        updateKeypadEqualBtn();
       }
       return;
     }
@@ -1781,17 +1848,20 @@ function handleCalcInput(key) {
       val = val.replace(/\s[+\-×÷*/]\s$/, ` ${displayOp} `);
       input.value = val;
       updateCalcPreview();
+      updateKeypadEqualBtn();
       return;
     }
     if (/[+\-×÷*/]$/.test(trimmed)) {
       val = trimmed.replace(/[+\-×÷*/]$/, `${displayOp}`);
       input.value = val + ' ';
       updateCalcPreview();
+      updateKeypadEqualBtn();
       return;
     }
     // Append operator with spacing for readability
     input.value = trimmed + ` ${displayOp} `;
     updateCalcPreview();
+    updateKeypadEqualBtn();
     return;
   }
 
@@ -1801,6 +1871,7 @@ function handleCalcInput(key) {
     if (!trimmed || trimmed === '0' || /\s[+\-×÷*/]\s$/.test(val)) {
       input.value = (!trimmed || trimmed === '0') ? '0.' : val + '0.';
       updateCalcPreview();
+      updateKeypadEqualBtn();
       return;
     }
     // Check if current number segment already has a decimal
@@ -1811,6 +1882,7 @@ function handleCalcInput(key) {
     }
     input.value = val + '.';
     updateCalcPreview();
+    updateKeypadEqualBtn();
     return;
   }
 
@@ -1822,6 +1894,7 @@ function handleCalcInput(key) {
       input.value = val + key;
     }
     updateCalcPreview();
+    updateKeypadEqualBtn();
   }
 }
 
@@ -1980,6 +2053,7 @@ function initEvents() {
     document.getElementById('input-amount').value = '';
     const calcPrev = document.getElementById('calc-preview');
     if (calcPrev) calcPrev.textContent = '';
+    updateKeypadEqualBtn();
     setKeypadVisible(true);
 
     document.getElementById('add-modal').classList.remove('hidden');
@@ -2017,6 +2091,7 @@ function initEvents() {
     document.getElementById('input-title').value = getItemTitle(tx);
     document.getElementById('input-amount').value = tx.amount;
     document.getElementById('input-date').value = tx.date;
+    updateKeypadEqualBtn();
 
     const modalCurrSelect = document.getElementById('modal-currency-select');
     if (modalCurrSelect) {

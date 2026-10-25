@@ -376,10 +376,10 @@
 
   <!-- ================= ADD / EDIT TRANSACTION MODAL ================= -->
   <div id="add-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-end sm:items-center justify-center p-0 sm:p-4 transition-opacity">
-    <div class="bg-white dark:bg-slate-900 w-full sm:max-w-md rounded-t-[32px] sm:rounded-3xl p-6 shadow-2xl border border-slate-200/80 dark:border-slate-800 max-h-[90vh] overflow-y-auto">
+    <div class="bg-white dark:bg-slate-900 w-full sm:max-w-md rounded-t-[32px] sm:rounded-3xl shadow-2xl border border-slate-200/80 dark:border-slate-800 max-h-[90vh] flex flex-col overflow-hidden">
       
-      <!-- Modal Header -->
-      <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+      <!-- Modal Header (Fixed at top) -->
+      <div class="flex-shrink-0 px-6 pt-5 pb-3 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
         <div class="flex items-center gap-2.5">
           <span id="modal-heading-text" class="text-xs font-extrabold px-2.5 py-1 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200/60 dark:border-indigo-800/60">
             New Transaction
@@ -398,154 +398,162 @@
         </button>
       </div>
 
-      <!-- Transaction Form -->
-      <form id="transaction-form" class="mt-4 space-y-4">
+      <!-- Transaction Form (Flex Column) -->
+      <form id="transaction-form" class="flex flex-col flex-1 min-h-0 overflow-hidden">
         <input type="hidden" id="edit-id" value="">
 
-        <!-- Big Amount & Currency Input Combo -->
-        <div class="py-2 text-center">
-          <label id="modal-amount-label" class="block text-xs font-semibold text-slate-400 mb-1.5">
-            Select Currency & Enter Amount
-          </label>
-          <div class="inline-flex items-center justify-center gap-2">
-            <!-- Currency selector inside entry modal -->
-            <div class="relative">
-              <select id="modal-currency-select" class="appearance-none bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/80 text-sm font-extrabold text-indigo-600 dark:text-indigo-400 py-2 pl-3 pr-7 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer shadow-sm">
-                <option value="USD">$ USD</option>
-                <option value="TWD">NT$ TWD</option>
-                <option value="JPY">¥ JPY</option>
-                <option value="EUR">€ EUR</option>
-                <option value="KRW">₩ KRW</option>
-                <option value="HKD">HK$ HKD</option>
-                <option value="GBP">£ GBP</option>
-              </select>
-              <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1.5 text-slate-400">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
-              </div>
-            </div>
-
-            <!-- Amount Input -->
-            <input id="input-amount" type="text" inputmode="none" placeholder="0" required autocomplete="off"
-              class="w-44 sm:w-56 text-left text-3xl sm:text-4xl font-extrabold bg-transparent text-slate-800 dark:text-white focus:outline-none border-b-2 border-indigo-500 pb-1 tracking-tight">
-          </div>
-
-          <!-- Live Preview & Keypad Toggle Header -->
-          <div class="flex items-center justify-between max-w-xs mx-auto mt-2 px-1">
-            <div id="calc-preview" class="text-xs font-bold text-indigo-600 dark:text-indigo-400 min-h-[1.25rem] flex items-center"></div>
-            <button type="button" id="toggle-keypad-btn" class="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400 transition py-0.5 px-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-              <span id="toggle-keypad-text">Hide Calculator</span>
-            </button>
-          </div>
-
-          <!-- Calculator Keypad -->
-          <div id="calc-keypad" class="w-full max-w-xs mx-auto mt-2 grid grid-cols-4 gap-1.5 p-2 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200/70 dark:border-slate-700/60 select-none">
-            <!-- Row 1: Clear, Backspace, Divide, Multiply -->
-            <button type="button" class="calc-key h-10 sm:h-11 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 font-bold text-sm shadow-sm border border-rose-200/60 dark:border-rose-900/50 hover:bg-rose-100 dark:hover:bg-rose-900/60 active:scale-95 transition flex items-center justify-center cursor-pointer" data-calc="clear" aria-label="Clear">C</button>
-            <button type="button" class="calc-key h-10 sm:h-11 rounded-xl bg-slate-100 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300 font-bold text-base shadow-sm border border-slate-200/60 dark:border-slate-600/60 hover:bg-slate-200 dark:hover:bg-slate-600 active:scale-95 transition flex items-center justify-center cursor-pointer" data-calc="backspace" aria-label="Backspace">⌫</button>
-            <button type="button" class="calc-key h-10 sm:h-11 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-black text-lg shadow-sm border border-indigo-200/60 dark:border-indigo-800/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 active:scale-95 transition flex items-center justify-center cursor-pointer" data-calc="÷" aria-label="Divide">÷</button>
-            <button type="button" class="calc-key h-10 sm:h-11 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-black text-lg shadow-sm border border-indigo-200/60 dark:border-indigo-800/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 active:scale-95 transition flex items-center justify-center cursor-pointer" data-calc="×" aria-label="Multiply">×</button>
-
-            <!-- Row 2: 7, 8, 9, Minus -->
-            <button type="button" class="calc-key h-10 sm:h-11 rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 font-bold text-base shadow-sm border border-slate-200/60 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-95 transition flex items-center justify-center cursor-pointer" data-calc="7">7</button>
-            <button type="button" class="calc-key h-10 sm:h-11 rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 font-bold text-base shadow-sm border border-slate-200/60 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-95 transition flex items-center justify-center cursor-pointer" data-calc="8">8</button>
-            <button type="button" class="calc-key h-10 sm:h-11 rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 font-bold text-base shadow-sm border border-slate-200/60 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-95 transition flex items-center justify-center cursor-pointer" data-calc="9">9</button>
-            <button type="button" class="calc-key h-10 sm:h-11 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-black text-lg shadow-sm border border-indigo-200/60 dark:border-indigo-800/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 active:scale-95 transition flex items-center justify-center cursor-pointer" data-calc="-" aria-label="Minus">−</button>
-
-            <!-- Row 3: 4, 5, 6, Plus -->
-            <button type="button" class="calc-key h-10 sm:h-11 rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 font-bold text-base shadow-sm border border-slate-200/60 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-95 transition flex items-center justify-center cursor-pointer" data-calc="4">4</button>
-            <button type="button" class="calc-key h-10 sm:h-11 rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 font-bold text-base shadow-sm border border-slate-200/60 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-95 transition flex items-center justify-center cursor-pointer" data-calc="5">5</button>
-            <button type="button" class="calc-key h-10 sm:h-11 rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 font-bold text-base shadow-sm border border-slate-200/60 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-95 transition flex items-center justify-center cursor-pointer" data-calc="6">6</button>
-            <button type="button" class="calc-key h-10 sm:h-11 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-black text-lg shadow-sm border border-indigo-200/60 dark:border-indigo-800/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 active:scale-95 transition flex items-center justify-center cursor-pointer" data-calc="+" aria-label="Plus">+</button>
-
-            <!-- Row 4 & 5: 1, 2, 3, Equals, 0, Dot -->
-            <button type="button" class="calc-key h-10 sm:h-11 rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 font-bold text-base shadow-sm border border-slate-200/60 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-95 transition flex items-center justify-center cursor-pointer" data-calc="1">1</button>
-            <button type="button" class="calc-key h-10 sm:h-11 rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 font-bold text-base shadow-sm border border-slate-200/60 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-95 transition flex items-center justify-center cursor-pointer" data-calc="2">2</button>
-            <button type="button" class="calc-key h-10 sm:h-11 rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 font-bold text-base shadow-sm border border-slate-200/60 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-95 transition flex items-center justify-center cursor-pointer" data-calc="3">3</button>
-            <button type="button" class="calc-key row-span-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xl shadow-md shadow-indigo-600/30 active:scale-95 transition flex items-center justify-center cursor-pointer" data-calc="=" aria-label="Calculate">=</button>
-
-            <button type="button" class="calc-key col-span-2 h-10 sm:h-11 rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 font-bold text-base shadow-sm border border-slate-200/60 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-95 transition flex items-center justify-center cursor-pointer" data-calc="0">0</button>
-            <button type="button" class="calc-key h-10 sm:h-11 rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 font-bold text-base shadow-sm border border-slate-200/60 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-95 transition flex items-center justify-center cursor-pointer" data-calc=".">.</button>
-          </div>
-        </div>
-
-        <!-- Description with AUTOCOMPLETE (Optional) -->
-        <div class="relative">
-          <label id="modal-desc-label" class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5">
-            <span id="modal-desc-text">Description / Title (Optional)</span> <span id="modal-desc-hint" class="text-[11px] font-normal text-indigo-500">(Smart autocomplete enabled)</span>
-          </label>
-          <div class="relative">
-            <input id="input-title" type="text" placeholder="e.g., Latte, Groceries, Metro..." autocomplete="off"
-              class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/80 rounded-2xl text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 border border-slate-200 dark:border-slate-700/80 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-            <!-- Autocomplete Dropdown List -->
-            <div id="autocomplete-list" class="hidden absolute left-0 right-0 top-full mt-1.5 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 max-h-48 overflow-y-auto z-50 divide-y divide-slate-100 dark:divide-slate-700/60">
-            </div>
-          </div>
-        </div>
-
-        <!-- Category Picker Grid -->
-        <div>
-          <label id="modal-cat-label" class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5">Select Category</label>
-          <div id="category-grid" class="grid grid-cols-4 gap-2.5 max-h-52 overflow-y-auto hide-scrollbar p-1">
-          </div>
-        </div>
-
-        <!-- Date Picker -->
-        <div>
-          <label id="modal-date-label" class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5">Date</label>
-          <input id="input-date" type="date" required
-            class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/80 rounded-2xl text-xs text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700/80 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-        </div>
-
-        <!-- Recurring Option Toggle Card (Default: No) -->
-        <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 transition-all">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2.5">
-              <span class="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-              </span>
-              <div>
-                <div id="modal-rec-title" class="text-xs font-bold text-slate-800 dark:text-slate-100">Recurring Transaction</div>
-                <div id="modal-rec-desc" class="text-[10px] text-slate-400">Auto-repeat every month or week</div>
-              </div>
-            </div>
-
-            <!-- Small Toggle Button (Default: No) -->
-            <div class="inline-flex p-1 bg-slate-200/70 dark:bg-slate-700/70 rounded-xl items-center">
-              <button type="button" id="modal-rec-no-btn" class="px-3 py-1 rounded-lg text-xs font-bold bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition">
-                No
-              </button>
-              <button type="button" id="modal-rec-yes-btn" class="px-3 py-1 rounded-lg text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition">
-                Yes
-              </button>
-            </div>
-          </div>
-
-          <!-- Extended Recurring Options (Hidden by Default) -->
-          <div id="modal-recurring-fields" class="hidden mt-3 pt-3 border-t border-slate-200/60 dark:border-slate-700/60 space-y-2.5">
-            <div class="grid grid-cols-2 gap-2.5">
-              <div>
-                <label id="modal-rec-freq-label" class="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1">Frequency</label>
-                <select id="modal-rec-freq" class="w-full px-3 py-2 bg-white dark:bg-slate-800 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                  <option id="modal-rec-freq-monthly" value="monthly">Monthly</option>
-                  <option id="modal-rec-freq-weekly" value="weekly">Weekly</option>
+        <!-- Scrollable Form Fields -->
+        <div class="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+          <!-- Big Amount & Currency Input Combo -->
+          <div class="py-2 text-center">
+            <label id="modal-amount-label" class="block text-xs font-semibold text-slate-400 mb-1.5">
+              Select Currency & Enter Amount
+            </label>
+            <div class="inline-flex items-center justify-center gap-2">
+              <!-- Currency selector inside entry modal -->
+              <div class="relative">
+                <select id="modal-currency-select" class="appearance-none bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/80 text-sm font-extrabold text-indigo-600 dark:text-indigo-400 py-2 pl-3 pr-7 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer shadow-sm">
+                  <option value="USD">$ USD</option>
+                  <option value="TWD">NT$ TWD</option>
+                  <option value="JPY">¥ JPY</option>
+                  <option value="EUR">€ EUR</option>
+                  <option value="KRW">₩ KRW</option>
+                  <option value="HKD">HK$ HKD</option>
+                  <option value="GBP">£ GBP</option>
                 </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1.5 text-slate-400">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
+                </div>
               </div>
-              <div>
-                <label id="modal-rec-day-label" class="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1">Repeat Day (1-31)</label>
-                <input id="modal-rec-day" type="number" min="1" max="31" value="1" class="w-full px-3 py-2 bg-white dark:bg-slate-800 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+
+              <!-- Amount Input -->
+              <input id="input-amount" type="text" inputmode="none" placeholder="0" required autocomplete="off"
+                class="w-44 sm:w-56 text-left text-3xl sm:text-4xl font-extrabold bg-transparent text-slate-800 dark:text-white focus:outline-none border-b-2 border-indigo-500 pb-1 tracking-tight">
+            </div>
+
+            <!-- Live Preview & Keypad Toggle Header -->
+            <div class="flex items-center justify-between max-w-xs mx-auto mt-2 px-1">
+              <div id="calc-preview" class="text-xs font-bold text-indigo-600 dark:text-indigo-400 min-h-[1.25rem] flex items-center"></div>
+              <button type="button" id="toggle-keypad-btn" class="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400 transition py-0.5 px-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                <span id="toggle-keypad-text">Hide Calculator</span>
+              </button>
+            </div>
+
+            <!-- Calculator Keypad -->
+            <div id="calc-keypad" class="w-full max-w-xs mx-auto mt-2 grid grid-cols-4 gap-1.5 p-2 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200/70 dark:border-slate-700/60 select-none">
+              <!-- Row 1: Clear, Backspace, Divide, Multiply -->
+              <button type="button" class="calc-key h-10 sm:h-11 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 font-bold text-sm shadow-sm border border-rose-200/60 dark:border-rose-900/50 hover:bg-rose-100 dark:hover:bg-rose-900/60 active:scale-95 transition flex items-center justify-center cursor-pointer" data-calc="clear" aria-label="Clear">C</button>
+              <button type="button" class="calc-key h-10 sm:h-11 rounded-xl bg-slate-100 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300 font-bold text-base shadow-sm border border-slate-200/60 dark:border-slate-600/60 hover:bg-slate-200 dark:hover:bg-slate-600 active:scale-95 transition flex items-center justify-center cursor-pointer" data-calc="backspace" aria-label="Backspace">⌫</button>
+              <button type="button" class="calc-key h-10 sm:h-11 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-black text-lg shadow-sm border border-indigo-200/60 dark:border-indigo-800/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 active:scale-95 transition flex items-center justify-center cursor-pointer" data-calc="÷" aria-label="Divide">÷</button>
+              <button type="button" class="calc-key h-10 sm:h-11 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-black text-lg shadow-sm border border-indigo-200/60 dark:border-indigo-800/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 active:scale-95 transition flex items-center justify-center cursor-pointer" data-calc="×" aria-label="Multiply">×</button>
+
+              <!-- Row 2: 7, 8, 9, Minus -->
+              <button type="button" class="calc-key h-10 sm:h-11 rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 font-bold text-base shadow-sm border border-slate-200/60 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-95 transition flex items-center justify-center cursor-pointer" data-calc="7">7</button>
+              <button type="button" class="calc-key h-10 sm:h-11 rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 font-bold text-base shadow-sm border border-slate-200/60 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-95 transition flex items-center justify-center cursor-pointer" data-calc="8">8</button>
+              <button type="button" class="calc-key h-10 sm:h-11 rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 font-bold text-base shadow-sm border border-slate-200/60 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-95 transition flex items-center justify-center cursor-pointer" data-calc="9">9</button>
+              <button type="button" class="calc-key h-10 sm:h-11 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-black text-lg shadow-sm border border-indigo-200/60 dark:border-indigo-800/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 active:scale-95 transition flex items-center justify-center cursor-pointer" data-calc="-" aria-label="Minus">−</button>
+
+              <!-- Row 3: 4, 5, 6, Plus -->
+              <button type="button" class="calc-key h-10 sm:h-11 rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 font-bold text-base shadow-sm border border-slate-200/60 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-95 transition flex items-center justify-center cursor-pointer" data-calc="4">4</button>
+              <button type="button" class="calc-key h-10 sm:h-11 rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 font-bold text-base shadow-sm border border-slate-200/60 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-95 transition flex items-center justify-center cursor-pointer" data-calc="5">5</button>
+              <button type="button" class="calc-key h-10 sm:h-11 rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 font-bold text-base shadow-sm border border-slate-200/60 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-95 transition flex items-center justify-center cursor-pointer" data-calc="6">6</button>
+              <button type="button" class="calc-key h-10 sm:h-11 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-black text-lg shadow-sm border border-indigo-200/60 dark:border-indigo-800/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 active:scale-95 transition flex items-center justify-center cursor-pointer" data-calc="+" aria-label="Plus">+</button>
+
+              <!-- Row 4 & 5: 1, 2, 3, Equals / Save Key, 0, Dot -->
+              <button type="button" class="calc-key h-10 sm:h-11 rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 font-bold text-base shadow-sm border border-slate-200/60 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-95 transition flex items-center justify-center cursor-pointer" data-calc="1">1</button>
+              <button type="button" class="calc-key h-10 sm:h-11 rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 font-bold text-base shadow-sm border border-slate-200/60 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-95 transition flex items-center justify-center cursor-pointer" data-calc="2">2</button>
+              <button type="button" class="calc-key h-10 sm:h-11 rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 font-bold text-base shadow-sm border border-slate-200/60 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-95 transition flex items-center justify-center cursor-pointer" data-calc="3">3</button>
+              <button type="button" id="calc-key-equal" class="calc-key row-span-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-md shadow-emerald-600/30 active:scale-95 transition flex flex-col items-center justify-center gap-0.5 cursor-pointer border border-emerald-500/40" data-calc="save" aria-label="Save Transaction">
+                <span id="calc-key-equal-icon" class="text-base font-black leading-none">✓</span>
+                <span id="calc-key-equal-label" class="text-[10px] font-extrabold uppercase tracking-tight">Save</span>
+              </button>
+
+              <button type="button" class="calc-key col-span-2 h-10 sm:h-11 rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 font-bold text-base shadow-sm border border-slate-200/60 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-95 transition flex items-center justify-center cursor-pointer" data-calc="0">0</button>
+              <button type="button" class="calc-key h-10 sm:h-11 rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 font-bold text-base shadow-sm border border-slate-200/60 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-95 transition flex items-center justify-center cursor-pointer" data-calc=".">.</button>
+            </div>
+          </div>
+
+          <!-- Description with AUTOCOMPLETE (Optional) -->
+          <div class="relative">
+            <label id="modal-desc-label" class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5">
+              <span id="modal-desc-text">Description / Title (Optional)</span> <span id="modal-desc-hint" class="text-[11px] font-normal text-indigo-500">(Smart autocomplete enabled)</span>
+            </label>
+            <div class="relative">
+              <input id="input-title" type="text" placeholder="e.g., Latte, Groceries, Metro..." autocomplete="off"
+                class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/80 rounded-2xl text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 border border-slate-200 dark:border-slate-700/80 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+              <!-- Autocomplete Dropdown List -->
+              <div id="autocomplete-list" class="hidden absolute left-0 right-0 top-full mt-1.5 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 max-h-48 overflow-y-auto z-50 divide-y divide-slate-100 dark:divide-slate-700/60">
               </div>
             </div>
-            <div id="modal-rec-help-text" class="text-[10px] text-indigo-500 dark:text-indigo-400 font-medium leading-tight">
-              💡 Automatically creates a recurring rule. Future due dates will alert you automatically.
+          </div>
+
+          <!-- Category Picker Grid -->
+          <div>
+            <label id="modal-cat-label" class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5">Select Category</label>
+            <div id="category-grid" class="grid grid-cols-4 gap-2.5 max-h-52 overflow-y-auto hide-scrollbar p-1">
+            </div>
+          </div>
+
+          <!-- Date Picker -->
+          <div>
+            <label id="modal-date-label" class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5">Date</label>
+            <input id="input-date" type="date" required
+              class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/80 rounded-2xl text-xs text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700/80 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+          </div>
+
+          <!-- Recurring Option Toggle Card (Default: No) -->
+          <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 transition-all">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2.5">
+                <span class="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                </span>
+                <div>
+                  <div id="modal-rec-title" class="text-xs font-bold text-slate-800 dark:text-slate-100">Recurring Transaction</div>
+                  <div id="modal-rec-desc" class="text-[10px] text-slate-400">Auto-repeat every month or week</div>
+                </div>
+              </div>
+
+              <!-- Small Toggle Button (Default: No) -->
+              <div class="inline-flex p-1 bg-slate-200/70 dark:bg-slate-700/70 rounded-xl items-center">
+                <button type="button" id="modal-rec-no-btn" class="px-3 py-1 rounded-lg text-xs font-bold bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition">
+                  No
+                </button>
+                <button type="button" id="modal-rec-yes-btn" class="px-3 py-1 rounded-lg text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition">
+                  Yes
+                </button>
+              </div>
+            </div>
+
+            <!-- Extended Recurring Options (Hidden by Default) -->
+            <div id="modal-recurring-fields" class="hidden mt-3 pt-3 border-t border-slate-200/60 dark:border-slate-700/60 space-y-2.5">
+              <div class="grid grid-cols-2 gap-2.5">
+                <div>
+                  <label id="modal-rec-freq-label" class="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1">Frequency</label>
+                  <select id="modal-rec-freq" class="w-full px-3 py-2 bg-white dark:bg-slate-800 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <option id="modal-rec-freq-monthly" value="monthly">Monthly</option>
+                    <option id="modal-rec-freq-weekly" value="weekly">Weekly</option>
+                  </select>
+                </div>
+                <div>
+                  <label id="modal-rec-day-label" class="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1">Repeat Day (1-31)</label>
+                  <input id="modal-rec-day" type="number" min="1" max="31" value="1" class="w-full px-3 py-2 bg-white dark:bg-slate-800 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+              </div>
+              <div id="modal-rec-help-text" class="text-[10px] text-indigo-500 dark:text-indigo-400 font-medium leading-tight">
+                💡 Automatically creates a recurring rule. Future due dates will alert you automatically.
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Submit Button -->
-        <button id="modal-submit-btn" type="submit" class="w-full py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm shadow-md shadow-indigo-600/25 hover:opacity-95 active:scale-98 transition">
-          Save Transaction
-        </button>
+        <!-- Sticky Bottom Action Footer (Fixed at bottom) -->
+        <div class="flex-shrink-0 px-6 py-3.5 border-t border-slate-100 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md">
+          <button id="modal-submit-btn" type="submit" class="w-full py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm shadow-md shadow-indigo-600/25 hover:opacity-95 active:scale-98 transition flex items-center justify-center gap-2">
+            Save Transaction
+          </button>
+        </div>
       </form>
 
     </div>
