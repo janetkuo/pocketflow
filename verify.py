@@ -123,6 +123,19 @@ def check_business_logic():
     const dessertIcon = resolveItemIcon('drinks', '法式草莓千層蛋糕', '☕');
     if (dessertIcon !== '🥐') throw new Error('resolveItemIcon dessert failed: got ' + dessertIcon);
 
+    // Check recurring schedule subtext formatting (Weekly vs Monthly)
+    const enWeekly = window.I18N.en.recurringItemSub(1, 'expense', 'weekly');
+    if (enWeekly !== 'Every Monday · Expense') throw new Error('enWeekly failed: ' + enWeekly);
+
+    const twWeekly = window.I18N['zh-TW'].recurringItemSub(1, 'expense', 'weekly');
+    if (twWeekly !== '每週一 · 支出') throw new Error('twWeekly failed: ' + twWeekly);
+
+    const enMonthly = window.I18N.en.recurringItemSub(10, 'expense', 'monthly');
+    if (enMonthly !== 'Day 10 each month · Expense') throw new Error('enMonthly failed: ' + enMonthly);
+
+    const twMonthly = window.I18N['zh-TW'].recurringItemSub(10, 'expense', 'monthly');
+    if (twMonthly !== '每月 10 號 · 支出') throw new Error('twMonthly failed: ' + twMonthly);
+
     const evChargeIcon = resolveItemIcon('transport', 'Tesla 特斯拉超充站充電', '🚗');
     if (evChargeIcon !== '⚡') throw new Error('resolveItemIcon ev charging failed: got ' + evChargeIcon);
 

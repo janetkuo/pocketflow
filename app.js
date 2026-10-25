@@ -127,6 +127,8 @@ const I18N = {
     modalRecFreqLabel: 'Frequency',
     modalRecFreqMonthly: 'Monthly',
     modalRecFreqWeekly: 'Weekly',
+    modalRecDayLabelMonthly: 'Repeat Day (1-31)',
+    modalRecDayLabelWeekly: 'Day of Week',
     modalRecDayLabel: 'Repeat Day (1-31)',
     modalRecHelpText: '💡 Automatically creates a recurring rule. Future due dates will alert you automatically.',
     recQuickAddTip: '💡 You can now set recurring transactions directly inside Quick Add!',
@@ -144,13 +146,32 @@ const I18N = {
     recFreqMonthly: 'Monthly',
     recFreqWeekly: 'Weekly',
     recDayLabel: 'Day',
+    recDayLabelMonthly: 'Day',
+    recDayLabelWeekly: 'Every',
     recDaySuffix: 'of month',
+    recDaySuffixMonthly: 'of month',
+    recDaySuffixWeekly: '',
     recDayPlaceholder: '1-31',
+    recScheduleHeading: 'Repeat Schedule',
+    recNameFieldLabel: 'Item Name',
+    recAmountFieldLabel: 'Amount',
+    recTypeFieldLabel: 'Type',
+    recCatFieldLabel: 'Category',
+    recFreqFieldLabel: 'Frequency',
+    weekdays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
     addRecurringBtn: 'Add to Recurring List',
     updateRecurringBtn: 'Update Recurring Item',
     cancelEditBtn: 'Cancel',
     noRecurringRules: 'No recurring items configured yet',
-    recurringItemSub: (day, type) => `Day ${day} each month · ${type === 'expense' ? 'Expense' : 'Income'}`,
+    recurringItemSub: (day, type, freq = 'monthly') => {
+      const typeStr = type === 'expense' ? 'Expense' : 'Income';
+      if (freq === 'weekly') {
+        const weekdays = { 1: 'Monday', 2: 'Tuesday', 3: 'Wednesday', 4: 'Thursday', 5: 'Friday', 6: 'Saturday', 7: 'Sunday' };
+        const wName = weekdays[day] || `Day ${day}`;
+        return `Every ${wName} · ${typeStr}`;
+      }
+      return `Day ${day} each month · ${typeStr}`;
+    },
 
     // Settings Modal
     settingsTitle: 'Settings & Data Backup',
@@ -317,7 +338,9 @@ const I18N = {
     modalRecFreqLabel: '週期頻率',
     modalRecFreqMonthly: '每月固定',
     modalRecFreqWeekly: '每週固定',
-    modalRecDayLabel: '固定扣款/入帳日 (1-31)',
+    modalRecDayLabelMonthly: '每月固定日 (1-31)',
+    modalRecDayLabelWeekly: '每週固定日 (星期幾)',
+    modalRecDayLabel: '每月固定日 (1-31)',
     modalRecHelpText: '💡 將同步建立固定週期規則，未來的扣款日系統會自動提醒與對帳。',
     recQuickAddTip: '💡 現在可以直接在「快速記帳」中開啟週期設定！',
     recQuickAddBtn: '+ 快速記帳新增',
@@ -334,13 +357,32 @@ const I18N = {
     recFreqMonthly: '每月固定',
     recFreqWeekly: '每週固定',
     recDayLabel: '每月',
+    recDayLabelMonthly: '每月',
+    recDayLabelWeekly: '每週',
     recDaySuffix: '號',
+    recDaySuffixMonthly: '號',
+    recDaySuffixWeekly: '',
     recDayPlaceholder: '1-31',
+    recScheduleHeading: '扣款/入帳週期',
+    recNameFieldLabel: '項目名稱',
+    recAmountFieldLabel: '金額',
+    recTypeFieldLabel: '收支類型',
+    recCatFieldLabel: '分類項目',
+    recFreqFieldLabel: '週期頻率',
+    weekdays: ['星期一 (週一)', '星期二 (週二)', '星期三 (週三)', '星期四 (週四)', '星期五 (週五)', '星期六 (週六)', '星期日 (週日)'],
     addRecurringBtn: '加入定期清單',
     updateRecurringBtn: '更新定期項目',
     cancelEditBtn: '取消',
     noRecurringRules: '目前沒有設定定期項目',
-    recurringItemSub: (day, type) => `每月 ${day} 號 · ${type === 'expense' ? '支出' : '收入'}`,
+    recurringItemSub: (day, type, freq = 'monthly') => {
+      const typeStr = type === 'expense' ? '支出' : '收入';
+      if (freq === 'weekly') {
+        const weekdays = { 1: '週一', 2: '週二', 3: '週三', 4: '週四', 5: '週五', 6: '週六', 7: '週日' };
+        const wName = weekdays[day] || `週 ${day}`;
+        return `每${wName} · ${typeStr}`;
+      }
+      return `每月 ${day} 號 · ${typeStr}`;
+    },
 
     // Settings Modal
     settingsTitle: '設定與資料備份',
@@ -420,6 +462,10 @@ const I18N = {
     langSwitchLabel: 'English'
   }
 };
+
+if (typeof window !== 'undefined') {
+  window.I18N = I18N;
+}
 
 // Curated Morandi Color Palettes
 const MORANDI_PALETTES = {
@@ -793,10 +839,56 @@ let state = {
   selectedCategory: 'food',
   chartType: 'expense',
   modalIsRecurring: false,
-  isKeypadVisible: true
+  isKeypadVisible: false
 };
 
 let modalRecDayTouched = false;
+
+function updateRecScheduleUI(freq) {
+  const dict = I18N[state.lang] || I18N.en;
+  const isWeekly = freq === 'weekly';
+  const monthlyBox = document.getElementById('rec-monthly-container');
+  const weeklyBox = document.getElementById('rec-weekly-container');
+  const suffix = document.getElementById('rec-day-suffix');
+
+  if (monthlyBox && weeklyBox) {
+    if (isWeekly) {
+      monthlyBox.classList.add('hidden');
+      monthlyBox.classList.remove('flex');
+      weeklyBox.classList.remove('hidden');
+      weeklyBox.classList.add('flex');
+    } else {
+      weeklyBox.classList.add('hidden');
+      weeklyBox.classList.remove('flex');
+      monthlyBox.classList.remove('hidden');
+      monthlyBox.classList.add('flex');
+    }
+  }
+  if (suffix) {
+    suffix.textContent = isWeekly ? dict.recDaySuffixWeekly : dict.recDaySuffixMonthly;
+  }
+}
+
+function updateModalRecScheduleUI(freq) {
+  const dict = I18N[state.lang] || I18N.en;
+  const isWeekly = freq === 'weekly';
+  const dayInput = document.getElementById('modal-rec-day');
+  const weekdaySelect = document.getElementById('modal-rec-weekday');
+  const label = document.getElementById('modal-rec-day-label');
+
+  if (label) {
+    label.textContent = isWeekly ? dict.modalRecDayLabelWeekly : dict.modalRecDayLabelMonthly;
+  }
+  if (dayInput && weekdaySelect) {
+    if (isWeekly) {
+      dayInput.classList.add('hidden');
+      weekdaySelect.classList.remove('hidden');
+    } else {
+      weekdaySelect.classList.add('hidden');
+      dayInput.classList.remove('hidden');
+    }
+  }
+}
 
 // Normalize demo items if user has demo state
 function normalizeDemoItems() {
@@ -1264,8 +1356,17 @@ function applyLanguage() {
   const modalRecFreqWeekly = document.getElementById('modal-rec-freq-weekly');
   if (modalRecFreqWeekly) modalRecFreqWeekly.textContent = dict.modalRecFreqWeekly;
 
+  const modalRecFreq = document.getElementById('modal-rec-freq');
+  const isWeeklyModal = modalRecFreq && modalRecFreq.value === 'weekly';
   const modalRecDayLabel = document.getElementById('modal-rec-day-label');
-  if (modalRecDayLabel) modalRecDayLabel.textContent = dict.modalRecDayLabel;
+  if (modalRecDayLabel) modalRecDayLabel.textContent = isWeeklyModal ? dict.modalRecDayLabelWeekly : dict.modalRecDayLabelMonthly;
+
+  const modalRecWeekday = document.getElementById('modal-rec-weekday');
+  if (modalRecWeekday && dict.weekdays) {
+    const curVal = modalRecWeekday.value;
+    modalRecWeekday.innerHTML = dict.weekdays.map((w, idx) => `<option value="${idx + 1}">${w}</option>`).join('');
+    if (curVal) modalRecWeekday.value = curVal;
+  }
 
   const modalRecHelpText = document.getElementById('modal-rec-help-text');
   if (modalRecHelpText) modalRecHelpText.textContent = dict.modalRecHelpText;
@@ -1302,6 +1403,24 @@ function applyLanguage() {
   const recAmount = document.getElementById('rec-amount');
   if (recAmount) recAmount.setAttribute('placeholder', dict.recAmountPlaceholder);
 
+  const recNameField = document.getElementById('rec-name-field-label');
+  if (recNameField) recNameField.textContent = dict.recNameFieldLabel;
+
+  const recAmountField = document.getElementById('rec-amount-field-label');
+  if (recAmountField) recAmountField.textContent = dict.recAmountFieldLabel;
+
+  const recTypeField = document.getElementById('rec-type-field-label');
+  if (recTypeField) recTypeField.textContent = dict.recTypeFieldLabel;
+
+  const recCatField = document.getElementById('rec-cat-field-label');
+  if (recCatField) recCatField.textContent = dict.recCatFieldLabel;
+
+  const recFreqField = document.getElementById('rec-freq-field-label');
+  if (recFreqField) recFreqField.textContent = dict.recFreqFieldLabel;
+
+  const recDayHeading = document.getElementById('rec-day-heading-label');
+  if (recDayHeading) recDayHeading.textContent = dict.recScheduleHeading;
+
   const recOptExp = document.getElementById('rec-opt-expense');
   if (recOptExp) recOptExp.textContent = dict.recTypeExpense;
 
@@ -1318,10 +1437,22 @@ function applyLanguage() {
   if (recDay) recDay.setAttribute('placeholder', dict.recDayPlaceholder);
 
   const recDayLabel = document.getElementById('rec-day-label');
-  if (recDayLabel) recDayLabel.textContent = dict.recDayLabel;
+  if (recDayLabel) recDayLabel.textContent = dict.recDayLabelMonthly;
 
+  const recWeeklyLabel = document.getElementById('rec-weekly-label');
+  if (recWeeklyLabel) recWeeklyLabel.textContent = dict.recDayLabelWeekly;
+
+  const recFreq = document.getElementById('rec-freq');
+  const isWeeklyRec = recFreq && recFreq.value === 'weekly';
   const recDaySuffix = document.getElementById('rec-day-suffix');
-  if (recDaySuffix) recDaySuffix.textContent = dict.recDaySuffix;
+  if (recDaySuffix) recDaySuffix.textContent = isWeeklyRec ? dict.recDaySuffixWeekly : dict.recDaySuffixMonthly;
+
+  const recWeekday = document.getElementById('rec-weekday');
+  if (recWeekday && dict.weekdays) {
+    const curVal = recWeekday.value;
+    recWeekday.innerHTML = dict.weekdays.map((w, idx) => `<option value="${idx + 1}">${w}</option>`).join('');
+    if (curVal) recWeekday.value = curVal;
+  }
 
   const recSubmitBtn = document.getElementById('rec-submit-btn');
   if (recSubmitBtn) recSubmitBtn.textContent = isEditingRec ? dict.updateRecurringBtn : dict.addRecurringBtn;
@@ -1602,14 +1733,14 @@ function renderPaletteSelectorUI() {
       : 'border-slate-200/80 dark:border-slate-800 hover:bg-slate-100/70 dark:hover:bg-slate-800/60';
 
     return `
-      <button type="button" data-palette-id="${p.id}" class="palette-option-btn text-left p-2.5 rounded-2xl border transition-all flex flex-col justify-between ${activeClasses}">
+      <button type="button" data-palette-id="${p.id}" class="palette-option-btn text-left p-2.5 rounded-2xl border transition-all flex flex-col justify-between min-h-[58px] ${activeClasses}">
         <div class="flex items-center justify-between w-full mb-1.5">
           <span class="w-3.5 h-3.5 rounded-full shadow-inner border border-black/10 shrink-0" style="background-color: ${p.primary}"></span>
           <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-md ${isActive ? 'bg-indigo-600 text-white' : 'bg-slate-200/70 dark:bg-slate-700 text-slate-600 dark:text-slate-300'}">
             ${badge}
           </span>
         </div>
-        <div class="text-[11px] font-bold text-slate-800 dark:text-slate-100 truncate">${name}</div>
+        <div class="text-[11px] font-bold text-slate-800 dark:text-slate-100 leading-tight break-words whitespace-normal">${name}</div>
       </button>
     `;
   }).join('');
@@ -1989,12 +2120,6 @@ function initCalcKeypad() {
       updateCalcPreview();
     });
 
-    inputAmount.addEventListener('focus', () => {
-      if (!state.isKeypadVisible) {
-        setKeypadVisible(true);
-      }
-    });
-
     inputAmount.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         const val = (inputAmount.value || '').trim();
@@ -2002,9 +2127,6 @@ function initCalcKeypad() {
           e.preventDefault();
           handleCalcInput('=');
         }
-      } else if (e.key === 'Escape') {
-        e.preventDefault();
-        handleCalcInput('clear');
       }
     });
   }
@@ -2113,12 +2235,19 @@ function initEvents() {
       const parts = todayStr.split('-');
       modalRecDay.value = parts.length === 3 ? parseInt(parts[2], 10) : new Date().getDate();
     }
+    const modalRecWeekday = document.getElementById('modal-rec-weekday');
+    if (modalRecWeekday) {
+      const todayDate = new Date();
+      const jsDay = todayDate.getDay();
+      modalRecWeekday.value = jsDay === 0 ? '7' : String(jsDay);
+    }
+    updateModalRecScheduleUI('monthly');
 
     document.getElementById('input-amount').value = '';
     const calcPrev = document.getElementById('calc-preview');
     if (calcPrev) calcPrev.textContent = '';
     updateKeypadEqualBtn();
-    setKeypadVisible(true);
+    setKeypadVisible(false);
 
     document.getElementById('add-modal').classList.remove('hidden');
     document.getElementById('add-modal').classList.add('flex');
@@ -2144,7 +2273,7 @@ function initEvents() {
 
     const calcPrev = document.getElementById('calc-preview');
     if (calcPrev) calcPrev.textContent = '';
-    setKeypadVisible(true);
+    setKeypadVisible(false);
 
     const modalHeading = document.getElementById('modal-heading-text');
     if (modalHeading) modalHeading.textContent = dict.modalEditTitle;
@@ -2167,19 +2296,27 @@ function initEvents() {
 
     const modalRecFreq = document.getElementById('modal-rec-freq');
     const modalRecDay = document.getElementById('modal-rec-day');
+    const modalRecWeekday = document.getElementById('modal-rec-weekday');
 
     if (tx.recurringId) {
       setModalRecurring(true);
       const rule = state.recurring.find(r => r.id === tx.recurringId);
       if (rule) {
-        if (modalRecFreq) modalRecFreq.value = rule.freq || 'monthly';
-        if (modalRecDay) modalRecDay.value = rule.day || 1;
+        const freq = rule.freq || 'monthly';
+        if (modalRecFreq) modalRecFreq.value = freq;
+        if (freq === 'weekly') {
+          if (modalRecWeekday) modalRecWeekday.value = String(rule.day || 1);
+        } else {
+          if (modalRecDay) modalRecDay.value = rule.day || 1;
+        }
+        updateModalRecScheduleUI(freq);
       } else {
         if (modalRecFreq) modalRecFreq.value = 'monthly';
         if (modalRecDay) {
           const d = tx.date ? parseInt(tx.date.split('-')[2], 10) : 1;
           modalRecDay.value = d;
         }
+        updateModalRecScheduleUI('monthly');
       }
     } else {
       setModalRecurring(false);
@@ -2188,6 +2325,7 @@ function initEvents() {
         const d = tx.date ? parseInt(tx.date.split('-')[2], 10) : 1;
         modalRecDay.value = d;
       }
+      updateModalRecScheduleUI('monthly');
     }
 
     document.getElementById('add-modal').classList.remove('hidden');
@@ -2216,13 +2354,41 @@ function initEvents() {
   const inputDate = document.getElementById('input-date');
   if (inputDate) {
     inputDate.addEventListener('change', () => {
-      if (!modalRecDayTouched && inputDate.value) {
+      if (inputDate.value) {
         const parts = inputDate.value.split('-');
         if (parts.length === 3) {
-          const d = parseInt(parts[2], 10);
-          const modalRecDay = document.getElementById('modal-rec-day');
-          if (modalRecDay && d >= 1 && d <= 31) {
-            modalRecDay.value = d;
+          if (!modalRecDayTouched) {
+            const d = parseInt(parts[2], 10);
+            const modalRecDay = document.getElementById('modal-rec-day');
+            if (modalRecDay && d >= 1 && d <= 31) {
+              modalRecDay.value = d;
+            }
+          }
+          const dt = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+          const jsDay = dt.getDay();
+          const modalRecWeekday = document.getElementById('modal-rec-weekday');
+          if (modalRecWeekday) {
+            modalRecWeekday.value = jsDay === 0 ? '7' : String(jsDay);
+          }
+        }
+      }
+    });
+  }
+
+  const modalRecFreq = document.getElementById('modal-rec-freq');
+  if (modalRecFreq) {
+    modalRecFreq.addEventListener('change', () => {
+      const freq = modalRecFreq.value;
+      updateModalRecScheduleUI(freq);
+      if (freq === 'weekly') {
+        const inDate = document.getElementById('input-date');
+        const modalRecWeekday = document.getElementById('modal-rec-weekday');
+        if (inDate && inDate.value && modalRecWeekday) {
+          const parts = inDate.value.split('-');
+          if (parts.length === 3) {
+            const dt = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+            const jsDay = dt.getDay();
+            modalRecWeekday.value = jsDay === 0 ? '7' : String(jsDay);
           }
         }
       }
@@ -2341,11 +2507,16 @@ function initEvents() {
     const currency = document.getElementById('modal-currency-select').value || 'USD';
     const isRecurring = Boolean(state.modalIsRecurring);
     const recFreq = document.getElementById('modal-rec-freq')?.value || 'monthly';
-    let recDay = parseInt(document.getElementById('modal-rec-day')?.value, 10);
-    if (isNaN(recDay) || recDay < 1) {
-      recDay = date ? parseInt(date.split('-')[2], 10) : 1;
+    let recDay = 1;
+    if (recFreq === 'weekly') {
+      recDay = parseInt(document.getElementById('modal-rec-weekday')?.value, 10) || 1;
+    } else {
+      recDay = parseInt(document.getElementById('modal-rec-day')?.value, 10);
+      if (isNaN(recDay) || recDay < 1) {
+        recDay = date ? parseInt(date.split('-')[2], 10) : 1;
+      }
+      if (recDay > 31) recDay = 31;
     }
-    if (recDay > 31) recDay = 31;
 
     // Remember currency for next time
     localStorage.setItem(DEFAULT_CURR_KEY, currency);
@@ -2510,11 +2681,46 @@ function initEvents() {
     recTypeSelect.addEventListener('change', () => updateRecCategoryOptions());
   }
 
+  // Recurring Frequency change updates schedule UI
+  const recFreqSelect = document.getElementById('rec-freq');
+  if (recFreqSelect) {
+    recFreqSelect.addEventListener('change', () => {
+      updateRecScheduleUI(recFreqSelect.value);
+    });
+  }
+
   // Recurring Cancel Edit Button
   const recCancelBtn = document.getElementById('rec-cancel-edit-btn');
   if (recCancelBtn) {
     recCancelBtn.addEventListener('click', cancelEditRecurring);
   }
+
+  // Global Escape key handler to close active modals or autocomplete
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      const autocompleteList = document.getElementById('autocomplete-list');
+      if (autocompleteList && !autocompleteList.classList.contains('hidden')) {
+        autocompleteList.classList.add('hidden');
+        return;
+      }
+      const addModal = document.getElementById('add-modal');
+      if (addModal && !addModal.classList.contains('hidden')) {
+        window.closeModal();
+        return;
+      }
+      const recModal = document.getElementById('recurring-modal');
+      if (recModal && !recModal.classList.contains('hidden')) {
+        closeRecModal();
+        return;
+      }
+      const settingsModal = document.getElementById('settings-modal');
+      if (settingsModal && !settingsModal.classList.contains('hidden')) {
+        settingsModal.classList.add('hidden');
+        settingsModal.classList.remove('flex');
+        return;
+      }
+    }
+  });
 
   // Settings Modal Handlers
   const settingsModal = document.getElementById('settings-modal');
@@ -2664,7 +2870,9 @@ function initEvents() {
     const type = document.getElementById('rec-type').value;
     const category = document.getElementById('rec-category').value;
     const freq = document.getElementById('rec-freq').value;
-    const day = parseInt(document.getElementById('rec-day').value) || 1;
+    const day = freq === 'weekly'
+      ? (parseInt(document.getElementById('rec-weekday').value, 10) || 1)
+      : (parseInt(document.getElementById('rec-day').value, 10) || 1);
 
     if (editId) {
       const idx = state.recurring.findIndex(r => r.id === editId);
@@ -2806,13 +3014,13 @@ function renderCategoryPicker() {
     const isSelected = cat.id === state.selectedCategory;
     const catName = getCategoryName(cat);
     return `
-      <button type="button" class="category-btn flex flex-col items-center p-2 rounded-2xl border transition ${
+      <button type="button" class="category-btn flex flex-col items-center justify-center p-1.5 sm:p-2 min-h-[66px] sm:min-h-[72px] rounded-xl sm:rounded-2xl border transition ${
         isSelected 
           ? 'border-indigo-500 bg-indigo-50/70 dark:bg-indigo-950/50 shadow-sm ring-2 ring-indigo-500/20' 
           : 'border-slate-200/80 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800'
       }" data-cat="${cat.id}">
-        <span class="w-9 h-9 rounded-xl flex items-center justify-center text-lg mb-1" style="background:${cat.bg}">${cat.icon}</span>
-        <span class="text-[11px] font-medium text-slate-700 dark:text-slate-200 truncate max-w-full">${catName}</span>
+        <span class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center text-base sm:text-lg mb-1 shrink-0" style="background:${cat.bg}">${cat.icon}</span>
+        <span class="text-[10px] sm:text-[11px] font-medium text-slate-700 dark:text-slate-200 text-center leading-tight break-words line-clamp-2 max-w-full px-0.5">${catName}</span>
       </button>
     `;
   }).join('');
@@ -2865,8 +3073,20 @@ function applyAllDueRecurring() {
   const curMonth = state.currentDate.getMonth() + 1;
 
   dueItems.forEach(rule => {
-    const day = Math.min(rule.day || 1, 28);
-    const dateStr = `${curYear}-${String(curMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    let dateStr;
+    if (rule.freq === 'weekly') {
+      const targetDay = (rule.day % 7); // 1->1..6->6, 7->0 (Sun)
+      let d = 1;
+      const testDate = new Date(curYear, curMonth - 1, d);
+      while (testDate.getDay() !== targetDay && d <= 7) {
+        d++;
+        testDate.setDate(d);
+      }
+      dateStr = `${curYear}-${String(curMonth).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    } else {
+      const day = Math.min(rule.day || 1, 28);
+      dateStr = `${curYear}-${String(curMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    }
 
     state.transactions.unshift({
       id: 'tx_rec_' + Date.now() + Math.random().toString(36).substr(2, 4),
@@ -2912,8 +3132,15 @@ function startEditRecurring(id) {
   document.getElementById('rec-amount').value = rule.amount;
   document.getElementById('rec-type').value = rule.type;
   updateRecCategoryOptions(rule.category);
-  document.getElementById('rec-freq').value = rule.freq || 'monthly';
-  document.getElementById('rec-day').value = rule.day;
+  const freq = rule.freq || 'monthly';
+  document.getElementById('rec-freq').value = freq;
+  if (freq === 'weekly') {
+    const recWeekday = document.getElementById('rec-weekday');
+    if (recWeekday) recWeekday.value = String(rule.day || 1);
+  } else {
+    document.getElementById('rec-day').value = rule.day || 1;
+  }
+  updateRecScheduleUI(freq);
 
   const recAddTitle = document.getElementById('rec-add-title');
   if (recAddTitle) recAddTitle.textContent = dict.editRecurringTitle;
@@ -2936,6 +3163,7 @@ function cancelEditRecurring() {
   if (recForm) recForm.reset();
 
   updateRecCategoryOptions();
+  updateRecScheduleUI('monthly');
 
   const recAddTitle = document.getElementById('rec-add-title');
   if (recAddTitle) recAddTitle.textContent = dict.addRecurringTitle;
@@ -2961,7 +3189,7 @@ function renderRecurringList() {
     const title = getItemTitle(rule);
     const cat = getCategoryMeta(rule.type, rule.category, title);
     const ruleSym = (CURRENCIES[rule.currency] && CURRENCIES[rule.currency].symbol) || '$';
-    const subText = dict.recurringItemSub(rule.day, rule.type);
+    const subText = dict.recurringItemSub(rule.day, rule.type, rule.freq);
 
     return `
       <div class="group flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700/60 hover:border-indigo-300 dark:hover:border-indigo-700 transition">
