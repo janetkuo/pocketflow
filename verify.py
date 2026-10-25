@@ -123,6 +123,18 @@ def check_business_logic():
     const dessertIcon = resolveItemIcon('drinks', '法式草莓千層蛋糕', '☕');
     if (dessertIcon !== '🥐') throw new Error('resolveItemIcon dessert failed: got ' + dessertIcon);
 
+    const evChargeIcon = resolveItemIcon('transport', 'Tesla 特斯拉超充站充電', '🚗');
+    if (evChargeIcon !== '⚡') throw new Error('resolveItemIcon ev charging failed: got ' + evChargeIcon);
+
+    const tollIcon = resolveItemIcon('transport', '國道 eTag 通行費', '🚗');
+    if (tollIcon !== '🛣️') throw new Error('resolveItemIcon tolls failed: got ' + tollIcon);
+
+    const tireIcon = resolveItemIcon('transport', '特斯拉原廠換輪胎保養', '🚗');
+    if (tireIcon !== '🔧') throw new Error('resolveItemIcon tire repair failed: got ' + tireIcon);
+
+    const carLoanIcon = resolveItemIcon('transport', 'Tesla 每月車貸扣繳', '🚗');
+    if (carLoanIcon !== '🚗') throw new Error('resolveItemIcon auto loan failed: got ' + carLoanIcon);
+
     'OK'
     """
     proc = subprocess.run(['osascript', '-l', 'JavaScript', '-e', test_logic], capture_output=True, text=True)

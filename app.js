@@ -671,7 +671,7 @@ const CATEGORIES = {
     { id: 'food', name: { en: 'Food & Dining', 'zh-TW': '餐飲正餐' }, icon: '🍽️', color: '#CB8364', bg: 'rgba(203, 131, 100, 0.15)' },
     { id: 'drinks', name: { en: 'Drinks & Desserts', 'zh-TW': '飲品點心' }, icon: '☕', color: '#8C6C58', bg: 'rgba(140, 108, 88, 0.15)' },
     { id: 'groceries', name: { en: 'Groceries', 'zh-TW': '食材生鮮' }, icon: '🛒', color: '#709775', bg: 'rgba(112, 151, 117, 0.15)' },
-    { id: 'transport', name: { en: 'Transportation', 'zh-TW': '通勤交通' }, icon: '🚇', color: '#6A839A', bg: 'rgba(106, 131, 154, 0.15)' },
+    { id: 'transport', name: { en: 'Transportation & Auto', 'zh-TW': '交通行車' }, icon: '🚗', color: '#6A839A', bg: 'rgba(106, 131, 154, 0.15)' },
     { id: 'housing', name: { en: 'Housing & Utilities', 'zh-TW': '居住水電' }, icon: '🏠', color: '#5A8485', bg: 'rgba(90, 132, 133, 0.15)' },
     { id: 'household', name: { en: 'Household Essentials', 'zh-TW': '生活日用' }, icon: '🧻', color: '#7A938C', bg: 'rgba(122, 147, 140, 0.15)' },
     { id: 'apparel', name: { en: 'Apparel & Beauty', 'zh-TW': '服飾美妝' }, icon: '👗', color: '#B47B82', bg: 'rgba(180, 123, 130, 0.15)' },
@@ -703,6 +703,8 @@ const AUTOCOMPLETE_PRESETS = {
     { title: 'Flight Tickets to Tokyo', category: 'travel', type: 'expense', amount: 480, currency: 'USD' },
     { title: 'Uniqlo Winter Jacket', category: 'apparel', type: 'expense', amount: 79.9, currency: 'USD' },
     { title: 'Metro Transit Pass', category: 'transport', type: 'expense', amount: 35, currency: 'USD' },
+    { title: 'Tesla Supercharging', category: 'transport', type: 'expense', amount: 18.5, currency: 'USD' },
+    { title: 'Tesla Monthly Auto Loan', category: 'transport', type: 'expense', amount: 480, currency: 'USD' },
     { title: 'Uber Ride', category: 'transport', type: 'expense', amount: 24, currency: 'USD' },
     { title: 'DoorDash Lunch Delivery', category: 'food', type: 'expense', amount: 22.5, currency: 'USD' },
     { title: 'Steam Game Sale', category: 'entertainment', type: 'expense', amount: 39.99, currency: 'USD' },
@@ -719,6 +721,10 @@ const AUTOCOMPLETE_PRESETS = {
     { title: '日本東京機票訂位', category: 'travel', type: 'expense', amount: 13500, currency: 'TWD' },
     { title: 'Uniqlo 保暖發熱衣', category: 'apparel', type: 'expense', amount: 990, currency: 'TWD' },
     { title: '中油加油', category: 'transport', type: 'expense', amount: 150, currency: 'TWD' },
+    { title: 'Tesla 特斯拉超充站充電', category: 'transport', type: 'expense', amount: 380, currency: 'TWD' },
+    { title: '國道 eTag 通行費', category: 'transport', type: 'expense', amount: 500, currency: 'TWD' },
+    { title: 'Tesla 車貸月付', category: 'transport', type: 'expense', amount: 16800, currency: 'TWD' },
+    { title: '特斯拉回廠換輪胎/保養', category: 'transport', type: 'expense', amount: 28000, currency: 'TWD' },
     { title: '地鐵通勤週票', category: 'transport', type: 'expense', amount: 350, currency: 'TWD' },
     { title: 'Uber 乘車', category: 'transport', type: 'expense', amount: 240, currency: 'TWD' },
     { title: '週末朋友聚餐', category: 'food', type: 'expense', amount: 580, currency: 'TWD' },
@@ -882,15 +888,18 @@ function resolveItemIcon(category, title, fallbackIcon = '✨') {
     return '🍽️';
   }
 
-  // Transportation (public transit vs driving vs taxi vs bike vs car maintenance)
-  if (category === 'transport' || /metro|subway|transit|bus|train|mrt|uber|taxi|gas|fuel|flight|air|parking|traffic|交通|通勤|車/.test(t)) {
+  // Transportation & Auto (public transit vs driving vs taxi vs bike vs car maintenance vs EV charging vs tolls)
+  if (category === 'transport' || /metro|subway|transit|bus|train|mrt|uber|taxi|gas|fuel|flight|air|parking|traffic|charge|tesla|toll|etag|tire|loan|交通|通勤|行車|車|油|電|過路費|輪胎/.test(t)) {
+    if (/maintenance|repair|tire|service|保養|修車|車輛保養|驗車|輪胎|換胎|修繕|維修|板金/.test(t)) return '🔧';
+    if (/toll|etag|etc|過路費|通行費|高速公路/.test(t)) return '🛣️';
+    if (/charge|charging|supercharger|充電|超充/.test(t) || (/tesla|特斯拉/.test(t) && !/貸|買|買車|租|保養|維修|修|輪胎/.test(t))) return '⚡';
     if (/metro|subway|mrt|train|rail|pass|ticket|transit|地鐵|捷運|高鐵|火車|台鐵|電車|週票|月票|票|悠遊卡|一卡通/.test(t)) return '🚇';
     if (/bus|coach|公車|客運|巴士/.test(t)) return '🚌';
     if (/uber|taxi|cab|lyft|計程車|小黃|乘車|叫車/.test(t)) return '🚕';
     if (/bike|bicycle|youbike|ubike|單車|腳踏車|自行車/.test(t)) return '🚲';
     if (/gas|fuel|petrol|oil|加油|中油|台塑/.test(t)) return '⛽';
     if (/parking|parking fee|停車|車位/.test(t)) return '🅿️';
-    if (/maintenance|repair|tire|service|保養|修車|車輛保養|驗車/.test(t)) return '🔧';
+    if (/loan|車貸|特斯拉貸/.test(t)) return '🚗';
     if (/flight|plane|airline|airport|機票|航空|飛機/.test(t)) return '✈️';
     return '🚗';
   }
