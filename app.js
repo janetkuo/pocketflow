@@ -154,6 +154,9 @@ const I18N = {
 
     // Settings Modal
     settingsTitle: 'Settings & Data Backup',
+    settingsRecTitle: 'Fixed Recurring Items',
+    settingsOpenRecLabel: 'Manage Rules',
+    settingsRecDesc: 'Configure monthly subscriptions, rent, and recurring income. Future due items can be posted in batch.',
     aiExportTitle: 'Export for AI Financial Review',
     aiExportDesc: "Formats this month's <strong>totals, category breakdown, savings rate, and items</strong> into a prompt. Paste directly into Gemini or ChatGPT for financial advice!",
     copyAiPromptBtn: 'Copy AI Financial Prompt',
@@ -341,6 +344,9 @@ const I18N = {
 
     // Settings Modal
     settingsTitle: '設定與資料備份',
+    settingsRecTitle: '固定週期收支規則',
+    settingsOpenRecLabel: '管理規則',
+    settingsRecDesc: '設定每月固定支出（房租、訂閱）或固定薪資收入，到期自動提醒入帳。',
     aiExportTitle: '打包丟給 AI 財務分析',
     aiExportDesc: '自動將本月份的<strong>收支總額、分類佔比、儲蓄率與明細清單</strong>整理成專業 Markdown 提示詞，複製後可直接貼給 Gemini 或 ChatGPT 進行財務健檢與省錢建議！',
     copyAiPromptBtn: '複製本月 AI 分析提示詞',
@@ -1151,15 +1157,9 @@ function applyLanguage() {
   const emptyDesc = document.getElementById('empty-state-desc');
   if (emptyDesc) emptyDesc.textContent = dict.emptyDesc;
 
-  // Bottom Nav & Floating Add
-  const navRecLabel = document.getElementById('nav-records-label');
-  if (navRecLabel) navRecLabel.textContent = dict.navRecords;
-
-  const navRecurringLabel = document.getElementById('nav-recurring-label');
-  if (navRecurringLabel) navRecurringLabel.textContent = dict.navRecurring;
-
-  const desktopAddLabel = document.getElementById('desktop-add-label');
-  if (desktopAddLabel) desktopAddLabel.textContent = dict.quickAdd;
+  // Floating Action Button (FAB)
+  const quickAddLabel = document.getElementById('quick-add-label');
+  if (quickAddLabel) quickAddLabel.textContent = dict.quickAdd;
 
   // Add/Edit Transaction Modal
   const isEditingTx = Boolean(document.getElementById('edit-id')?.value);
@@ -1310,6 +1310,15 @@ function applyLanguage() {
   // Settings Modal
   const settingsTitle = document.getElementById('settings-modal-title');
   if (settingsTitle) settingsTitle.textContent = dict.settingsTitle;
+
+  const settingsRecTitle = document.getElementById('settings-rec-title');
+  if (settingsRecTitle) settingsRecTitle.textContent = dict.settingsRecTitle;
+
+  const settingsOpenRecLabel = document.getElementById('settings-open-rec-label');
+  if (settingsOpenRecLabel) settingsOpenRecLabel.textContent = dict.settingsOpenRecLabel;
+
+  const settingsRecDesc = document.getElementById('settings-rec-desc');
+  if (settingsRecDesc) settingsRecDesc.textContent = dict.settingsRecDesc;
 
   const aiExportTitle = document.getElementById('ai-export-title');
   if (aiExportTitle) aiExportTitle.textContent = dict.aiExportTitle;
@@ -2151,7 +2160,6 @@ function initEvents() {
   };
 
   document.getElementById('open-add-modal-btn').addEventListener('click', () => window.openModal(false));
-  document.getElementById('desktop-add-btn').addEventListener('click', () => window.openModal(false));
   document.getElementById('close-add-modal-btn').addEventListener('click', window.closeModal);
 
   // Modal Type Switchers
@@ -2450,7 +2458,6 @@ function initEvents() {
   };
 
   document.getElementById('open-recurring-modal-btn').addEventListener('click', openRecModal);
-  document.getElementById('nav-recurring').addEventListener('click', openRecModal);
   document.getElementById('close-recurring-modal-btn').addEventListener('click', closeRecModal);
 
   const recQuickAddBtn = document.getElementById('rec-quick-add-btn');
@@ -2484,6 +2491,15 @@ function initEvents() {
     settingsModal.classList.add('hidden');
     settingsModal.classList.remove('flex');
   });
+
+  const settingsRecBtn = document.getElementById('settings-open-rec-btn');
+  if (settingsRecBtn) {
+    settingsRecBtn.addEventListener('click', () => {
+      settingsModal.classList.add('hidden');
+      settingsModal.classList.remove('flex');
+      openRecModal();
+    });
+  }
 
   // FEATURE: Google Drive Backup & Sync
   const gdriveBackupBtn = document.getElementById('gdrive-backup-btn');

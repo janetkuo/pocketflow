@@ -212,7 +212,7 @@
   </div>
 
   <!-- Main Responsive Container -->
-  <main class="flex-1 max-w-6xl w-full mx-auto p-4 pb-28 md:pb-8">
+  <main class="flex-1 max-w-6xl w-full mx-auto p-4 pb-24 sm:pb-8">
     <div class="grid grid-cols-1 md:grid-cols-12 gap-5 items-start">
       
       <!-- ================= LEFT PANE (Dashboard & Donut Chart) ================= -->
@@ -346,32 +346,10 @@
     </div>
   </main>
 
-  <!-- ================= BOTTOM NAVIGATION BAR (Mobile Outer Screen) ================= -->
-  <nav class="fixed bottom-0 left-0 right-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 px-6 py-2 pb-safe md:hidden">
-    <div class="flex items-center justify-around max-w-md mx-auto relative">
-      <button id="nav-records" class="flex flex-col items-center gap-1 text-indigo-600 dark:text-indigo-400">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-        <span id="nav-records-label" class="text-[10px] font-bold">Records</span>
-      </button>
-
-      <!-- Center Floating (+) Button -->
-      <div class="-mt-7">
-        <button id="open-add-modal-btn" aria-label="Add Transaction" class="w-14 h-14 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-600/30 flex items-center justify-center transform active:scale-95 hover:scale-105 transition">
-          <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"/></svg>
-        </button>
-      </div>
-
-      <button id="nav-recurring" class="flex flex-col items-center gap-1 text-slate-400 hover:text-indigo-500">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-        <span id="nav-recurring-label" class="text-[10px] font-medium">Recurring</span>
-      </button>
-    </div>
-  </nav>
-
-  <!-- Desktop / Fold Inner Screen Floating Quick Add Button (Bottom Right) -->
-  <button id="desktop-add-btn" class="hidden md:flex fixed bottom-8 right-8 z-30 items-center gap-2 px-5 py-3.5 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold shadow-lg shadow-indigo-600/30 hover:scale-105 active:scale-95 transition">
-    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"/></svg>
-    <span id="desktop-add-label">Quick Add</span>
+  <!-- Floating Action Button (FAB) for Quick Add (Responsive: circular FAB on mobile, extended pill on tablet/desktop) -->
+  <button id="open-add-modal-btn" aria-label="Quick Add Transaction" class="fixed bottom-6 right-6 sm:bottom-8 sm:right-8 z-30 flex items-center justify-center gap-2 w-14 h-14 sm:w-auto sm:h-auto sm:px-5 sm:py-3.5 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold shadow-xl shadow-indigo-600/35 hover:scale-105 active:scale-95 transition-all cursor-pointer">
+    <svg class="w-6 h-6 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+    <span id="quick-add-label" class="hidden sm:inline text-sm font-bold">Quick Add</span>
   </button>
 
   <!-- ================= ADD / EDIT TRANSACTION MODAL ================= -->
@@ -670,6 +648,23 @@
           </div>
         </div>
 
+        <!-- FEATURE: Fixed Recurring Items Management -->
+        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-800 space-y-2.5">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2 text-xs font-bold text-indigo-600 dark:text-indigo-400">
+              <span class="text-base">🔄</span>
+              <span id="settings-rec-title">Fixed Recurring Items</span>
+            </div>
+            <button id="settings-open-rec-btn" type="button" class="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-sm transition active:scale-95 flex items-center gap-1 cursor-pointer">
+              <span id="settings-open-rec-label">Manage Rules</span>
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+          <p id="settings-rec-desc" class="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+            Configure monthly subscriptions, rent, and recurring income. Future due items can be posted in batch.
+          </p>
+        </div>
+
         <!-- FEATURE: AI Prompt Exporter -->
         <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-800">
           <div class="flex items-center gap-2 text-xs font-bold text-indigo-600 dark:text-indigo-400">
@@ -811,7 +806,7 @@
   </div>
 
   <!-- PWA Instant Update Notification Banner -->
-  <div id="pwa-update-banner" class="hidden fixed bottom-24 sm:bottom-6 left-1/2 -translate-x-1/2 z-50 max-w-sm w-[90%] sm:w-auto px-4 py-3 rounded-2xl bg-slate-900/95 dark:bg-slate-800/95 text-white shadow-2xl backdrop-blur-md border border-slate-700/80 flex items-center justify-between gap-3 transition-all duration-300">
+  <div id="pwa-update-banner" class="hidden fixed bottom-6 sm:bottom-8 left-1/2 -translate-x-1/2 z-50 max-w-sm w-[90%] sm:w-auto px-4 py-3 rounded-2xl bg-slate-900/95 dark:bg-slate-800/95 text-white shadow-2xl backdrop-blur-md border border-slate-700/80 flex items-center justify-between gap-3 transition-all duration-300">
     <div class="flex items-center gap-2.5 min-w-0">
       <span class="text-base shrink-0">✨</span>
       <span id="pwa-update-text" class="text-xs font-semibold truncate">發現新版本！點擊立即載入最新功能</span>
