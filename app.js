@@ -106,7 +106,11 @@ const I18N = {
     categoryLabel: 'Select Category',
     dateLabel: 'Date',
     saveTransaction: 'Save Transaction',
+    saveExpense: 'Save Expense',
+    saveIncome: 'Save Income',
     updateTransaction: 'Update Transaction',
+    updateExpense: 'Update Expense',
+    updateIncome: 'Update Income',
     calcToggleShow: 'Show Calculator',
     calcToggleHide: 'Hide Calculator',
     calcDivZero: '⚠️ Cannot divide by 0',
@@ -289,7 +293,11 @@ const I18N = {
     categoryLabel: '選擇類別',
     dateLabel: '消費日期',
     saveTransaction: '儲存紀錄',
+    saveExpense: '儲存支出',
+    saveIncome: '儲存收入',
     updateTransaction: '更新紀錄',
+    updateExpense: '更新支出',
+    updateIncome: '更新收入',
     calcToggleShow: '顯示計算機',
     calcToggleHide: '收合計算機',
     calcDivZero: '⚠️ 除數不能為 0',
@@ -1188,7 +1196,13 @@ function applyLanguage() {
   if (modalDateLabel) modalDateLabel.textContent = dict.dateLabel;
 
   const modalSubmitBtn = document.getElementById('modal-submit-btn');
-  if (modalSubmitBtn) modalSubmitBtn.textContent = isEditingTx ? dict.updateTransaction : dict.saveTransaction;
+  if (modalSubmitBtn) {
+    if (state.modalType === 'income') {
+      modalSubmitBtn.textContent = isEditingTx ? dict.updateIncome : dict.saveIncome;
+    } else {
+      modalSubmitBtn.textContent = isEditingTx ? dict.updateExpense : dict.saveExpense;
+    }
+  }
 
   updateKeypadEqualBtn();
 
@@ -1728,8 +1742,13 @@ function updateKeypadEqualBtn() {
     }
   } else {
     equalBtn.setAttribute('data-calc', 'save');
-    equalBtn.setAttribute('aria-label', dict.saveTransaction || 'Save Transaction');
-    equalBtn.className = 'calc-key row-span-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-md shadow-emerald-600/30 active:scale-95 transition flex flex-col items-center justify-center gap-0.5 cursor-pointer border border-emerald-500/40';
+    const isIncome = state.modalType === 'income';
+    equalBtn.setAttribute('aria-label', isIncome ? (dict.saveIncome || 'Save Income') : (dict.saveExpense || 'Save Expense'));
+    if (isIncome) {
+      equalBtn.className = 'calc-key row-span-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-md shadow-emerald-600/30 active:scale-95 transition flex flex-col items-center justify-center gap-0.5 cursor-pointer border border-emerald-500/40';
+    } else {
+      equalBtn.className = 'calc-key row-span-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-sm shadow-md shadow-rose-600/30 active:scale-95 transition flex flex-col items-center justify-center gap-0.5 cursor-pointer border border-rose-500/40';
+    }
     if (icon) {
       icon.textContent = '✓';
       icon.className = 'text-base font-black leading-none';
@@ -2660,15 +2679,36 @@ function setModalType(type) {
   state.modalType = type;
   const expBtn = document.getElementById('type-expense-btn');
   const incBtn = document.getElementById('type-income-btn');
+  const amtInput = document.getElementById('input-amount');
+  const submitBtn = document.getElementById('modal-submit-btn');
+  const dict = I18N[state?.lang || 'en'] || I18N.en;
+  const isEditingTx = Boolean(document.getElementById('edit-id')?.value);
 
   if (type === 'expense') {
-    expBtn.className = 'px-4 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-slate-700 text-rose-500 shadow-sm transition';
-    incBtn.className = 'px-4 py-1.5 rounded-xl text-xs font-medium text-slate-500 dark:text-slate-400 transition';
+    if (expBtn) expBtn.className = 'px-4 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-slate-700 text-rose-500 shadow-sm transition';
+    if (incBtn) incBtn.className = 'px-4 py-1.5 rounded-xl text-xs font-medium text-slate-500 dark:text-slate-400 transition';
+    if (amtInput) {
+      amtInput.classList.remove('border-emerald-500', 'border-indigo-500');
+      amtInput.classList.add('border-rose-500');
+    }
+    if (submitBtn) {
+      submitBtn.className = 'w-full py-3.5 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-sm shadow-md shadow-rose-600/25 hover:opacity-95 active:scale-98 transition flex items-center justify-center gap-2';
+      submitBtn.textContent = isEditingTx ? (dict.updateExpense || dict.updateTransaction) : (dict.saveExpense || dict.saveTransaction);
+    }
   } else {
-    incBtn.className = 'px-4 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-slate-700 text-emerald-500 shadow-sm transition';
-    expBtn.className = 'px-4 py-1.5 rounded-xl text-xs font-medium text-slate-500 dark:text-slate-400 transition';
+    if (incBtn) incBtn.className = 'px-4 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-slate-700 text-emerald-500 shadow-sm transition';
+    if (expBtn) expBtn.className = 'px-4 py-1.5 rounded-xl text-xs font-medium text-slate-500 dark:text-slate-400 transition';
+    if (amtInput) {
+      amtInput.classList.remove('border-rose-500', 'border-indigo-500');
+      amtInput.classList.add('border-emerald-500');
+    }
+    if (submitBtn) {
+      submitBtn.className = 'w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-md shadow-emerald-600/25 hover:opacity-95 active:scale-98 transition flex items-center justify-center gap-2';
+      submitBtn.textContent = isEditingTx ? (dict.updateIncome || dict.updateTransaction) : (dict.saveIncome || dict.saveTransaction);
+    }
   }
 
+  updateKeypadEqualBtn();
   renderCategoryPicker();
 }
 
