@@ -135,6 +135,18 @@ def check_business_logic():
     const carLoanIcon = resolveItemIcon('transport', 'Tesla 每月車貸扣繳', '🚗');
     if (carLoanIcon !== '🚗') throw new Error('resolveItemIcon auto loan failed: got ' + carLoanIcon);
 
+    const aiIcon = resolveItemIcon('education', 'Google AI Pro 方案訂閱', '📚');
+    if (aiIcon !== '🤖') throw new Error('resolveItemIcon AI Pro failed: got ' + aiIcon);
+
+    const laptopIcon = resolveItemIcon('shopping', 'MacBook Air M3 筆電', '📱');
+    if (laptopIcon !== '💻') throw new Error('resolveItemIcon laptop failed: got ' + laptopIcon);
+
+    const earphoneIcon = resolveItemIcon('shopping', 'AirPods Pro 2 降噪耳機', '📱');
+    if (earphoneIcon !== '🎧') throw new Error('resolveItemIcon earphones failed: got ' + earphoneIcon);
+
+    const cloudIcon = resolveItemIcon('housing', 'iCloud 2TB 雲端空間', '🏠');
+    if (cloudIcon !== '☁️') throw new Error('resolveItemIcon cloud failed: got ' + cloudIcon);
+
     'OK'
     """
     proc = subprocess.run(['osascript', '-l', 'JavaScript', '-e', test_logic], capture_output=True, text=True)

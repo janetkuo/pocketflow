@@ -680,7 +680,7 @@ const CATEGORIES = {
     { id: 'education', name: { en: 'Education & Growth', 'zh-TW': '學習進修' }, icon: '📚', color: '#BF9F5F', bg: 'rgba(191, 159, 95, 0.15)' },
     { id: 'health', name: { en: 'Health & Medical', 'zh-TW': '醫療保健' }, icon: '💊', color: '#AB5F5F', bg: 'rgba(171, 95, 95, 0.15)' },
     { id: 'taxes', name: { en: 'Taxes & Fees', 'zh-TW': '稅費規費' }, icon: '🧾', color: '#8E8279', bg: 'rgba(142, 130, 121, 0.15)' },
-    { id: 'shopping', name: { en: 'Gadgets & Shopping', 'zh-TW': '3C 購物' }, icon: '🛍️', color: '#9E778E', bg: 'rgba(158, 119, 142, 0.15)' },
+    { id: 'shopping', name: { en: 'Tech & Gadgets', 'zh-TW': '3C 數位' }, icon: '📱', color: '#9E778E', bg: 'rgba(158, 119, 142, 0.15)' },
     { id: 'other_exp', name: { en: 'Other Expense', 'zh-TW': '其他支出' }, icon: '✨', color: '#788282', bg: 'rgba(120, 130, 130, 0.15)' }
   ],
   income: [
@@ -708,6 +708,9 @@ const AUTOCOMPLETE_PRESETS = {
     { title: 'Uber Ride', category: 'transport', type: 'expense', amount: 24, currency: 'USD' },
     { title: 'DoorDash Lunch Delivery', category: 'food', type: 'expense', amount: 22.5, currency: 'USD' },
     { title: 'Steam Game Sale', category: 'entertainment', type: 'expense', amount: 39.99, currency: 'USD' },
+    { title: 'Google AI Pro Plan', category: 'education', type: 'expense', amount: 19.99, currency: 'USD' },
+    { title: 'MacBook Air M3', category: 'shopping', type: 'expense', amount: 1099, currency: 'USD' },
+    { title: 'AirPods Pro Earphones', category: 'shopping', type: 'expense', amount: 249, currency: 'USD' },
     { title: 'Annual Property / Income Tax', category: 'taxes', type: 'expense', amount: 350, currency: 'USD' },
     { title: 'High-Yield Savings Interest', category: 'interest', type: 'income', amount: 48.5, currency: 'USD' },
     { title: 'Stock Dividend', category: 'invest', type: 'income', amount: 350, currency: 'USD' },
@@ -730,6 +733,9 @@ const AUTOCOMPLETE_PRESETS = {
     { title: '週末朋友聚餐', category: 'food', type: 'expense', amount: 580, currency: 'TWD' },
     { title: '外送午餐便當', category: 'food', type: 'expense', amount: 180, currency: 'TWD' },
     { title: 'Steam 遊戲特價', category: 'entertainment', type: 'expense', amount: 590, currency: 'TWD' },
+    { title: 'Google AI Pro 方案訂閱', category: 'education', type: 'expense', amount: 650, currency: 'TWD' },
+    { title: 'MacBook Air M3 筆電', category: 'shopping', type: 'expense', amount: 35900, currency: 'TWD' },
+    { title: 'AirPods Pro 2 降噪耳機', category: 'shopping', type: 'expense', amount: 7490, currency: 'TWD' },
     { title: '年度綜合所得稅/房屋稅', category: 'taxes', type: 'expense', amount: 4500, currency: 'TWD' },
     { title: '銀行活存/定存利息', category: 'interest', type: 'income', amount: 35, currency: 'TWD' },
     { title: '股票股利入帳', category: 'invest', type: 'income', amount: 3500, currency: 'TWD' },
@@ -861,6 +867,21 @@ function resolveItemIcon(category, title, fallbackIcon = '✨') {
     return '🧾';
   }
 
+  // AI Services & Subscriptions
+  if (/chatgpt|openai|gemini|claude|copilot|midjourney|perplexity|google ai|ai pro|gpt|ai 訂閱|ai訂閱|人工智慧/.test(t)) {
+    return '🤖';
+  }
+
+  // Cloud Storage & Sync Services
+  if (/icloud|google one|dropbox|onedrive|cloud storage|雲端硬碟|雲端空間|雲端儲存|網盤/.test(t)) {
+    return '☁️';
+  }
+
+  // Software & Productivity Tools
+  if (/notion|figma|adobe|photoshop|illustrator|office 365|microsoft 365|github|app store|google play|軟體授權|生產力工具/.test(t)) {
+    return '💻';
+  }
+
   // Household & Daily Essentials
   if (category === 'household' || (!['shopping', 'travel'].includes(category) && /tissue|shampoo|soap|detergent|towel|clean|toilet|toothpaste|衛生紙|洗髮|沐浴|洗衣精|洗碗精|清潔劑|牙膏|毛巾|垃圾袋|掃具|日用品/.test(t))) {
     return '🧻';
@@ -889,7 +910,7 @@ function resolveItemIcon(category, title, fallbackIcon = '✨') {
   }
 
   // Transportation & Auto (public transit vs driving vs taxi vs bike vs car maintenance vs EV charging vs tolls)
-  if (category === 'transport' || /metro|subway|transit|bus|train|mrt|uber|taxi|gas|fuel|flight|air|parking|traffic|charge|tesla|toll|etag|tire|loan|交通|通勤|行車|車|油|電|過路費|輪胎/.test(t)) {
+  if (category === 'transport' || (!['shopping', 'education', 'housing', 'apparel'].includes(category) && /metro|subway|transit|bus|train|mrt|uber|taxi|gas|fuel|flight|parking|traffic|charge|tesla|toll|etag|tire|loan|交通|通勤|行車|車|加油|超充|過路費|輪胎/.test(t))) {
     if (/maintenance|repair|tire|service|保養|修車|車輛保養|驗車|輪胎|換胎|修繕|維修|板金/.test(t)) return '🔧';
     if (/toll|etag|etc|過路費|通行費|高速公路/.test(t)) return '🛣️';
     if (/charge|charging|supercharger|充電|超充/.test(t) || (/tesla|特斯拉/.test(t) && !/貸|買|買車|租|保養|維修|修|輪胎/.test(t))) return '⚡';
@@ -931,14 +952,20 @@ function resolveItemIcon(category, title, fallbackIcon = '✨') {
   }
 
   // Education
-  if (category === 'education' || /book|course|study|class|tutor|lesson|書|課程|學習|進修|學費/.test(t)) {
+  if (category === 'education' || (!['shopping', 'apparel', 'household', 'transport'].includes(category) && /\bbook\b|\bbooks\b|course|study|class|tutor|lesson|書籍|買書|書籍|課程|學習|進修|學費|教材|講座/.test(t))) {
     return '📚';
   }
 
-  // Gadgets & Shopping
-  if (category === 'shopping' || /shopping|apple|iphone|ipad|mac|electronic|gadget|3c|device|appliance|電腦|手機|平板|筆電|耳機|相機|家電|購物/.test(t)) {
-    if (/apple|iphone|ipad|mac|phone|laptop|pc|electronic|gadget|3c|手機|電腦|筆電|平板|耳機|相機/.test(t)) return '📱';
-    return '🛍️';
+  // Tech & Gadgets (3C 數位 / 電腦設備 / 影音家電)
+  if (category === 'shopping' || /apple|iphone|ipad|mac|pixel|galaxy|laptop|pc|computer|electronic|gadget|3c|device|appliance|電腦|手機|平板|筆電|耳機|相機|家電|科技|數位|購物/.test(t)) {
+    if (/headphone|earphone|airpods|speaker|audio|soundbar|耳機|喇叭|音響/.test(t)) return '🎧';
+    if (/camera|lens|gopro|dji|相機|鏡頭|單眼|空拍/.test(t)) return '📷';
+    if (/watch|apple watch|garmin|手錶|智慧手錶/.test(t)) return '⌚';
+    if (/laptop|macbook|mac mini|pc|computer|monitor|keyboard|mouse|筆電|電腦|主機|螢幕|鍵盤|滑鼠/.test(t)) return '💻';
+    if (/appliance|tv|dyson|vacuum|air purifier|fridge|dryer|家電|電視|吸塵器|空氣清淨機|除濕機|吹風機|洗衣機|冰箱/.test(t)) return '🔌';
+    if (/phone|iphone|pixel|galaxy|ipad|tablet|手機|平板/.test(t)) return '📱';
+    if (/shopping|mall|商場|購物/.test(t)) return '🛍️';
+    return '📱';
   }
 
   // Income sources
