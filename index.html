@@ -6,7 +6,19 @@
   <title>PocketFlow - Smart Expense Tracker</title>
   
   <!-- PWA Meta Tags -->
-  <link rel="manifest" href="./manifest.json">
+  <link id="manifest-link" rel="manifest" href="./manifest.json">
+  <script>
+    (function() {
+      try {
+        var savedLang = localStorage.getItem('pocketflow_lang_v1');
+        var lang = savedLang || ((navigator.language || '').toLowerCase().startsWith('zh') ? 'zh-TW' : 'en');
+        var link = document.getElementById('manifest-link');
+        if (link && lang.startsWith('zh')) {
+          link.href = './manifest.zh.json';
+        }
+      } catch (e) {}
+    })();
+  </script>
   <meta name="theme-color" content="#4EB896">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">

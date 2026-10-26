@@ -1216,6 +1216,15 @@ function applyLanguage() {
   document.documentElement.lang = lang === 'en' ? 'en' : 'zh-TW';
   document.title = dict.appTitle;
 
+  // Dynamic PWA Manifest update for localized shortcuts
+  const manifestLink = document.getElementById('manifest-link');
+  if (manifestLink) {
+    const targetManifest = lang === 'zh-TW' ? './manifest.zh.json' : './manifest.json';
+    if (manifestLink.getAttribute('href') !== targetManifest) {
+      manifestLink.setAttribute('href', targetManifest);
+    }
+  }
+
   // Header
   const subTitle = document.getElementById('app-subtitle');
   if (subTitle) subTitle.textContent = dict.appSubtitle;
@@ -2149,7 +2158,50 @@ document.addEventListener('DOMContentLoaded', () => {
   initEvents();
   applyLanguage();
   updateDemoBanner();
+  checkUrlShortcuts();
 });
+
+// URL Action and Parameter Handler (PWA Shortcuts & Automation)
+function checkUrlShortcuts() {
+  try {
+    if (typeof window === 'undefined' || !window.location || !window.location.search) return;
+    const urlParams = new URLSearchParams(window.location.search);
+    const action = urlParams.get('action');
+    const paramAmount = urlParams.get('amount');
+    const paramNote = urlParams.get('note') || urlParams.get('title');
+    const paramCategory = urlParams.get('category');
+
+    if (!action && !paramAmount && !paramNote) return;
+
+    if (action === 'quick-add' || action === 'quick-income' || paramAmount || paramNote) {
+      setTimeout(() => {
+        if (typeof window.openModal === 'function') {
+          window.openModal(false);
+          if (action === 'quick-income' && typeof setModalType === 'function') {
+            setModalType('income');
+          }
+          if (paramAmount) {
+            const amtInput = document.getElementById('input-amount');
+            if (amtInput) amtInput.value = paramAmount;
+          }
+          if (paramNote) {
+            const titleInput = document.getElementById('input-title');
+            if (titleInput) titleInput.value = paramNote;
+          }
+          if (paramCategory && typeof selectCategory === 'function') {
+            selectCategory(paramCategory);
+          }
+        }
+        if (window.history && window.history.replaceState) {
+          const cleanUrl = (window.location.pathname || '') + (window.location.hash || '');
+          window.history.replaceState({}, document.title, cleanUrl);
+        }
+      }, 150);
+    }
+  } catch (err) {
+    console.error('Shortcut handling error:', err);
+  }
+}
 
 // Event Listeners Setup
 function initEvents() {

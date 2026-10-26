@@ -184,6 +184,12 @@ def check_branding_and_icons():
     if './icon.svg' not in manifest or './icon-maskable.svg' not in manifest:
         print("❌ manifest.json missing icon.svg or icon-maskable.svg!")
         return False
+    if os.path.exists('manifest.zh.json'):
+        with open('manifest.zh.json') as f:
+            manifest_zh = f.read()
+        if './icon.svg' not in manifest_zh or './icon-maskable.svg' not in manifest_zh:
+            print("❌ manifest.zh.json missing icon.svg or icon-maskable.svg!")
+            return False
     print("   ✅ icon.svg, icon-maskable.svg, and index.html single source of truth verified.")
     return True
 

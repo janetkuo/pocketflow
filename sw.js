@@ -1,9 +1,10 @@
-const CACHE_NAME = 'pocketflow-tracker-v28';
+const CACHE_NAME = 'pocketflow-tracker-v29';
 const ASSETS = [
   './',
   './index.html',
   './app.js',
   './manifest.json',
+  './manifest.zh.json',
   './icon.svg',
   './icon-maskable.svg'
 ];
