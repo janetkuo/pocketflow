@@ -236,8 +236,6 @@ const I18N = {
 
     paletteSettingsTitle: 'Appearance & Morandi Palette',
     paletteSettingsDesc: 'Choose your preferred Morandi color theme. Changes apply instantly:',
-    paletteToggleTitle: 'Color Palette / 莫蘭迪風格色盤',
-    paletteQuickLabel: 'Palette',
     paletteActiveBadge: 'Active',
 
     months: [
@@ -447,8 +445,6 @@ const I18N = {
 
     paletteSettingsTitle: '外觀風格與莫蘭迪色盤',
     paletteSettingsDesc: '挑選您喜愛的莫蘭迪色系，即時換膚且自動保存：',
-    paletteToggleTitle: '切換風格色盤',
-    paletteQuickLabel: '色盤',
     paletteActiveBadge: '使用中',
 
     months: [
@@ -1481,12 +1477,6 @@ function applyLanguage() {
   const paletteSettingsDesc = document.getElementById('palette-settings-desc');
   if (paletteSettingsDesc) paletteSettingsDesc.textContent = dict.paletteSettingsDesc;
 
-  const paletteToggleBtn = document.getElementById('palette-toggle-btn');
-  if (paletteToggleBtn) paletteToggleBtn.setAttribute('title', dict.paletteToggleTitle);
-
-  const paletteQuickLabel = document.getElementById('palette-quick-label');
-  if (paletteQuickLabel) paletteQuickLabel.textContent = dict.paletteQuickLabel;
-
   renderPaletteSelectorUI();
 
   // Settings Modal
@@ -1706,12 +1696,6 @@ function applyPalette(paletteKey, save = true) {
   const metaTheme = document.querySelector && document.querySelector('meta[name="theme-color"]');
   if (metaTheme && typeof metaTheme.setAttribute === 'function') {
     metaTheme.setAttribute('content', isDark ? p.bgDark : p.primary);
-  }
-
-  // Update quick dot in header
-  const quickDot = document.getElementById('palette-quick-dot');
-  if (quickDot && quickDot.style) {
-    quickDot.style.backgroundColor = p.primary;
   }
 
   // Render selector grid in Settings modal
@@ -2211,17 +2195,6 @@ function initEvents() {
   const langToggleBtn = document.getElementById('lang-toggle-btn');
   if (langToggleBtn) {
     langToggleBtn.addEventListener('click', toggleLanguage);
-  }
-
-  // Morandi Palette Quick Switcher button in header: cycles to next palette
-  const paletteToggleBtn = document.getElementById('palette-toggle-btn');
-  if (paletteToggleBtn) {
-    paletteToggleBtn.addEventListener('click', () => {
-      const keys = Object.keys(MORANDI_PALETTES);
-      const currIdx = keys.indexOf(state.palette);
-      const nextIdx = (currIdx + 1) % keys.length;
-      applyPalette(keys[nextIdx]);
-    });
   }
 
   // Month Navigator
