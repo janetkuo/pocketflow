@@ -29,16 +29,17 @@ Experience PocketFlow immediately in your browser (no registration or install re
 
 | Category | Highlight Features |
 | :--- | :--- |
-| 📱 **Foldable & Responsive** | Dual-pane dashboard on unfolded screens (≥ 768px); ergonomic single-column view with bottom navigation on folded screens (< 768px). |
+| 📱 **Foldable & Responsive** | Dual-pane dashboard on unfolded screens (≥ 768px); clean single-column view with floating `+` action button on folded screens (< 768px). |
 | 🔒 **100% Client-Side Privacy** | Zero tracking, zero ads, zero required login. All transaction records and settings remain strictly in local storage (`localStorage`). |
 | 📊 **Interactive Donut Chart** | Mathematical SVG circular arcs with min-degree protection (6°) preventing tiny slice glitches; interactive hover & tap inspection. |
-| 🧮 **In-Modal Calculator** | Built-in keypad calculator for quick arithmetic directly inside transaction entry; smart autocomplete with emoji matching. |
-| 🔄 **Recurring Automation** | Monthly & weekly recurring subscriptions/bills (Netflix, Rent, Salary) with automatic due checking and 1-click batch entry. |
+| 🧮 **In-Modal Calculator** | Built-in keypad calculator for quick arithmetic directly inside transaction entry; smart autocomplete, undo toast, and custom confirm dialogs. |
+| 💱 **Multi-Currency & FX Snapshots** | Supports 7 currencies with configurable primary currency, entry-time FX snapshots, manual rate sync, and editable reference rates. |
+| 🔄 **Recurring Automation** | Monthly & weekly recurring subscriptions/bills (Netflix, Rent, Salary) with end-of-month clamping, due checking, and 1-click batch entry. |
 | 🤖 **AI Financial Advisor** | One-click prompt generator formatting totals, savings rate, and category breakdowns ready for Google Gemini, ChatGPT, or Claude. |
 | ☁️ **Cloud & Local Backup** | Secure Google Drive sync (`drive.file` least-privilege), custom OAuth Client ID support, complete JSON backup/restore, and CSV export. |
-| 🎨 **Morandi Color Themes** | Curated Morandi palettes (Sage Green, Mist Blue, Desert Rose, Warm Taupe, Slate Gray) with seamless Dark & Light mode. |
-| 🌐 **Bilingual (i18n)** | English (default) and Traditional Chinese (`zh-TW`) with instant dynamic switching across all UI and charts. |
-| ⚡ **Offline-Ready PWA** | Service Worker shell caching for complete offline functionality; installable to home screen on Android and iOS. |
+| 🎨 **Morandi Color Themes** | 6 curated palettes (Mint & Peach Sage, Glacier Sky Blue, Blush Coral Peach, Butter Lemon & Gold, Soft Lilac & Lavender, Obsidian Deep Pine) with Dark & Light mode. |
+| 🌐 **Bilingual (i18n)** | English (default) and Traditional Chinese (`zh-TW`) with instant dynamic switching across all UI, modals, and charts. |
+| ⚡ **Offline-Ready PWA** | Service Worker shell caching (`sw.js`) and pre-compiled `styles.css` for full offline reliability; non-disruptive update banner. |
 
 ---
 
@@ -49,7 +50,7 @@ Experience PocketFlow immediately in your browser (no registration or install re
   - **Left Pane**: Monthly balance card, savings rate progress indicator, and interactive SVG donut chart.
   - **Right Pane**: Instant search bar, category/type filter tabs (All, Expense, Income), and chronological transaction feed.
 - **Folded Outer Screen / Mobile Displays (< 768px)**:
-  - Ergonomic thumb-friendly navigation bar.
+  - Clean single-column ledger layout with full vertical space (zero redundant bottom navigation bar).
   - Floating Action Button `(+)` for one-hand rapid entry.
 - **Fold State Observer**: Dynamically reacts to window resizing and screen fold/unfold transitions in real time.
 
@@ -66,9 +67,9 @@ Experience PocketFlow immediately in your browser (no registration or install re
 
 ### 🧮 4. Smart Transaction Entry & In-Modal Calculator
 - **Built-in Keypad Calculator**: Perform inline arithmetic (`+`, `-`, `×`, `÷`) directly within the transaction sheet without switching apps.
-- **Multi-Currency Support**: Switch between **USD ($)**, **TWD (NT$)**, **JPY (¥)**, **EUR (€)**, **KRW (₩)**, **HKD (HK$)**, and **GBP (£)** per transaction.
+- **Multi-Currency & FX Conversion**: Switch between **USD ($)**, **TWD (NT$)**, **JPY (¥)**, **EUR (€)**, **KRW (₩)**, **HKD (HK$)**, and **GBP (£)** per transaction, snapshot rates on entry, choose a primary currency, and update or customize reference FX rates.
 - **Smart Autocomplete & Emoji Resolution**: Context-aware suggestions based on past entries with automatic icon matching (e.g., latte → ☕, metro → 🚇, groceries → 🛍️).
-- **In-Place Editing**: Quick tap-to-edit on any transaction card or explicit edit/delete actions.
+- **In-Place Editing & Undo**: Quick tap-to-edit on any transaction card, custom accessible confirmation dialogs, and non-blocking Undo toast notifications on deletion.
 
 ### 🔄 5. Recurring Transactions & Subscription Automation
 - **Flexible Rules**: Define monthly or weekly recurring rules for rent, streaming subscriptions, utility bills, or regular income.
@@ -87,21 +88,22 @@ Experience PocketFlow immediately in your browser (no registration or install re
 - **Local Data Export/Import**: Full JSON snapshot backup/restore and CSV spreadsheet export compatible with Google Sheets and Excel.
 
 ### 🎨 8. Morandi Palette & Dark / Light Theme
-- Curated soothing Morandi color presets:
-  - 🌿 **Sage Green** (Default)
-  - 🌊 **Mist Blue**
-  - 🌸 **Desert Rose**
-  - 🪵 **Warm Taupe**
-  - 🪨 **Slate Gray**
-- System-respecting Dark / Light mode toggle with smooth visual transitions.
+- Curated soothing color presets:
+  - 🌿 **Mint & Peach Sage** (Default)
+  - 🩵 **Glacier Sky Blue**
+  - 🌸 **Blush Coral Peach**
+  - 🧈 **Butter Lemon & Gold**
+  - 💜 **Soft Lilac & Lavender**
+  - 🌲 **Obsidian Deep Pine**
+- System-respecting Dark / Light mode toggle with smooth surface transitions.
 
 ---
 
 ## 🛠️ Technology Stack
 
-- **Frontend**: Semantic HTML5, Vanilla ES6+ JavaScript (zero build tools, zero dependencies, instant load).
-- **Styling**: Tailwind CSS (via CDN) with customized Morandi CSS variables and dark mode classes.
-- **PWA**: Service Worker (`sw.js`) app-shell cache strategy + Web App Manifest (`manifest.json`).
+- **Frontend**: Semantic HTML5, Vanilla ES6+ JavaScript (zero runtime build tools, zero external runtime dependencies, instant load).
+- **Styling**: Pre-compiled static Tailwind CSS (`styles.css` + `tailwind.config.js`) with customized CSS variables and dark mode classes for 100% offline loading.
+- **PWA**: Service Worker (`sw.js`) app-shell cache strategy + localized Web App Manifests (`manifest.json` / `manifest.zh.json`).
 - **Icons**: Handcrafted inline SVG vector icons.
 - **Cloud Sync**: Google Identity Services (GIS) + Google Drive API v3.
 
@@ -133,7 +135,7 @@ python3 verify.py
 ```
 
 Checks performed:
-1. **JavaScript Syntax**: Validated using macOS JavaScriptCore engine (`osascript -l JavaScript`) for zero syntax errors.
-2. **DOM ID Consistency**: Validates that all element IDs referenced in `app.js` exist in `index.html`.
-3. **Core Calculations**: Validates currency formatting (`formatMoney`) and category icon resolution.
-4. **Branding & Assets**: Verifies icon assets and metadata consistency.
+1. **JavaScript Syntax**: Validated using macOS JavaScriptCore engine (`osascript -l JavaScript`) for zero syntax errors in `app.js` and `sw.js`.
+2. **DOM ID Consistency**: Validates zero duplicate IDs in `index.html` and confirms all element IDs referenced in `app.js` exist in `index.html`.
+3. **Core Logic & Edge Cases**: Validates currency formatting (`formatMoney`), icon resolution, HTML/CSV escaping, calculator expressions, bilingual edits, recurring scheduling & end-of-month clamping, multi-currency FX conversion, and toast/confirm helpers.
+4. **Offline Assets & Cache**: Verifies pre-compiled `styles.css`, `sw.js` pre-cache coverage, and SVG icon assets.

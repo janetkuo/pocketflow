@@ -100,9 +100,7 @@ const I18N = {
     dailyExpense: (sym, amt) => `Daily Expense ${sym} ${amt}`,
     recurringBadge: 'Recurring',
 
-    // Bottom Nav & Floating Add
-    navRecords: 'Records',
-    navRecurring: 'Recurring',
+    // Floating Add
     quickAdd: 'Quick Add',
 
     // Add/Edit Modal
@@ -335,9 +333,7 @@ const I18N = {
     dailyExpense: (sym, amt) => `日支出 ${sym} ${amt}`,
     recurringBadge: '週期',
 
-    // Bottom Nav & Floating Add
-    navRecords: '明細',
-    navRecurring: '週期',
+    // Floating Add
     quickAdd: '快速記帳',
 
     // Add/Edit Modal
@@ -1676,6 +1672,31 @@ function persistData() {
 }
 
 // ================= I18N APPLICATION ENGINE =================
+function applyI18nAttributes(dict) {
+  if (typeof document.querySelectorAll !== 'function') return;
+  const bindings = [
+    ['[data-i18n]', 'data-i18n', (el, val) => { el.textContent = val; }],
+    ['[data-i18n-html]', 'data-i18n-html', (el, val) => { el.innerHTML = val; }],
+    ['[data-i18n-placeholder]', 'data-i18n-placeholder', (el, val) => { el.setAttribute('placeholder', val); }],
+    ['[data-i18n-title]', 'data-i18n-title', (el, val) => { el.setAttribute('title', val); }]
+  ];
+  bindings.forEach(([selector, attr, apply]) => {
+    document.querySelectorAll(selector).forEach(el => {
+      const key = el.getAttribute(attr);
+      if (key && dict[key] !== undefined) {
+        apply(el, dict[key]);
+      }
+    });
+  });
+}
+
+function localizeWeekdaySelect(selectEl, weekdays) {
+  if (!selectEl || !Array.isArray(weekdays)) return;
+  const curVal = selectEl.value;
+  selectEl.innerHTML = weekdays.map((w, idx) => `<option value="${idx + 1}">${escapeHtml(w)}</option>`).join('');
+  if (curVal) selectEl.value = curVal;
+}
+
 function applyLanguage() {
   const lang = state.lang;
   const dict = I18N[lang] || I18N.en;
@@ -1693,118 +1714,22 @@ function applyLanguage() {
     }
   }
 
-  // Header
-  const subTitle = document.getElementById('app-subtitle');
-  if (subTitle) subTitle.textContent = dict.appSubtitle;
+  // Declarative static translations via data-i18n* attributes
+  applyI18nAttributes(dict);
 
-  const langLabel = document.getElementById('lang-label');
-  if (langLabel) langLabel.textContent = dict.langSwitchLabel;
-
-  const settingsBtn = document.getElementById('open-settings-btn');
-  if (settingsBtn) settingsBtn.setAttribute('title', dict.settingsTitle);
-
-  // Screen Mode Indicator
+  // Dynamic & state-dependent UI labels
   updateScreenMode();
-
-  // Demo Banner
-  const bannerTag = document.getElementById('demo-banner-tag');
-  if (bannerTag) bannerTag.textContent = dict.demoBannerTag;
-
-  const bannerText = document.getElementById('demo-banner-text');
-  if (bannerText) bannerText.innerHTML = dict.demoBannerText;
-
-  const bannerClearBtn = document.getElementById('banner-clear-btn-text');
-  if (bannerClearBtn) bannerClearBtn.textContent = dict.demoBannerClearBtn;
-
-  // Recurring Alert Banner
-  const applyRecBtn = document.getElementById('apply-recurring-btn');
-  if (applyRecBtn) applyRecBtn.textContent = dict.applyRecurringBtn;
   checkDueRecurring();
 
-  // Left Pane - Balance Card
-  const balTitle = document.getElementById('monthly-balance-title');
-  if (balTitle) balTitle.textContent = dict.monthlyBalance;
-
-  const incTitle = document.getElementById('total-income-title');
-  if (incTitle) incTitle.textContent = dict.totalIncome;
-
-  const expTitle = document.getElementById('total-expense-title');
-  if (expTitle) expTitle.textContent = dict.totalExpense;
-
-  // Left Pane - Donut Card
-  const catBreakdownTitle = document.getElementById('category-breakdown-title');
-  if (catBreakdownTitle) catBreakdownTitle.textContent = dict.categoryBreakdown;
-
-  const expTab = document.getElementById('chart-tab-expense');
-  if (expTab) expTab.textContent = dict.tabExpense;
-
-  const incTab = document.getElementById('chart-tab-income');
-  if (incTab) incTab.textContent = dict.tabIncome;
-
-  // Left Pane - Savings Card
-  const savTitle = document.getElementById('savings-rate-title');
-  if (savTitle) savTitle.textContent = dict.savingsRateTitle;
-
-  const recBtnLabel = document.getElementById('manage-recurring-label');
-  if (recBtnLabel) recBtnLabel.textContent = dict.manageRecurringBtn;
-
-  // Right Pane - Filter & Search
-  const searchInput = document.getElementById('search-input');
-  if (searchInput) searchInput.setAttribute('placeholder', dict.searchPlaceholder);
-
-  const filterAll = document.getElementById('filter-all-btn');
-  if (filterAll) filterAll.textContent = dict.filterAll;
-
-  const filterExp = document.getElementById('filter-expense-btn');
-  if (filterExp) filterExp.textContent = dict.filterExpense;
-
-  const filterInc = document.getElementById('filter-income-btn');
-  if (filterInc) filterInc.textContent = dict.filterIncome;
-
-  // Empty State
-  const emptyTitle = document.getElementById('empty-state-title');
-  if (emptyTitle) emptyTitle.textContent = dict.emptyTitle;
-
-  const emptyDesc = document.getElementById('empty-state-desc');
-  if (emptyDesc) emptyDesc.textContent = dict.emptyDesc;
-
-  // Floating Action Button (FAB)
-  const quickAddLabel = document.getElementById('quick-add-label');
-  if (quickAddLabel) quickAddLabel.textContent = dict.quickAdd;
-
-  // Add/Edit Transaction Modal
+  // Add/Edit Transaction Modal (mode-dependent strings)
   const isEditingTx = Boolean(document.getElementById('edit-id')?.value);
   const modalHeading = document.getElementById('modal-heading-text');
   if (modalHeading) modalHeading.textContent = isEditingTx ? dict.modalEditTitle : dict.modalNewTitle;
-
-  const typeExpBtn = document.getElementById('type-expense-btn');
-  if (typeExpBtn) typeExpBtn.textContent = dict.modalExpenseTab;
-
-  const typeIncBtn = document.getElementById('type-income-btn');
-  if (typeIncBtn) typeIncBtn.textContent = dict.modalIncomeTab;
-
-  const modalAmtLabel = document.getElementById('modal-amount-label');
-  if (modalAmtLabel) modalAmtLabel.textContent = dict.amountLabel;
 
   const toggleKeypadText = document.getElementById('toggle-keypad-text');
   if (toggleKeypadText) {
     toggleKeypadText.textContent = state.isKeypadVisible !== false ? dict.calcToggleHide : dict.calcToggleShow;
   }
-
-  const modalDescText = document.getElementById('modal-desc-text');
-  if (modalDescText) modalDescText.textContent = dict.descLabel;
-
-  const modalDescHint = document.getElementById('modal-desc-hint');
-  if (modalDescHint) modalDescHint.textContent = dict.descHint;
-
-  const inputTitle = document.getElementById('input-title');
-  if (inputTitle) inputTitle.setAttribute('placeholder', dict.descPlaceholder);
-
-  const modalCatLabel = document.getElementById('modal-cat-label');
-  if (modalCatLabel) modalCatLabel.textContent = dict.categoryLabel;
-
-  const modalDateLabel = document.getElementById('modal-date-label');
-  if (modalDateLabel) modalDateLabel.textContent = dict.dateLabel;
 
   const modalSubmitBtn = document.getElementById('modal-submit-btn');
   if (modalSubmitBtn) {
@@ -1817,254 +1742,32 @@ function applyLanguage() {
 
   updateKeypadEqualBtn();
 
-  // Recurring Controls in Add Modal
-  const modalRecTitle = document.getElementById('modal-rec-title');
-  if (modalRecTitle) modalRecTitle.textContent = dict.modalRecTitle;
-
-  const modalRecDesc = document.getElementById('modal-rec-desc');
-  if (modalRecDesc) modalRecDesc.textContent = dict.modalRecDesc;
-
-  const modalRecNoBtn = document.getElementById('modal-rec-no-btn');
-  if (modalRecNoBtn) modalRecNoBtn.textContent = dict.modalRecNo;
-
-  const modalRecYesBtn = document.getElementById('modal-rec-yes-btn');
-  if (modalRecYesBtn) modalRecYesBtn.textContent = dict.modalRecYes;
-
-  const modalRecFreqLabel = document.getElementById('modal-rec-freq-label');
-  if (modalRecFreqLabel) modalRecFreqLabel.textContent = dict.modalRecFreqLabel;
-
-  const modalRecFreqMonthly = document.getElementById('modal-rec-freq-monthly');
-  if (modalRecFreqMonthly) modalRecFreqMonthly.textContent = dict.modalRecFreqMonthly;
-
-  const modalRecFreqWeekly = document.getElementById('modal-rec-freq-weekly');
-  if (modalRecFreqWeekly) modalRecFreqWeekly.textContent = dict.modalRecFreqWeekly;
-
   const modalRecFreq = document.getElementById('modal-rec-freq');
   const isWeeklyModal = modalRecFreq && modalRecFreq.value === 'weekly';
   const modalRecDayLabel = document.getElementById('modal-rec-day-label');
   if (modalRecDayLabel) modalRecDayLabel.textContent = isWeeklyModal ? dict.modalRecDayLabelWeekly : dict.modalRecDayLabelMonthly;
+  localizeWeekdaySelect(document.getElementById('modal-rec-weekday'), dict.weekdays);
 
-  const modalRecWeekday = document.getElementById('modal-rec-weekday');
-  if (modalRecWeekday && dict.weekdays) {
-    const curVal = modalRecWeekday.value;
-    modalRecWeekday.innerHTML = dict.weekdays.map((w, idx) => `<option value="${idx + 1}">${w}</option>`).join('');
-    if (curVal) modalRecWeekday.value = curVal;
-  }
-
-  const modalRecHelpText = document.getElementById('modal-rec-help-text');
-  if (modalRecHelpText) modalRecHelpText.textContent = dict.modalRecHelpText;
-
-  // Recurring Modal Shortcut Tip & Button
-  const recQuickAddTip = document.getElementById('rec-quick-add-tip');
-  if (recQuickAddTip) recQuickAddTip.textContent = dict.recQuickAddTip;
-
-  const recQuickAddBtn = document.getElementById('rec-quick-add-btn');
-  if (recQuickAddBtn) recQuickAddBtn.textContent = dict.recQuickAddBtn;
-
-  // Recurring Modal
-  const recModalTitle = document.getElementById('rec-modal-title');
-  if (recModalTitle) {
-    recModalTitle.innerHTML = `
-      <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-      ${dict.recurringModalTitle}
-    `;
-  }
-
-  const recModalDesc = document.getElementById('rec-modal-desc');
-  if (recModalDesc) recModalDesc.textContent = dict.recurringModalDesc;
-
+  // Recurring Modal (mode-dependent strings & options)
   const isEditingRec = Boolean(document.getElementById('rec-edit-id')?.value);
   const recAddTitle = document.getElementById('rec-add-title');
   if (recAddTitle) recAddTitle.textContent = isEditingRec ? dict.editRecurringTitle : dict.addRecurringTitle;
-
-  const recCancelBtn = document.getElementById('rec-cancel-edit-btn');
-  if (recCancelBtn) recCancelBtn.textContent = dict.cancelEditBtn;
-
-  const recTitle = document.getElementById('rec-title');
-  if (recTitle) recTitle.setAttribute('placeholder', dict.recTitlePlaceholder);
-
-  const recAmount = document.getElementById('rec-amount');
-  if (recAmount) recAmount.setAttribute('placeholder', dict.recAmountPlaceholder);
-
-  const recNameField = document.getElementById('rec-name-field-label');
-  if (recNameField) recNameField.textContent = dict.recNameFieldLabel;
-
-  const recAmountField = document.getElementById('rec-amount-field-label');
-  if (recAmountField) recAmountField.textContent = dict.recAmountFieldLabel;
-
-  const recTypeField = document.getElementById('rec-type-field-label');
-  if (recTypeField) recTypeField.textContent = dict.recTypeFieldLabel;
-
-  const recCatField = document.getElementById('rec-cat-field-label');
-  if (recCatField) recCatField.textContent = dict.recCatFieldLabel;
-
-  const recFreqField = document.getElementById('rec-freq-field-label');
-  if (recFreqField) recFreqField.textContent = dict.recFreqFieldLabel;
-
-  const recDayHeading = document.getElementById('rec-day-heading-label');
-  if (recDayHeading) recDayHeading.textContent = dict.recScheduleHeading;
-
-  const recOptExp = document.getElementById('rec-opt-expense');
-  if (recOptExp) recOptExp.textContent = dict.recTypeExpense;
-
-  const recOptInc = document.getElementById('rec-opt-income');
-  if (recOptInc) recOptInc.textContent = dict.recTypeIncome;
-
-  const recOptMonthly = document.getElementById('rec-opt-monthly');
-  if (recOptMonthly) recOptMonthly.textContent = dict.recFreqMonthly;
-
-  const recOptWeekly = document.getElementById('rec-opt-weekly');
-  if (recOptWeekly) recOptWeekly.textContent = dict.recFreqWeekly;
-
-  const recDay = document.getElementById('rec-day');
-  if (recDay) recDay.setAttribute('placeholder', dict.recDayPlaceholder);
-
-  const recDayLabel = document.getElementById('rec-day-label');
-  if (recDayLabel) recDayLabel.textContent = dict.recDayLabelMonthly;
-
-  const recWeeklyLabel = document.getElementById('rec-weekly-label');
-  if (recWeeklyLabel) recWeeklyLabel.textContent = dict.recDayLabelWeekly;
 
   const recFreq = document.getElementById('rec-freq');
   const isWeeklyRec = recFreq && recFreq.value === 'weekly';
   const recDaySuffix = document.getElementById('rec-day-suffix');
   if (recDaySuffix) recDaySuffix.textContent = isWeeklyRec ? dict.recDaySuffixWeekly : dict.recDaySuffixMonthly;
-
-  const recWeekday = document.getElementById('rec-weekday');
-  if (recWeekday && dict.weekdays) {
-    const curVal = recWeekday.value;
-    recWeekday.innerHTML = dict.weekdays.map((w, idx) => `<option value="${idx + 1}">${w}</option>`).join('');
-    if (curVal) recWeekday.value = curVal;
-  }
+  localizeWeekdaySelect(document.getElementById('rec-weekday'), dict.weekdays);
 
   const recSubmitBtn = document.getElementById('rec-submit-btn');
   if (recSubmitBtn) recSubmitBtn.textContent = isEditingRec ? dict.updateRecurringBtn : dict.addRecurringBtn;
 
   updateRecCategoryOptions();
 
-  // Settings Modal - Morandi Palette Section
-  const paletteSettingsTitle = document.getElementById('palette-settings-title');
-  if (paletteSettingsTitle) paletteSettingsTitle.textContent = dict.paletteSettingsTitle;
-
-  const paletteSettingsDesc = document.getElementById('palette-settings-desc');
-  if (paletteSettingsDesc) paletteSettingsDesc.textContent = dict.paletteSettingsDesc;
-
+  // Dynamic Settings sections
   renderPaletteSelectorUI();
-
-  // Settings Modal - Primary Currency & Reference FX Section
-  const fxSettingsTitle = document.getElementById('fx-settings-title');
-  if (fxSettingsTitle) fxSettingsTitle.textContent = dict.fxSettingsTitle;
-
-  const fxSettingsDesc = document.getElementById('fx-settings-desc');
-  if (fxSettingsDesc) fxSettingsDesc.textContent = dict.fxSettingsDesc;
-
-  const fxSyncBtnLabel = document.getElementById('fx-sync-btn-label');
-  if (fxSyncBtnLabel) fxSyncBtnLabel.textContent = dict.fxSyncBtn;
-
-  const fxToggleRatesLabel = document.getElementById('fx-toggle-rates-label');
-  if (fxToggleRatesLabel) fxToggleRatesLabel.textContent = dict.fxToggleRates;
-
-  const fxResetRatesBtn = document.getElementById('fx-reset-rates-btn');
-  if (fxResetRatesBtn) fxResetRatesBtn.textContent = dict.fxResetRates;
-
-  const fxSaveRatesBtn = document.getElementById('fx-save-rates-btn');
-  if (fxSaveRatesBtn) fxSaveRatesBtn.textContent = dict.fxSaveRates;
-
   renderFxRatesUI();
-
-  // Settings Modal
-  const settingsTitle = document.getElementById('settings-modal-title');
-  if (settingsTitle) settingsTitle.textContent = dict.settingsTitle;
-
-  const settingsRecTitle = document.getElementById('settings-rec-title');
-  if (settingsRecTitle) settingsRecTitle.textContent = dict.settingsRecTitle;
-
-  const settingsOpenRecLabel = document.getElementById('settings-open-rec-label');
-  if (settingsOpenRecLabel) settingsOpenRecLabel.textContent = dict.settingsOpenRecLabel;
-
-  const settingsRecDesc = document.getElementById('settings-rec-desc');
-  if (settingsRecDesc) settingsRecDesc.textContent = dict.settingsRecDesc;
-
-  const aiExportTitle = document.getElementById('ai-export-title');
-  if (aiExportTitle) aiExportTitle.textContent = dict.aiExportTitle;
-
-  const aiExportDesc = document.getElementById('ai-export-desc');
-  if (aiExportDesc) aiExportDesc.innerHTML = dict.aiExportDesc;
-
-  const copyAiBtnText = document.getElementById('copy-ai-btn-text');
-  if (copyAiBtnText) copyAiBtnText.textContent = dict.copyAiPromptBtn;
-
-  // Google Drive Backup UI
-  const gdriveTitle = document.getElementById('gdrive-title');
-  if (gdriveTitle) gdriveTitle.textContent = dict.gdriveTitle;
-
-  const gdriveDesc = document.getElementById('gdrive-desc');
-  if (gdriveDesc) gdriveDesc.textContent = dict.gdriveDesc;
-
-  const gdriveBackupLabel = document.getElementById('gdrive-backup-label');
-  if (gdriveBackupLabel) gdriveBackupLabel.textContent = dict.gdriveBackupBtn;
-
-  const gdriveRestoreLabel = document.getElementById('gdrive-restore-label');
-  if (gdriveRestoreLabel) gdriveRestoreLabel.textContent = dict.gdriveRestoreBtn;
-
-  const disconnectBtn = document.getElementById('gdrive-disconnect-btn');
-  if (disconnectBtn) disconnectBtn.textContent = dict.gdriveDisconnectBtn;
-
-  const gdriveToggleConfigLabel = document.getElementById('gdrive-toggle-config-label');
-  if (gdriveToggleConfigLabel) gdriveToggleConfigLabel.textContent = dict.gdriveToggleConfig;
-
-  const gdriveClientIdLabel = document.getElementById('gdrive-client-id-label');
-  if (gdriveClientIdLabel) gdriveClientIdLabel.textContent = dict.gdriveClientIdLabel;
-
-  const gdriveSaveClientIdBtn = document.getElementById('gdrive-save-client-id-btn');
-  if (gdriveSaveClientIdBtn) gdriveSaveClientIdBtn.textContent = dict.gdriveSaveClientIdBtn;
-
-  const gdriveGuideTitle = document.getElementById('gdrive-guide-title');
-  if (gdriveGuideTitle) gdriveGuideTitle.textContent = dict.gdriveGuideTitle;
-
-  const gdriveGuideStep1 = document.getElementById('gdrive-guide-step1');
-  if (gdriveGuideStep1) gdriveGuideStep1.innerHTML = dict.gdriveGuideStep1;
-
-  const gdriveGuideStep2 = document.getElementById('gdrive-guide-step2');
-  if (gdriveGuideStep2) gdriveGuideStep2.innerHTML = dict.gdriveGuideStep2;
-
-  const gdriveGuideStep3 = document.getElementById('gdrive-guide-step3');
-  if (gdriveGuideStep3) gdriveGuideStep3.innerHTML = dict.gdriveGuideStep3;
-
   updateGoogleDriveStatusUI();
-
-  const backupTitle = document.getElementById('backup-title');
-  if (backupTitle) backupTitle.textContent = dict.backupTitle;
-
-  const backupDesc = document.getElementById('backup-desc');
-  if (backupDesc) backupDesc.textContent = dict.backupDesc;
-
-  const exportJsonLabel = document.getElementById('export-json-label');
-  if (exportJsonLabel) exportJsonLabel.textContent = dict.exportJsonBtn;
-
-  const exportCsvLabel = document.getElementById('export-csv-label');
-  if (exportCsvLabel) exportCsvLabel.textContent = dict.exportCsvBtn;
-
-  const importJsonLabel = document.getElementById('import-json-label');
-  if (importJsonLabel) importJsonLabel.textContent = dict.importJsonBtn;
-
-  const clearDataTitle = document.getElementById('clear-data-title');
-  if (clearDataTitle) clearDataTitle.textContent = dict.clearDataTitle;
-
-  const clearDataDesc = document.getElementById('clear-data-desc');
-  if (clearDataDesc) clearDataDesc.textContent = dict.clearDataDesc;
-
-  const clearAllDataBtn = document.getElementById('clear-all-data-btn');
-  if (clearAllDataBtn) clearAllDataBtn.textContent = dict.clearDataBtn;
-
-  const reloadDemoBtn = document.getElementById('reload-demo-btn');
-  if (reloadDemoBtn) reloadDemoBtn.textContent = dict.reloadDemoBtn;
-
-  const pwaUpdateText = document.getElementById('pwa-update-text');
-  if (pwaUpdateText) pwaUpdateText.textContent = dict.pwaUpdateText;
-
-  const pwaUpdateBtn = document.getElementById('pwa-update-btn');
-  if (pwaUpdateBtn) pwaUpdateBtn.textContent = dict.pwaUpdateBtn;
 
   // Re-render UI components with localized text
   renderCategoryPicker();
@@ -2641,6 +2344,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initCurrency();
   initFoldScreenObserver();
   initEvents();
+  initPwaServiceWorker();
   applyLanguage();
   updateDemoBanner();
   checkUrlShortcuts();
@@ -4233,25 +3937,12 @@ function renderChart() {
     }).join('');
   }
 
-  svg.querySelectorAll('.donut-slice').forEach(slice => {
-    const handleInspect = () => {
-      const name = slice.getAttribute('data-cat-name');
-      const amt = slice.getAttribute('data-cat-amount');
-      const pct = slice.getAttribute('data-cat-pct');
-      document.getElementById('donut-center-sub').textContent = `${pct}% ${dict.donutCenterPct}`;
-      document.getElementById('donut-center-val').textContent = `${sym} ${formatMoney(amt, state.currency)}`;
-      document.getElementById('donut-center-cat').textContent = name;
-    };
-
-    const handleReset = () => {
-      document.getElementById('donut-center-sub').textContent = state.chartType === 'expense' ? dict.donutCenterExp : dict.donutCenterInc;
-      document.getElementById('donut-center-val').textContent = `${sym} ${formatMoney(total, state.currency)}`;
-      document.getElementById('donut-center-cat').textContent = dict.donutCenterAll;
-    };
-
-    slice.addEventListener('mouseenter', handleInspect);
-    slice.addEventListener('mouseleave', handleReset);
-    slice.addEventListener('touchstart', handleInspect, { passive: true });
+  bindDonutInspectEvents(svg.querySelectorAll('.donut-slice'), {
+    pctSuffix: '%',
+    tapEvent: 'touchstart',
+    total,
+    sym,
+    dict
   });
 
   legend.innerHTML = sortedCats.map(([catId, amount]) => {
@@ -4276,23 +3967,40 @@ function renderChart() {
     `;
   }).join('');
 
-  legend.querySelectorAll('.legend-row').forEach(row => {
+  bindDonutInspectEvents(legend.querySelectorAll('.legend-row'), {
+    pctSuffix: '',
+    tapEvent: 'click',
+    total,
+    sym,
+    dict
+  });
+}
+
+function bindDonutInspectEvents(elements, { pctSuffix = '', tapEvent, total, sym, dict }) {
+  const defaultSub = state.chartType === 'expense' ? dict.donutCenterExp : dict.donutCenterInc;
+  const defaultVal = `${sym} ${formatMoney(total, state.currency)}`;
+
+  const handleReset = () => {
+    document.getElementById('donut-center-sub').textContent = defaultSub;
+    document.getElementById('donut-center-val').textContent = defaultVal;
+    document.getElementById('donut-center-cat').textContent = dict.donutCenterAll;
+  };
+
+  elements.forEach(el => {
     const handleInspect = () => {
-      const name = row.getAttribute('data-cat-name');
-      const amt = row.getAttribute('data-cat-amount');
-      const pct = row.getAttribute('data-cat-pct');
-      document.getElementById('donut-center-sub').textContent = `${pct} ${dict.donutCenterPct}`;
+      const name = el.getAttribute('data-cat-name');
+      const amt = el.getAttribute('data-cat-amount');
+      const pct = el.getAttribute('data-cat-pct');
+      document.getElementById('donut-center-sub').textContent = `${pct}${pctSuffix} ${dict.donutCenterPct}`;
       document.getElementById('donut-center-val').textContent = `${sym} ${formatMoney(amt, state.currency)}`;
       document.getElementById('donut-center-cat').textContent = name;
     };
-    const handleReset = () => {
-      document.getElementById('donut-center-sub').textContent = state.chartType === 'expense' ? dict.donutCenterExp : dict.donutCenterInc;
-      document.getElementById('donut-center-val').textContent = `${sym} ${formatMoney(total, state.currency)}`;
-      document.getElementById('donut-center-cat').textContent = dict.donutCenterAll;
-    };
-    row.addEventListener('mouseenter', handleInspect);
-    row.addEventListener('mouseleave', handleReset);
-    row.addEventListener('click', handleInspect);
+
+    el.addEventListener('mouseenter', handleInspect);
+    el.addEventListener('mouseleave', handleReset);
+    if (tapEvent) {
+      el.addEventListener(tapEvent, handleInspect, tapEvent === 'touchstart' ? { passive: true } : undefined);
+    }
   });
 }
 
@@ -4518,43 +4226,43 @@ function copyAIPrompt() {
     return orig;
   };
 
+  const isEn = state.lang === 'en';
+  const catLines = sortedCats.map(([catId, amt]) => {
+    const meta = getCategoryMeta('expense', catId);
+    const pct = expense > 0 ? Math.round((amt / expense) * 100) : 0;
+    return `- ${meta.name} (${meta.icon}): ${sym}${formatMoney(amt)} (${pct}%)`;
+  }).join('\n') || (isEn ? '- No expense records for this month' : '- 本月尚無支出紀錄');
+
+  const recurringLines = state.recurring.map(r => {
+    const cat = getCategoryMeta(r.type, r.category);
+    const title = getItemTitle(r) || cat.name;
+    const schedule = dict.recurringItemSub(r.day, r.type, r.freq);
+    const rSym = (CURRENCIES[r.currency] && CURRENCIES[r.currency].symbol) || sym;
+    return `- ${title}: ${schedule} · ${rSym}${formatMoney(r.amount, r.currency)}`;
+  }).join('\n') || (isEn ? '- No recurring items configured' : '- 目前無設定固定週期收支');
+
+  const topExpenses = monthTxs
+    .filter(t => t.type === 'expense')
+    .sort((a, b) => convertTxToBase(b) - convertTxToBase(a))
+    .slice(0, 5)
+    .map((t, idx) => {
+      const cat = getCategoryMeta(t.type, t.category);
+      const title = getItemTitle(t) || cat.name;
+      return `${idx + 1}. ${title} (${t.date}): ${formatTxPromptAmount(t)}`;
+    })
+    .join('\n') || (isEn ? 'None' : '無');
+
+  const txListSample = monthTxs.slice(0, 25).map(t => {
+    const sign = t.type === 'expense' ? '-' : '+';
+    const cat = getCategoryMeta(t.type, t.category);
+    const title = getItemTitle(t);
+    const displayDesc = title ? `${title} (${cat.name})` : cat.name;
+    return `- ${t.date} | ${displayDesc} | ${sign}${formatTxPromptAmount(t)}`;
+  }).join('\n') || (isEn ? 'No records for this month' : '本月尚無明細');
+
   let promptText = '';
 
-  if (state.lang === 'en') {
-    // English Prompt
-    const catLines = sortedCats.map(([catId, amt]) => {
-      const meta = getCategoryMeta('expense', catId);
-      const pct = expense > 0 ? Math.round((amt / expense) * 100) : 0;
-      return `- ${meta.name} (${meta.icon}): ${sym}${formatMoney(amt)} (${pct}%)`;
-    }).join('\n') || '- No expense records for this month';
-
-    const recurringLines = state.recurring.map(r => {
-      const cat = getCategoryMeta(r.type, r.category);
-      const title = getItemTitle(r) || cat.name;
-      const schedule = dict.recurringItemSub(r.day, r.type, r.freq);
-      const rSym = (CURRENCIES[r.currency] && CURRENCIES[r.currency].symbol) || sym;
-      return `- ${title}: ${schedule} · ${rSym}${formatMoney(r.amount, r.currency)}`;
-    }).join('\n') || '- No recurring items configured';
-
-    const topExpenses = monthTxs
-      .filter(t => t.type === 'expense')
-      .sort((a, b) => convertTxToBase(b) - convertTxToBase(a))
-      .slice(0, 5)
-      .map((t, idx) => {
-        const cat = getCategoryMeta(t.type, t.category);
-        const title = getItemTitle(t) || cat.name;
-        return `${idx + 1}. ${title} (${t.date}): ${formatTxPromptAmount(t)}`;
-      })
-      .join('\n') || 'None';
-
-    const txListSample = monthTxs.slice(0, 25).map(t => {
-      const sign = t.type === 'expense' ? '-' : '+';
-      const cat = getCategoryMeta(t.type, t.category);
-      const title = getItemTitle(t);
-      const displayDesc = title ? `${title} (${cat.name})` : cat.name;
-      return `- ${t.date} | ${displayDesc} | ${sign}${formatTxPromptAmount(t)}`;
-    }).join('\n') || 'No records for this month';
-
+  if (isEn) {
     promptText = `# Personal Financial Review & Budget Analysis Request (from PocketFlow)
 
 Hello! Please act as my "Personal Financial Advisor and Budgeting Coach".
@@ -4591,42 +4299,7 @@ ${monthTxs.length > 25 ? `\n(and ${monthTxs.length - 25} smaller transactions om
 4. **[3 Concrete Action Steps for Next Month]**: Give me 3 high-impact, easy-to-adopt micro-habits to cut unnecessary spending.
 
 Thank you! Please provide a structured, friendly, and professional response in English.`;
-
   } else {
-    // Traditional Chinese Prompt
-    const catLines = sortedCats.map(([catId, amt]) => {
-      const meta = getCategoryMeta('expense', catId);
-      const pct = expense > 0 ? Math.round((amt / expense) * 100) : 0;
-      return `- ${meta.name} (${meta.icon}): ${sym}${formatMoney(amt)} (${pct}%)`;
-    }).join('\n') || '- 本月尚無支出紀錄';
-
-    const recurringLines = state.recurring.map(r => {
-      const cat = getCategoryMeta(r.type, r.category);
-      const title = getItemTitle(r) || cat.name;
-      const schedule = dict.recurringItemSub(r.day, r.type, r.freq);
-      const rSym = (CURRENCIES[r.currency] && CURRENCIES[r.currency].symbol) || sym;
-      return `- ${title}: ${schedule} · ${rSym}${formatMoney(r.amount, r.currency)}`;
-    }).join('\n') || '- 目前無設定固定週期收支';
-
-    const topExpenses = monthTxs
-      .filter(t => t.type === 'expense')
-      .sort((a, b) => convertTxToBase(b) - convertTxToBase(a))
-      .slice(0, 5)
-      .map((t, idx) => {
-        const cat = getCategoryMeta(t.type, t.category);
-        const title = getItemTitle(t) || cat.name;
-        return `${idx + 1}. ${title} (${t.date}): ${formatTxPromptAmount(t)}`;
-      })
-      .join('\n') || '無';
-
-    const txListSample = monthTxs.slice(0, 25).map(t => {
-      const sign = t.type === 'expense' ? '-' : '+';
-      const cat = getCategoryMeta(t.type, t.category);
-      const title = getItemTitle(t);
-      const displayDesc = title ? `${title} (${cat.name})` : cat.name;
-      return `- ${t.date} | ${displayDesc} | ${sign}${formatTxPromptAmount(t)}`;
-    }).join('\n') || '本月尚無明細';
-
     promptText = `# 財務健檢與預算分析請求 (來自 PocketFlow 記帳本)
 
 你好！請擔任我的「個人專屬財務顧問與理財教練」。
@@ -5196,21 +4869,28 @@ async function restoreFromGoogleDrive(retried = false) {
 }
 
 // Register Service Worker for PWA with non-disruptive update notification
-if ('serviceWorker' in navigator) {
+function initPwaServiceWorker() {
+  if (!('serviceWorker' in navigator)) return;
+
   let hadController = Boolean(navigator.serviceWorker.controller);
   let refreshing = false;
 
-  function triggerPwaReload() {
+  const triggerPwaReload = () => {
     if (refreshing) return;
     refreshing = true;
     window.location.reload();
-  }
+  };
 
-  function showPwaUpdateBanner() {
+  const showPwaUpdateBanner = () => {
     const banner = document.getElementById('pwa-update-banner');
     if (banner) {
       banner.classList.remove('hidden');
     }
+  };
+
+  const updateBtn = document.getElementById('pwa-update-btn');
+  if (updateBtn) {
+    updateBtn.addEventListener('click', triggerPwaReload);
   }
 
   // Prompt user cleanly via banner when a new SW takes control (avoid mid-session jarring reloads)
@@ -5254,13 +4934,5 @@ if ('serviceWorker' in navigator) {
     }).catch(err => {
       console.log('SW registration note:', err);
     });
-  });
-
-  // Bind update button
-  document.addEventListener('DOMContentLoaded', () => {
-    const updateBtn = document.getElementById('pwa-update-btn');
-    if (updateBtn) {
-      updateBtn.addEventListener('click', triggerPwaReload);
-    }
   });
 }
