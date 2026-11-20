@@ -160,6 +160,62 @@ def check_business_logic():
     const cloudIcon = resolveItemIcon('housing', 'iCloud 2TB 雲端空間', '🏠');
     if (cloudIcon !== '☁️') throw new Error('resolveItemIcon cloud failed: got ' + cloudIcon);
 
+    // Check HTML escaping & CSV escaping
+    const escaped = escapeHtml('<img src=x onerror="alert(1)"> & \\'test\\'');
+    if (escaped !== '&lt;img src=x onerror=&quot;alert(1)&quot;&gt; &amp; &#39;test&#39;') {
+      throw new Error('escapeHtml failed: ' + escaped);
+    }
+
+    const csvFormula = escapeCsvCell('=CMD("calc")');
+    if (csvFormula !== '"\\'=CMD(""calc"")"') {
+      throw new Error('escapeCsvCell formula failed: ' + csvFormula);
+    }
+    const csvQuotes = escapeCsvCell('Coffee "Large", Iced');
+    if (csvQuotes !== '"Coffee ""Large"", Iced"') {
+      throw new Error('escapeCsvCell quotes failed: ' + csvQuotes);
+    }
+
+    // Check expression evaluation & validation
+    if (evaluateExpression('12.5 + 3 * 2') !== 18.5) throw new Error('evaluateExpression order of ops failed');
+    if (evaluateExpression('12.34.56') !== null) throw new Error('evaluateExpression malformed decimal should be null');
+    if (evaluateExpression('5++3') !== null) throw new Error('evaluateExpression double operator should be null');
+    if (!isDivisionByZeroExpr('10 / 0.00')) throw new Error('isDivisionByZeroExpr failed for 0.00');
+    if (isDivisionByZeroExpr('10 / 0.5')) throw new Error('isDivisionByZeroExpr false positive for 0.5');
+
+    // Check bilingual title editing sync
+    const txItem = { title: 'Oat Milk Latte', title_tw: '中杯燕麥熱拿鐵' };
+    const unchangedCopy = { ...txItem };
+    applyEditedTitle(unchangedCopy, txItem, 'Oat Milk Latte', 'en');
+    if (unchangedCopy.title_tw !== '中杯燕麥熱拿鐵' || unchangedCopy.title !== 'Oat Milk Latte') {
+      throw new Error('applyEditedTitle should preserve bilingual titles when unchanged');
+    }
+    const unchangedZhCopy = { ...txItem };
+    applyEditedTitle(unchangedZhCopy, txItem, '中杯燕麥熱拿鐵', 'zh-TW');
+    if (unchangedZhCopy.title_tw !== '中杯燕麥熱拿鐵' || unchangedZhCopy.title !== 'Oat Milk Latte') {
+      throw new Error('applyEditedTitle should preserve English title when zh-TW unchanged');
+    }
+    const changedEnCopy = { ...txItem };
+    applyEditedTitle(changedEnCopy, txItem, 'Matcha Latte', 'en');
+    if (changedEnCopy.title !== 'Matcha Latte' || 'title_tw' in changedEnCopy) {
+      throw new Error('applyEditedTitle should clear stale title_tw when edited in en');
+    }
+    const changedZhCopy = { ...txItem };
+    applyEditedTitle(changedZhCopy, txItem, '抹茶拿鐵', 'zh-TW');
+    if (changedZhCopy.title !== '抹茶拿鐵' || changedZhCopy.title_tw !== '抹茶拿鐵') {
+      throw new Error('applyEditedTitle should sync both titles when edited in zh-TW');
+    }
+
+    // Check generateId & sanitizeImportedRecord
+    const id1 = generateId('tx');
+    const id2 = generateId('tx');
+    if (!id1.startsWith('tx_') || !id2.startsWith('tx_') || id1 === id2) {
+      throw new Error('generateId failed: ' + id1 + ', ' + id2);
+    }
+    const sanitized = sanitizeImportedRecord({ title: 'Test', amount: -10, type: 'invalid', date: 'bad-date' }, false);
+    if (!sanitized || sanitized.amount !== 0 || sanitized.type !== 'expense' || !/^\\d{4}-\\d{2}-\\d{2}$/.test(sanitized.date)) {
+      throw new Error('sanitizeImportedRecord failed: ' + JSON.stringify(sanitized));
+    }
+
     'OK'
     """
     proc = subprocess.run(['osascript', '-l', 'JavaScript', '-e', test_logic], capture_output=True, text=True)

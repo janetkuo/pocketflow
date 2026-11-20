@@ -115,6 +115,7 @@ const I18N = {
     calcToggleHide: 'Hide Calculator',
     calcDivZero: '⚠️ Cannot divide by 0',
     calcInvalidExpr: '⚠️ Invalid calculation',
+    amountMustBePositive: '⚠️ Please enter a valid amount greater than 0',
     calcKeypadSave: 'Save',
     editTxBtn: 'Edit',
     deleteTxBtn: 'Delete',
@@ -324,6 +325,7 @@ const I18N = {
     calcToggleHide: '收合計算機',
     calcDivZero: '⚠️ 除數不能為 0',
     calcInvalidExpr: '⚠️ 計算式有誤',
+    amountMustBePositive: '⚠️ 請輸入大於 0 的有效金額',
     calcKeypadSave: '儲存',
     editTxBtn: '編輯',
     deleteTxBtn: '刪除',
@@ -919,10 +921,88 @@ function normalizeDemoItems() {
   }
 }
 
+// Security & Data Integrity Helpers
+function escapeHtml(str) {
+  return String(str == null ? '' : str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function generateId(prefix = 'id') {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return `${prefix}_${crypto.randomUUID()}`;
+  }
+  return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function escapeCsvCell(value) {
+  let str = String(value == null ? '' : value);
+  if (/^[=+\-@\t\r]/.test(str)) {
+    str = `'${str}`;
+  }
+  if (/[",\n\r]/.test(str)) {
+    return `"${str.replace(/"/g, '""')}"`;
+  }
+  return str;
+}
+
+function applyEditedTitle(target, existingItem, newTitle, lang = state.lang) {
+  const prevDisplayed = getItemTitle(existingItem, lang);
+  if (newTitle === prevDisplayed) {
+    return;
+  }
+  target.title = newTitle;
+  if (lang === 'zh-TW' && newTitle) {
+    target.title_tw = newTitle;
+  } else {
+    delete target.title_tw;
+  }
+}
+
+function sanitizeImportedRecord(raw, isRecurring = false) {
+  if (!raw || typeof raw !== 'object') return null;
+  const type = raw.type === 'income' ? 'income' : 'expense';
+  const amount = Number(raw.amount);
+  const cleanAmount = Number.isFinite(amount) && amount >= 0 ? amount : 0;
+  const currency = typeof raw.currency === 'string' && CURRENCIES[raw.currency] ? raw.currency : undefined;
+  const record = {
+    id: typeof raw.id === 'string' && raw.id.trim() ? raw.id.trim() : generateId(isRecurring ? 'rec' : 'tx'),
+    title: typeof raw.title === 'string' ? raw.title : '',
+    amount: cleanAmount,
+    type,
+    category: typeof raw.category === 'string' && raw.category.trim()
+      ? raw.category.trim()
+      : (type === 'income' ? 'other_inc' : 'other_exp')
+  };
+  if (typeof raw.title_tw === 'string' && raw.title_tw) {
+    record.title_tw = raw.title_tw;
+  }
+  if (currency) {
+    record.currency = currency;
+  }
+  if (isRecurring) {
+    record.freq = raw.freq === 'weekly' ? 'weekly' : 'monthly';
+    const maxDay = record.freq === 'weekly' ? 7 : 31;
+    const parsedDay = parseInt(raw.day, 10);
+    record.day = Number.isFinite(parsedDay) ? Math.min(Math.max(parsedDay, 1), maxDay) : 1;
+  } else {
+    record.date = typeof raw.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(raw.date)
+      ? raw.date
+      : getLocalDateString();
+    if (typeof raw.recurringId === 'string' && raw.recurringId.trim()) {
+      record.recurringId = raw.recurringId.trim();
+    }
+  }
+  return record;
+}
+
 // Helpers for Title & Category Localized Strings
-function getItemTitle(item) {
+function getItemTitle(item, lang = state.lang) {
   if (!item) return '';
-  if (state.lang === 'zh-TW') {
+  if (lang === 'zh-TW') {
     return item.title_tw || item.title || '';
   }
   return item.title || item.title_tw || '';
@@ -1781,6 +1861,11 @@ function updateDemoBanner() {
 // ================= CALCULATOR KEYPAD CONTROLLER =================
 
 // Safe arithmetic evaluator supporting +, -, ×, ÷ (*, /) with order of operations
+function isDivisionByZeroExpr(exprStr) {
+  if (!exprStr || typeof exprStr !== 'string') return false;
+  return /[÷/]\s*(?:0+(?:\.0*)?|\.0+)(?:$|\s|[+\-×÷*/])/.test(exprStr);
+}
+
 function evaluateExpression(exprStr) {
   if (!exprStr || typeof exprStr !== 'string') return null;
   var s = exprStr.replace(/×/g, '*').replace(/÷/g, '/').replace(/−/g, '-').replace(/\s+/g, '');
@@ -1800,6 +1885,7 @@ function evaluateExpression(exprStr) {
           numStr += s[i];
           i++;
         }
+        if (!/^-(?:\d+(?:\.\d*)?|\.\d+)$/.test(numStr)) return null;
         var val = parseFloat(numStr);
         if (isNaN(val)) return null;
         tokens.push(val);
@@ -1813,6 +1899,7 @@ function evaluateExpression(exprStr) {
         numStr += s[i];
         i++;
       }
+      if (!/^(?:\d+(?:\.\d*)?|\.\d+)$/.test(numStr)) return null;
       var val = parseFloat(numStr);
       if (isNaN(val)) return null;
       tokens.push(val);
@@ -1884,7 +1971,7 @@ function updateCalcPreview() {
   }
 
   // Division by zero check
-  if (/[÷/]\s*0(\.0*)?($|\s|[+\-×÷*/])/.test(val)) {
+  if (isDivisionByZeroExpr(val)) {
     preview.textContent = dict.calcDivZero;
     return;
   }
@@ -1894,7 +1981,7 @@ function updateCalcPreview() {
     const cleanNum = parseFloat(result.toFixed(2));
     preview.textContent = `= ${cleanNum.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
   } else {
-    preview.textContent = '';
+    preview.textContent = dict.calcInvalidExpr;
   }
 }
 
@@ -2458,20 +2545,25 @@ function initEvents() {
         ? (state.lang === 'en' ? 'Expense' : '支出') 
         : (state.lang === 'en' ? 'Income' : '收入');
       const recBadge = item.isRecurring ? (state.lang === 'en' ? ' · 🔄 Recurring' : ' · 🔄 固定週期') : '';
+      const safeTitle = escapeHtml(item.title);
+      const safeCat = escapeHtml(item.category);
+      const safeType = escapeHtml(item.type);
+      const safeCurr = escapeHtml(item.currency || 'USD');
+      const safeCatName = escapeHtml(cat.name);
 
       return `
         <div class="auto-item px-3 py-2.5 hover:bg-indigo-50 dark:hover:bg-slate-700/80 cursor-pointer flex items-center justify-between transition"
-             data-title="${item.title}" data-category="${item.category}" data-type="${item.type}" data-amount="${item.amount}" data-currency="${item.currency || 'USD'}"
-             data-is-recurring="${item.isRecurring ? 'true' : 'false'}" data-freq="${item.freq || 'monthly'}" data-day="${item.day || ''}">
+             data-title="${safeTitle}" data-category="${safeCat}" data-type="${safeType}" data-amount="${escapeHtml(item.amount)}" data-currency="${safeCurr}"
+             data-is-recurring="${item.isRecurring ? 'true' : 'false'}" data-freq="${escapeHtml(item.freq || 'monthly')}" data-day="${escapeHtml(item.day || '')}">
           <div class="flex items-center gap-2">
-            <span class="w-7 h-7 rounded-lg flex items-center justify-center text-sm" style="background:${cat.bg}">${cat.icon}</span>
+            <span class="w-7 h-7 rounded-lg flex items-center justify-center text-sm" style="background:${escapeHtml(cat.bg)}">${escapeHtml(cat.icon)}</span>
             <div>
-              <div class="text-xs font-bold text-slate-800 dark:text-slate-100">${item.title}</div>
-              <div class="text-[10px] text-slate-400">${cat.name} · ${typeLabel}${recBadge}</div>
+              <div class="text-xs font-bold text-slate-800 dark:text-slate-100">${safeTitle}</div>
+              <div class="text-[10px] text-slate-400">${safeCatName} · ${escapeHtml(typeLabel)}${escapeHtml(recBadge)}</div>
             </div>
           </div>
           <div class="text-xs font-semibold ${item.type === 'expense' ? 'text-rose-500' : 'text-emerald-500'}">
-            ${itemSym} ${formatMoney(item.amount, item.currency)}
+            ${escapeHtml(itemSym)} ${escapeHtml(formatMoney(item.amount, item.currency))}
           </div>
         </div>
       `;
@@ -2527,19 +2619,33 @@ function initEvents() {
     const dict = I18N[state.lang] || I18N.en;
 
     // Check division by zero
-    if (/[÷/]\s*0(\.0*)?($|\s|[+\-×÷*/])/.test(rawAmt)) {
+    if (isDivisionByZeroExpr(rawAmt)) {
       alert(dict.calcDivZero);
       return;
     }
 
-    let amount = 0;
-    if (rawAmt) {
-      const evaluated = evaluateExpression(rawAmt);
-      amount = (evaluated !== null && !isNaN(evaluated)) ? evaluated : (parseFloat(rawAmt) || 0);
+    if (!rawAmt) {
+      alert(dict.amountMustBePositive);
+      return;
     }
-    if (amount > 0) {
-      document.getElementById('input-amount').value = parseFloat(amount.toFixed(2));
+
+    if (/[+\-×÷*/]\s*$/.test(rawAmt)) {
+      alert(dict.calcInvalidExpr);
+      return;
     }
+
+    const evaluated = evaluateExpression(rawAmt);
+    if (evaluated === null || isNaN(evaluated) || !isFinite(evaluated)) {
+      alert(dict.calcInvalidExpr);
+      return;
+    }
+
+    const amount = parseFloat(evaluated.toFixed(2));
+    if (amount <= 0) {
+      alert(dict.amountMustBePositive);
+      return;
+    }
+    document.getElementById('input-amount').value = amount;
     const date = document.getElementById('input-date').value;
     const currency = document.getElementById('modal-currency-select').value || 'USD';
     const isRecurring = Boolean(state.modalIsRecurring);
@@ -2561,16 +2667,17 @@ function initEvents() {
     if (editId) {
       const idx = state.transactions.findIndex(t => t.id === editId);
       if (idx !== -1) {
-        let recId = state.transactions[idx].recurringId;
+        const existingTx = state.transactions[idx];
+        let recId = existingTx.recurringId;
 
         if (isRecurring) {
           const recTitle = title || getCategoryMeta(state.modalType, state.selectedCategory).name;
           if (recId) {
             const rIdx = state.recurring.findIndex(r => r.id === recId);
             if (rIdx !== -1) {
-              state.recurring[rIdx] = {
-                ...state.recurring[rIdx],
-                title: recTitle,
+              const existingRule = state.recurring[rIdx];
+              const updatedRule = {
+                ...existingRule,
                 currency,
                 amount,
                 type: state.modalType,
@@ -2578,11 +2685,8 @@ function initEvents() {
                 freq: recFreq,
                 day: recDay
               };
-              if (state.lang === 'zh-TW') {
-                state.recurring[rIdx].title_tw = recTitle;
-              } else {
-                state.recurring[rIdx].title = recTitle;
-              }
+              applyEditedTitle(updatedRule, existingRule, recTitle);
+              state.recurring[rIdx] = updatedRule;
             } else {
               const newRule = {
                 id: recId,
@@ -2598,7 +2702,7 @@ function initEvents() {
               state.recurring.push(newRule);
             }
           } else {
-            recId = 'rec_' + Date.now();
+            recId = generateId('rec');
             const newRule = {
               id: recId,
               title: recTitle,
@@ -2616,33 +2720,29 @@ function initEvents() {
           recId = undefined;
         }
 
-        state.transactions[idx] = {
-          ...state.transactions[idx],
-          title,
+        const updatedTx = {
+          ...existingTx,
           amount,
           type: state.modalType,
           category: state.selectedCategory,
           currency,
           date
         };
+        applyEditedTitle(updatedTx, existingTx, title);
 
         if (recId) {
-          state.transactions[idx].recurringId = recId;
+          updatedTx.recurringId = recId;
         } else {
-          delete state.transactions[idx].recurringId;
+          delete updatedTx.recurringId;
         }
 
-        if (state.lang === 'zh-TW') {
-          state.transactions[idx].title_tw = title;
-        } else {
-          state.transactions[idx].title = title;
-        }
+        state.transactions[idx] = updatedTx;
       }
     } else {
       let recId = undefined;
       if (isRecurring) {
         const recTitle = title || getCategoryMeta(state.modalType, state.selectedCategory).name;
-        recId = 'rec_' + Date.now();
+        recId = generateId('rec');
         const newRule = {
           id: recId,
           title: recTitle,
@@ -2660,7 +2760,7 @@ function initEvents() {
       }
 
       const newTx = {
-        id: 'tx_' + Date.now(),
+        id: generateId('tx'),
         title,
         amount,
         type: state.modalType,
@@ -2671,7 +2771,7 @@ function initEvents() {
       if (recId) {
         newTx.recurringId = recId;
       }
-      if (state.lang === 'zh-TW') {
+      if (state.lang === 'zh-TW' && title) {
         newTx.title_tw = title;
       }
       state.transactions.unshift(newTx);
@@ -2900,23 +3000,31 @@ function initEvents() {
   // Add / Edit Recurring Rule Form
   document.getElementById('recurring-form').addEventListener('submit', (e) => {
     e.preventDefault();
+    const dict = I18N[state.lang] || I18N.en;
     const editId = document.getElementById('rec-edit-id').value;
     const title = document.getElementById('rec-title').value.trim();
     const currency = document.getElementById('rec-currency').value || 'USD';
-    const amount = parseFloat(document.getElementById('rec-amount').value) || 0;
+    const rawAmount = parseFloat(document.getElementById('rec-amount').value);
+    if (!Number.isFinite(rawAmount) || rawAmount <= 0) {
+      alert(dict.amountMustBePositive);
+      return;
+    }
+    const amount = parseFloat(rawAmount.toFixed(2));
     const type = document.getElementById('rec-type').value;
     const category = document.getElementById('rec-category').value;
     const freq = document.getElementById('rec-freq').value;
-    const day = freq === 'weekly'
-      ? (parseInt(document.getElementById('rec-weekday').value, 10) || 1)
-      : (parseInt(document.getElementById('rec-day').value, 10) || 1);
+    const rawDay = freq === 'weekly'
+      ? parseInt(document.getElementById('rec-weekday').value, 10)
+      : parseInt(document.getElementById('rec-day').value, 10);
+    const maxDay = freq === 'weekly' ? 7 : 31;
+    const day = Number.isFinite(rawDay) ? Math.min(Math.max(rawDay, 1), maxDay) : 1;
 
     if (editId) {
       const idx = state.recurring.findIndex(r => r.id === editId);
       if (idx !== -1) {
-        state.recurring[idx] = {
-          ...state.recurring[idx],
-          title,
+        const existingRule = state.recurring[idx];
+        const updatedRule = {
+          ...existingRule,
           currency,
           amount,
           type,
@@ -2924,15 +3032,12 @@ function initEvents() {
           freq,
           day
         };
-        if (state.lang === 'zh-TW') {
-          state.recurring[idx].title_tw = title;
-        } else {
-          state.recurring[idx].title = title;
-        }
+        applyEditedTitle(updatedRule, existingRule, title);
+        state.recurring[idx] = updatedRule;
       }
     } else {
       const newRule = {
-        id: 'rec_' + Date.now(),
+        id: generateId('rec'),
         title,
         currency,
         amount,
@@ -2941,7 +3046,7 @@ function initEvents() {
         freq,
         day
       };
-      if (state.lang === 'zh-TW') {
+      if (state.lang === 'zh-TW' && title) {
         newRule.title_tw = title;
       }
       state.recurring.push(newRule);
@@ -3126,7 +3231,7 @@ function applyAllDueRecurring() {
     }
 
     state.transactions.unshift({
-      id: 'tx_rec_' + Date.now() + Math.random().toString(36).substr(2, 4),
+      id: generateId('tx_rec'),
       recurringId: rule.id,
       title: rule.title,
       title_tw: rule.title_tw,
@@ -3227,28 +3332,32 @@ function renderRecurringList() {
     const cat = getCategoryMeta(rule.type, rule.category, title);
     const ruleSym = (CURRENCIES[rule.currency] && CURRENCIES[rule.currency].symbol) || '$';
     const subText = dict.recurringItemSub(rule.day, rule.type, rule.freq);
+    const safeRuleId = escapeHtml(rule.id);
+    const safeTitle = escapeHtml(title);
+    const safeSubText = escapeHtml(subText);
+    const safeCatName = escapeHtml(cat.name);
 
     return `
       <div class="group flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700/60 hover:border-indigo-300 dark:hover:border-indigo-700 transition">
-        <div class="flex items-center gap-3 cursor-pointer flex-1" data-edit-rec="${rule.id}" title="${state.lang === 'en' ? 'Click to edit recurring item' : '點擊以編輯此定期收支'}">
-          <span class="w-9 h-9 rounded-xl flex items-center justify-center text-lg shadow-sm" style="background:${cat.bg}">${cat.icon}</span>
+        <div class="flex items-center gap-3 cursor-pointer flex-1" data-edit-rec="${safeRuleId}" title="${state.lang === 'en' ? 'Click to edit recurring item' : '點擊以編輯此定期收支'}">
+          <span class="w-9 h-9 rounded-xl flex items-center justify-center text-lg shadow-sm" style="background:${escapeHtml(cat.bg)}">${escapeHtml(cat.icon)}</span>
           <div>
-            <div class="text-xs font-bold text-slate-800 dark:text-slate-100">${title}</div>
-            <div class="text-[10px] text-slate-400">${subText} · ${cat.name}</div>
+            <div class="text-xs font-bold text-slate-800 dark:text-slate-100">${safeTitle}</div>
+            <div class="text-[10px] text-slate-400">${safeSubText} · ${safeCatName}</div>
           </div>
         </div>
         <div class="flex items-center gap-1 sm:gap-2">
           <div class="text-xs font-extrabold mr-1 ${rule.type === 'expense' ? 'text-rose-500' : 'text-emerald-500'}">
-            ${rule.type === 'expense' ? '-' : '+'}${ruleSym} ${formatMoney(rule.amount, rule.currency)}
+            ${rule.type === 'expense' ? '-' : '+'}${escapeHtml(ruleSym)} ${escapeHtml(formatMoney(rule.amount, rule.currency))}
           </div>
           <!-- Edit recurring button -->
           <button class="edit-rec-btn p-1.5 text-slate-400 hover:text-indigo-600 rounded-lg hover:bg-indigo-50 dark:hover:bg-slate-700 transition"
-                  data-id="${rule.id}" title="${dict.editTxBtn}">
+                  data-id="${safeRuleId}" title="${escapeHtml(dict.editTxBtn)}">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
           </button>
           <!-- Delete recurring button -->
           <button class="delete-rec-btn p-1.5 text-slate-400 hover:text-rose-500 rounded-lg hover:bg-rose-50 dark:hover:bg-slate-700 transition"
-                  data-id="${rule.id}" title="${dict.deleteTxBtn}">
+                  data-id="${safeRuleId}" title="${escapeHtml(dict.deleteTxBtn)}">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
           </button>
         </div>
@@ -3394,9 +3503,9 @@ function renderChart() {
   if (sortedCats.length === 1) {
     const meta = getCategoryMeta(state.chartType, sortedCats[0][0]);
     svg.innerHTML = `
-      <path class="donut-slice" fill="${meta.color}"
+      <path class="donut-slice" fill="${escapeHtml(meta.color)}"
             d="${describeDonutArc(100, 100, 58, 84, 0, 179.99)} ${describeDonutArc(100, 100, 58, 84, 180, 359.99)}"
-            data-cat-name="${meta.name}" data-cat-amount="${total}" data-cat-pct="100">
+            data-cat-name="${escapeHtml(meta.name)}" data-cat-amount="${escapeHtml(total)}" data-cat-pct="100">
       </path>
     `;
   } else {
@@ -3420,9 +3529,9 @@ function renderChart() {
       const pctDisplay = rawPct < 1 && rawPct > 0 ? '< 1' : Math.round(rawPct);
 
       return `
-        <path class="donut-slice" fill="${meta.color}"
+        <path class="donut-slice" fill="${escapeHtml(meta.color)}"
               d="${describeDonutArc(100, 100, 58, 84, startAngle, endAngle)}"
-              data-cat-name="${meta.name}" data-cat-amount="${amount}" data-cat-pct="${pctDisplay}">
+              data-cat-name="${escapeHtml(meta.name)}" data-cat-amount="${escapeHtml(amount)}" data-cat-pct="${escapeHtml(pctDisplay)}">
         </path>
       `;
     }).join('');
@@ -3453,18 +3562,19 @@ function renderChart() {
     const meta = getCategoryMeta(state.chartType, catId);
     const rawPct = (amount / total) * 100;
     const pctText = rawPct < 1 && rawPct > 0 ? '< 1%' : `${Math.round(rawPct)}%`;
+    const safeCatName = escapeHtml(meta.name);
     return `
       <div class="legend-row flex items-center justify-between p-1.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition cursor-pointer"
-           data-cat-name="${meta.name}" data-cat-amount="${amount}" data-cat-pct="${pctText}">
+           data-cat-name="${safeCatName}" data-cat-amount="${escapeHtml(amount)}" data-cat-pct="${escapeHtml(pctText)}">
         <div class="flex items-center gap-1.5 min-w-0">
-          <span class="w-6 h-6 rounded-lg flex items-center justify-center text-xs shrink-0" style="background:${meta.bg}">
-            ${meta.icon}
+          <span class="w-6 h-6 rounded-lg flex items-center justify-center text-xs shrink-0" style="background:${escapeHtml(meta.bg)}">
+            ${escapeHtml(meta.icon)}
           </span>
-          <span class="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate">${meta.name}</span>
+          <span class="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate">${safeCatName}</span>
         </div>
         <div class="flex items-center gap-1.5 shrink-0 pl-1 text-right">
-          <span class="text-[10px] font-bold text-slate-400">${pctText}</span>
-          <span class="text-xs font-bold text-slate-800 dark:text-slate-100">${sym} ${formatMoney(amount, state.currency)}</span>
+          <span class="text-[10px] font-bold text-slate-400">${escapeHtml(pctText)}</span>
+          <span class="text-xs font-bold text-slate-800 dark:text-slate-100">${escapeHtml(sym)} ${escapeHtml(formatMoney(amount, state.currency))}</span>
         </div>
       </div>
     `;
@@ -3568,39 +3678,42 @@ function renderTransactions() {
       const meta = getCategoryMeta(item.type, item.category, title);
       const isExpense = item.type === 'expense';
       const itemSym = (CURRENCIES[item.currency] && CURRENCIES[item.currency].symbol) || sym;
+      const safeId = escapeHtml(item.id);
+      const safeTitle = escapeHtml(title);
+      const safeCatName = escapeHtml(meta.name);
 
       return `
         <div class="tx-item group flex items-center justify-between p-3.5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 hover:border-indigo-300 dark:hover:border-indigo-700 hover:shadow-md shadow-sm transition cursor-pointer"
-             data-id="${item.id}" title="${state.lang === 'en' ? 'Click to edit transaction' : '點擊以編輯此筆紀錄'}">
+             data-id="${safeId}" title="${state.lang === 'en' ? 'Click to edit transaction' : '點擊以編輯此筆紀錄'}">
           <div class="flex items-center gap-3">
-            <span class="w-10 h-10 rounded-2xl flex items-center justify-center text-xl shadow-sm" style="background:${meta.bg}">
-              ${meta.icon}
+            <span class="w-10 h-10 rounded-2xl flex items-center justify-center text-xl shadow-sm" style="background:${escapeHtml(meta.bg)}">
+              ${escapeHtml(meta.icon)}
             </span>
             <div>
               <div class="text-xs font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
-                ${title || meta.name}
-                ${item.recurringId ? `<span class="text-[9px] px-1.5 py-0.5 rounded-full bg-indigo-50 text-indigo-500 font-semibold dark:bg-indigo-950 dark:text-indigo-400">${dict.recurringBadge}</span>` : ''}
+                ${safeTitle || safeCatName}
+                ${item.recurringId ? `<span class="text-[9px] px-1.5 py-0.5 rounded-full bg-indigo-50 text-indigo-500 font-semibold dark:bg-indigo-950 dark:text-indigo-400">${escapeHtml(dict.recurringBadge)}</span>` : ''}
               </div>
-              ${title ? `<div class="text-[10px] text-slate-400 font-medium">${meta.name}</div>` : ''}
+              ${safeTitle ? `<div class="text-[10px] text-slate-400 font-medium">${safeCatName}</div>` : ''}
             </div>
           </div>
 
           <div class="flex items-center gap-1 sm:gap-2">
             <div class="text-right mr-1">
               <div class="text-sm font-extrabold ${isExpense ? 'text-rose-500' : 'text-emerald-500'}">
-                ${isExpense ? '-' : '+'}${itemSym} ${formatMoney(item.amount, item.currency)}
+                ${isExpense ? '-' : '+'}${escapeHtml(itemSym)} ${escapeHtml(formatMoney(item.amount, item.currency))}
               </div>
             </div>
 
             <!-- Edit Button -->
             <button class="edit-tx-btn p-1.5 text-slate-400 hover:text-indigo-600 rounded-xl hover:bg-indigo-50 dark:hover:bg-slate-800 transition opacity-80 sm:opacity-0 group-hover:opacity-100"
-                    data-id="${item.id}" title="${dict.editTxBtn}">
+                    data-id="${safeId}" title="${escapeHtml(dict.editTxBtn)}">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
             </button>
 
             <!-- Delete Button -->
             <button class="delete-tx-btn p-1.5 text-slate-400 hover:text-rose-500 rounded-xl hover:bg-rose-50 dark:hover:bg-slate-800 transition opacity-80 sm:opacity-0 group-hover:opacity-100"
-                    data-id="${item.id}" title="${dict.deleteTxBtn}">
+                    data-id="${safeId}" title="${escapeHtml(dict.deleteTxBtn)}">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
             </button>
           </div>
@@ -3611,8 +3724,8 @@ function renderTransactions() {
     return `
       <div class="space-y-2">
         <div class="flex items-center justify-between px-2 text-xs font-semibold text-slate-400">
-          <span>${dateLabel}</span>
-          ${dayTotalExpense > 0 ? `<span>${dict.dailyExpense(sym, formatMoney(dayTotalExpense, state.currency))}</span>` : ''}
+          <span>${escapeHtml(dateLabel)}</span>
+          ${dayTotalExpense > 0 ? `<span>${escapeHtml(dict.dailyExpense(sym, formatMoney(dayTotalExpense, state.currency)))}</span>` : ''}
         </div>
         <div class="space-y-1.5">
           ${itemsHtml}
@@ -3880,8 +3993,15 @@ function exportCSV() {
     const meta = getCategoryMeta(t.type, t.category);
     const title = getItemTitle(t);
     const typeLabel = t.type === 'expense' ? (isEn ? 'Expense' : '支出') : (isEn ? 'Income' : '收入');
-    const cleanTitle = (title || '').replace(/,/g, ' ');
-    csv += `${t.date},${typeLabel},"${cleanTitle}",${meta.name},${t.amount},${t.currency || state.currency}\n`;
+    const row = [
+      escapeCsvCell(t.date),
+      escapeCsvCell(typeLabel),
+      escapeCsvCell(title || ''),
+      escapeCsvCell(meta.name),
+      escapeCsvCell(t.amount),
+      escapeCsvCell(t.currency || state.currency)
+    ];
+    csv += `${row.join(',')}\n`;
   });
 
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -3903,15 +4023,17 @@ function importJSON(e) {
     try {
       const data = JSON.parse(event.target.result);
       if (Array.isArray(data.transactions)) {
-        if (confirm(dict.importConfirm(data.transactions.length))) {
-          state.transactions = data.transactions;
-          if (Array.isArray(data.recurring)) {
-            state.recurring = data.recurring;
-          } else {
-            state.recurring = [];
-          }
-          if (data.currency) state.currency = data.currency;
-          if (data.language) state.lang = data.language;
+        const sanitizedTxs = data.transactions
+          .map(item => sanitizeImportedRecord(item, false))
+          .filter(Boolean);
+        const sanitizedRecs = Array.isArray(data.recurring)
+          ? data.recurring.map(item => sanitizeImportedRecord(item, true)).filter(Boolean)
+          : [];
+        if (confirm(dict.importConfirm(sanitizedTxs.length))) {
+          state.transactions = sanitizedTxs;
+          state.recurring = sanitizedRecs;
+          if (data.currency && CURRENCIES[data.currency]) state.currency = data.currency;
+          if (data.language && I18N[data.language]) state.lang = data.language;
           state.isDemo = false;
           localStorage.setItem('pocketflow_is_demo', 'false');
 
@@ -4252,11 +4374,18 @@ async function restoreFromGoogleDrive() {
             : new Date(data.exportedAt).toLocaleString('en-US'))
         : (targetFile.modifiedTime ? new Date(targetFile.modifiedTime).toLocaleString() : '');
 
-      if (confirm(dict.gdriveRestoreConfirm(dateStr, data.transactions.length))) {
-        state.transactions = data.transactions;
-        state.recurring = Array.isArray(data.recurring) ? data.recurring : [];
-        if (data.currency) state.currency = data.currency;
-        if (data.language) state.lang = data.language;
+      const sanitizedTxs = data.transactions
+        .map(item => sanitizeImportedRecord(item, false))
+        .filter(Boolean);
+      const sanitizedRecs = Array.isArray(data.recurring)
+        ? data.recurring.map(item => sanitizeImportedRecord(item, true)).filter(Boolean)
+        : [];
+
+      if (confirm(dict.gdriveRestoreConfirm(dateStr, sanitizedTxs.length))) {
+        state.transactions = sanitizedTxs;
+        state.recurring = sanitizedRecs;
+        if (data.currency && CURRENCIES[data.currency]) state.currency = data.currency;
+        if (data.language && I18N[data.language]) state.lang = data.language;
         state.isDemo = false;
         localStorage.setItem('pocketflow_is_demo', 'false');
 
