@@ -414,6 +414,7 @@
                 <span id="toggle-keypad-text">Show Calculator</span>
               </button>
             </div>
+            <div id="fx-conversion-preview" class="hidden max-w-xs mx-auto text-left px-1 text-[11px] font-semibold text-slate-400 dark:text-slate-400 mt-0.5"></div>
 
             <!-- Calculator Keypad (Collapsed by Default) -->
             <div id="calc-keypad" class="hidden w-full max-w-xs mx-auto mt-2 grid grid-cols-4 gap-1.5 p-2 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200/70 dark:border-slate-700/60 select-none">
@@ -701,6 +702,52 @@
           </p>
           <div id="palette-options-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1">
             <!-- Populated dynamically via app.js -->
+          </div>
+        </div>
+
+        <!-- FEATURE: Base Currency & Reference Exchange Rates -->
+        <div id="fx-settings-section" class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-800 space-y-2.5">
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2 text-xs font-bold text-indigo-600 dark:text-indigo-400">
+              <span class="text-base">💱</span>
+              <span id="fx-settings-title">Primary Currency & Reference FX</span>
+            </div>
+            <select id="settings-base-currency" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-bold text-indigo-600 dark:text-indigo-400 px-2.5 py-1 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer">
+              <option value="USD">$ USD</option>
+              <option value="TWD">NT$ TWD</option>
+              <option value="JPY">¥ JPY</option>
+              <option value="EUR">€ EUR</option>
+              <option value="KRW">₩ KRW</option>
+              <option value="HKD">HK$ HKD</option>
+              <option value="GBP">£ GBP</option>
+            </select>
+          </div>
+          <p id="fx-settings-desc" class="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+            Foreign-currency transactions snapshot the rate on entry and convert to your primary currency in totals and charts.
+          </p>
+          <div class="flex items-center justify-between gap-2 pt-0.5">
+            <span id="fx-last-updated-text" class="text-[10px] text-slate-400 dark:text-slate-500">Using built-in reference rates</span>
+            <button id="fx-sync-btn" type="button" class="px-2.5 py-1 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold shadow-sm transition active:scale-95 shrink-0 cursor-pointer">
+              <span id="fx-sync-btn-label">Update Rates</span>
+            </button>
+          </div>
+          <div class="pt-1 border-t border-slate-200/70 dark:border-slate-700/60">
+            <button id="fx-toggle-rates-btn" type="button" class="text-[11px] font-medium text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1 cursor-pointer">
+              <span id="fx-toggle-rates-label">Edit Reference Rates (vs 1 USD)</span>
+            </button>
+            <div id="fx-rates-panel" class="hidden mt-2 p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 space-y-2">
+              <div id="fx-rates-inputs" class="space-y-1.5">
+                <!-- Populated dynamically via app.js -->
+              </div>
+              <div class="flex items-center justify-end gap-2 pt-1.5 border-t border-slate-100 dark:border-slate-800">
+                <button id="fx-reset-rates-btn" type="button" class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-[11px] font-semibold transition cursor-pointer">
+                  Reset Defaults
+                </button>
+                <button id="fx-save-rates-btn" type="button" class="px-3 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold transition cursor-pointer">
+                  Save Rates
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 

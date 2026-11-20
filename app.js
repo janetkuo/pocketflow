@@ -6,6 +6,8 @@ const RECURRING_KEY = 'pocketflow_recurring_v1';
 const THEME_KEY = 'pocketflow_theme_v1';
 const PALETTE_KEY = 'pocketflow_palette_v1';
 const CURRENCY_KEY = 'pocketflow_currency_v1';
+const FX_RATES_KEY = 'pocketflow_fx_rates_v1';
+const FX_UPDATED_AT_KEY = 'pocketflow_fx_updated_at_v1';
 const LANG_KEY = 'pocketflow_lang_v1';
 const DEFAULT_CURR_KEY = 'pocketflow_default_currency';
 const GDRIVE_CLIENT_ID_KEY = 'pocketflow_gdrive_client_id';
@@ -36,6 +38,17 @@ const CURRENCIES = {
   KRW: { symbol: '₩', name: { en: 'South Korean Won', 'zh-TW': '韓元' } },
   HKD: { symbol: 'HK$', name: { en: 'Hong Kong Dollar', 'zh-TW': '港幣' } },
   GBP: { symbol: '£', name: { en: 'British Pound', 'zh-TW': '英鎊' } }
+};
+
+// Reference Exchange Rates per 1 USD (used for offline multi-currency aggregation)
+const DEFAULT_FX_RATES = {
+  USD: 1,
+  TWD: 32.5,
+  JPY: 154,
+  EUR: 0.92,
+  KRW: 1390,
+  HKD: 7.78,
+  GBP: 0.79
 };
 
 // Bilingual Localization Dictionary
@@ -238,6 +251,21 @@ const I18N = {
     paletteSettingsTitle: 'Appearance & Morandi Palette',
     paletteSettingsDesc: 'Choose your preferred Morandi color theme. Changes apply instantly:',
     paletteActiveBadge: 'Active',
+
+    fxSettingsTitle: 'Primary Currency & Reference FX',
+    fxSettingsDesc: 'Foreign-currency transactions snapshot the rate on entry and convert to your primary currency in totals and charts.',
+    fxUsingDefault: 'Using built-in reference rates',
+    fxUsingCustom: 'Using custom reference rates',
+    fxLastUpdated: (time) => `Updated: ${time}`,
+    fxSyncBtn: 'Update Rates',
+    fxSyncingBtn: 'Updating...',
+    fxSyncSuccess: '✅ Reference exchange rates updated!',
+    fxSyncError: '⚠️ Could not fetch latest rates (still using saved offline rates).',
+    fxToggleRates: 'Edit Reference Rates (vs 1 USD)',
+    fxResetRates: 'Reset Defaults',
+    fxSaveRates: 'Save Rates',
+    fxSavedRates: '✅ Reference exchange rates saved!',
+    fxInvalidRate: '⚠️ Please enter valid positive exchange rates.',
 
     months: [
       'January', 'February', 'March', 'April', 'May', 'June',
@@ -448,6 +476,21 @@ const I18N = {
     paletteSettingsTitle: '外觀風格與莫蘭迪色盤',
     paletteSettingsDesc: '挑選您喜愛的莫蘭迪色系，即時換膚且自動保存：',
     paletteActiveBadge: '使用中',
+
+    fxSettingsTitle: '主要幣別與參考匯率',
+    fxSettingsDesc: '外幣交易會在記帳當下保存換算匯率快照（不改寫過去月份帳目），總覽與圓餅圖自動換算為主幣別統計。',
+    fxUsingDefault: '目前使用內建參考匯率（離線可用）',
+    fxUsingCustom: '目前使用自訂參考匯率',
+    fxLastUpdated: (time) => `匯率更新時間：${time}`,
+    fxSyncBtn: '更新參考匯率',
+    fxSyncingBtn: '更新中...',
+    fxSyncSuccess: '✅ 已更新最新參考匯率！',
+    fxSyncError: '⚠️ 無法連線取得最新匯率，將繼續使用已保存的離線匯率。',
+    fxToggleRates: '編輯參考匯率（相對於 1 USD）',
+    fxResetRates: '恢復預設值',
+    fxSaveRates: '儲存匯率',
+    fxSavedRates: '✅ 參考匯率已儲存！',
+    fxInvalidRate: '⚠️ 請輸入大於 0 的有效匯率數值。',
 
     months: [
       '1月', '2月', '3月', '4月', '5月', '6月',
@@ -833,13 +876,37 @@ function loadInitialData(key, fallback) {
   return isDemoMode ? fallback : [];
 }
 
+function loadInitialFxRates() {
+  const saved = localStorage.getItem(FX_RATES_KEY);
+  const merged = { ...DEFAULT_FX_RATES };
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+      if (parsed && typeof parsed === 'object') {
+        Object.keys(DEFAULT_FX_RATES).forEach(code => {
+          const val = Number(parsed[code]);
+          if (Number.isFinite(val) && val > 0) {
+            merged[code] = val;
+          }
+        });
+      }
+    } catch (e) {
+      console.warn('Failed to parse FX rates:', e);
+    }
+  }
+  merged.USD = 1;
+  return merged;
+}
+
 // App State
 let state = {
   lang: localStorage.getItem(LANG_KEY) || 'en', // Default to English as requested
   palette: localStorage.getItem(PALETTE_KEY) || 'sage', // Default to classic Morandi Sage
   transactions: loadInitialData(STORAGE_KEY, DEMO_TRANSACTIONS),
   recurring: loadInitialData(RECURRING_KEY, DEMO_RECURRING),
-  currency: localStorage.getItem(CURRENCY_KEY) || 'USD',
+  currency: CURRENCIES[localStorage.getItem(CURRENCY_KEY)] ? localStorage.getItem(CURRENCY_KEY) : 'USD',
+  fxRates: loadInitialFxRates(),
+  fxUpdatedAt: localStorage.getItem(FX_UPDATED_AT_KEY) || null,
   isDemo: isDemoMode,
   currentDate: new Date(INITIAL_YEAR, INITIAL_MONTH - 1, 1),
   currentFilter: 'all',
@@ -997,6 +1064,10 @@ function sanitizeImportedRecord(raw, isRecurring = false) {
     }
     if (Number.isFinite(Number(raw.createdAt)) && Number(raw.createdAt) > 0) {
       record.createdAt = Number(raw.createdAt);
+    }
+    if (Number.isFinite(Number(raw.fxRate)) && Number(raw.fxRate) > 0 && typeof raw.fxBase === 'string' && CURRENCIES[raw.fxBase]) {
+      record.fxRate = Number(raw.fxRate);
+      record.fxBase = raw.fxBase;
     }
   }
   if (isRecurring && typeof raw.startDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(raw.startDate)) {
@@ -1201,6 +1272,191 @@ function updateCurrencySymbols() {
   document.querySelectorAll('.curr-symbol').forEach(el => {
     el.textContent = sym;
   });
+}
+
+// Multi-currency FX Helpers
+function getExchangeRate(fromCurr, toCurr = state.currency, rates = state.fxRates) {
+  const from = CURRENCIES[fromCurr] ? fromCurr : state.currency;
+  const to = CURRENCIES[toCurr] ? toCurr : state.currency;
+  if (from === to) return 1;
+  const rateTable = rates || DEFAULT_FX_RATES;
+  const fromPerUsd = Number(rateTable[from]) > 0 ? Number(rateTable[from]) : (DEFAULT_FX_RATES[from] || 1);
+  const toPerUsd = Number(rateTable[to]) > 0 ? Number(rateTable[to]) : (DEFAULT_FX_RATES[to] || 1);
+  return toPerUsd / fromPerUsd;
+}
+
+function convertTxToBase(tx, baseCurr = state.currency, rates = state.fxRates) {
+  const amt = Number((tx && tx.amount) || 0);
+  if (!Number.isFinite(amt)) return 0;
+  const txCurr = (tx && tx.currency && CURRENCIES[tx.currency]) ? tx.currency : baseCurr;
+  if (txCurr === baseCurr) return amt;
+  if (tx && Number(tx.fxRate) > 0 && tx.fxBase === baseCurr) {
+    return amt * Number(tx.fxRate);
+  }
+  return amt * getExchangeRate(txCurr, baseCurr, rates);
+}
+
+function saveFxRates(rates, updatedAt = null) {
+  const cleanRates = { ...DEFAULT_FX_RATES };
+  Object.keys(DEFAULT_FX_RATES).forEach(code => {
+    const val = Number(rates && rates[code]);
+    if (Number.isFinite(val) && val > 0) {
+      cleanRates[code] = val;
+    }
+  });
+  cleanRates.USD = 1;
+  state.fxRates = cleanRates;
+  state.fxUpdatedAt = updatedAt;
+  localStorage.setItem(FX_RATES_KEY, JSON.stringify(cleanRates));
+  if (updatedAt) {
+    localStorage.setItem(FX_UPDATED_AT_KEY, updatedAt);
+  } else {
+    localStorage.removeItem(FX_UPDATED_AT_KEY);
+  }
+}
+
+function renderFxRatesUI() {
+  const dict = I18N[state.lang] || I18N.en;
+  const baseSelect = document.getElementById('settings-base-currency');
+  if (baseSelect) {
+    baseSelect.value = state.currency;
+  }
+
+  const lastUpdatedEl = document.getElementById('fx-last-updated-text');
+  if (lastUpdatedEl) {
+    if (state.fxUpdatedAt) {
+      const d = new Date(state.fxUpdatedAt);
+      const timeStr = isNaN(d.getTime())
+        ? state.fxUpdatedAt
+        : (state.lang === 'zh-TW'
+            ? `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+            : d.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }));
+      lastUpdatedEl.textContent = dict.fxLastUpdated(timeStr);
+    } else {
+      const isCustom = Object.keys(DEFAULT_FX_RATES).some(
+        code => code !== 'USD' && Math.abs((state.fxRates[code] || 0) - DEFAULT_FX_RATES[code]) > 1e-6
+      );
+      lastUpdatedEl.textContent = isCustom ? dict.fxUsingCustom : dict.fxUsingDefault;
+    }
+  }
+
+  const inputsWrap = document.getElementById('fx-rates-inputs');
+  if (inputsWrap) {
+    const baseSym = getCurrencySymbol();
+    inputsWrap.innerHTML = Object.keys(CURRENCIES)
+      .filter(code => code !== 'USD')
+      .map(code => {
+        const rateVal = state.fxRates[code] || DEFAULT_FX_RATES[code];
+        const helperText = state.currency !== 'USD' && code !== state.currency
+          ? `1 ${code} ≈ ${formatMoney(getExchangeRate(code, state.currency), state.currency)} ${state.currency}`
+          : (state.currency !== 'USD' && code === state.currency
+              ? `1 USD ≈ ${baseSym}${formatMoney(rateVal, state.currency)}`
+              : '');
+        return `
+          <div class="flex items-center justify-between gap-2 text-xs">
+            <div class="flex items-center gap-1.5 min-w-0">
+              <span class="font-bold text-slate-700 dark:text-slate-200 w-16 shrink-0">1 USD =</span>
+              <input type="number" step="any" min="0.0001" data-fx-code="${code}" value="${rateVal}"
+                     class="fx-rate-input w-24 px-2 py-1 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 font-semibold text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500">
+              <span class="font-bold text-indigo-600 dark:text-indigo-400 shrink-0">${code}</span>
+            </div>
+            ${helperText ? `<span class="text-[10px] text-slate-400 truncate">${escapeHtml(helperText)}</span>` : ''}
+          </div>
+        `;
+      }).join('');
+  }
+}
+
+async function syncLatestFxRates() {
+  const dict = I18N[state.lang] || I18N.en;
+  const syncBtn = document.getElementById('fx-sync-btn');
+  const syncLabel = document.getElementById('fx-sync-btn-label');
+  if (syncBtn) syncBtn.disabled = true;
+  if (syncLabel) syncLabel.textContent = dict.fxSyncingBtn;
+
+  try {
+    let fetchedRates = null;
+    try {
+      const res = await fetch('https://open.er-api.com/v6/latest/USD');
+      if (res.ok) {
+        const json = await res.json();
+        if (json && json.rates) fetchedRates = json.rates;
+      }
+    } catch (_) {}
+
+    if (!fetchedRates) {
+      const res2 = await fetch('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json');
+      if (res2.ok) {
+        const json2 = await res2.json();
+        if (json2 && json2.usd) {
+          fetchedRates = {};
+          Object.keys(DEFAULT_FX_RATES).forEach(code => {
+            const val = Number(json2.usd[code.toLowerCase()]);
+            if (Number.isFinite(val) && val > 0) fetchedRates[code] = val;
+          });
+        }
+      }
+    }
+
+    if (!fetchedRates) throw new Error('FX fetch failed');
+
+    const nextRates = { ...state.fxRates };
+    Object.keys(DEFAULT_FX_RATES).forEach(code => {
+      const val = Number(fetchedRates[code]);
+      if (Number.isFinite(val) && val > 0) {
+        nextRates[code] = Number(val.toFixed(4));
+      }
+    });
+
+    saveFxRates(nextRates, new Date().toISOString());
+    renderFxRatesUI();
+    render();
+    updateModalFxPreview();
+    alert(dict.fxSyncSuccess);
+  } catch (err) {
+    console.warn('FX sync error:', err);
+    alert(dict.fxSyncError);
+  } finally {
+    if (syncBtn) syncBtn.disabled = false;
+    if (syncLabel) syncLabel.textContent = dict.fxSyncBtn;
+  }
+}
+
+function updateModalFxPreview() {
+  const previewEl = document.getElementById('fx-conversion-preview');
+  const currSelect = document.getElementById('modal-currency-select');
+  const amtInput = document.getElementById('input-amount');
+  if (!previewEl || !currSelect || !amtInput) return;
+
+  const selectedCurr = currSelect.value || state.currency;
+  if (selectedCurr === state.currency) {
+    previewEl.classList.add('hidden');
+    previewEl.textContent = '';
+    return;
+  }
+
+  const rawAmt = (amtInput.value || '').trim();
+  const evaluated = rawAmt && !isDivisionByZeroExpr(rawAmt) ? evaluateExpression(rawAmt) : null;
+  if (evaluated === null || !Number.isFinite(evaluated) || evaluated <= 0) {
+    previewEl.classList.add('hidden');
+    previewEl.textContent = '';
+    return;
+  }
+
+  const editId = document.getElementById('edit-id')?.value;
+  let rate = getExchangeRate(selectedCurr, state.currency);
+  if (editId) {
+    const existingTx = state.transactions.find(t => t.id === editId);
+    if (existingTx && existingTx.currency === selectedCurr && existingTx.fxBase === state.currency && Number(existingTx.fxRate) > 0) {
+      rate = Number(existingTx.fxRate);
+    }
+  }
+
+  const converted = evaluated * rate;
+  const baseSym = getCurrencySymbol();
+  const rateDisplay = rate >= 1 ? rate.toFixed(2) : rate.toFixed(4);
+  previewEl.textContent = `≈ ${baseSym} ${formatMoney(converted, state.currency)} (1 ${selectedCurr} ≈ ${rateDisplay} ${state.currency})`;
+  previewEl.classList.remove('hidden');
 }
 
 // Helper: Get local YYYY-MM-DD date string without UTC timezone shift
@@ -1577,6 +1833,27 @@ function applyLanguage() {
   if (paletteSettingsDesc) paletteSettingsDesc.textContent = dict.paletteSettingsDesc;
 
   renderPaletteSelectorUI();
+
+  // Settings Modal - Primary Currency & Reference FX Section
+  const fxSettingsTitle = document.getElementById('fx-settings-title');
+  if (fxSettingsTitle) fxSettingsTitle.textContent = dict.fxSettingsTitle;
+
+  const fxSettingsDesc = document.getElementById('fx-settings-desc');
+  if (fxSettingsDesc) fxSettingsDesc.textContent = dict.fxSettingsDesc;
+
+  const fxSyncBtnLabel = document.getElementById('fx-sync-btn-label');
+  if (fxSyncBtnLabel) fxSyncBtnLabel.textContent = dict.fxSyncBtn;
+
+  const fxToggleRatesLabel = document.getElementById('fx-toggle-rates-label');
+  if (fxToggleRatesLabel) fxToggleRatesLabel.textContent = dict.fxToggleRates;
+
+  const fxResetRatesBtn = document.getElementById('fx-reset-rates-btn');
+  if (fxResetRatesBtn) fxResetRatesBtn.textContent = dict.fxResetRates;
+
+  const fxSaveRatesBtn = document.getElementById('fx-save-rates-btn');
+  if (fxSaveRatesBtn) fxSaveRatesBtn.textContent = dict.fxSaveRates;
+
+  renderFxRatesUI();
 
   // Settings Modal
   const settingsTitle = document.getElementById('settings-modal-title');
@@ -1971,6 +2248,7 @@ function updateCalcPreview() {
   const dict = I18N[state?.lang || 'en'] || I18N.en;
 
   updateKeypadEqualBtn();
+  updateModalFxPreview();
 
   if (!val) {
     preview.textContent = '';
@@ -2360,10 +2638,10 @@ function initEvents() {
     document.getElementById('input-date').value = todayStr;
     setModalType('expense');
     
-    // Set default currency to last used in modal
-    const lastCurr = localStorage.getItem(DEFAULT_CURR_KEY) || 'USD';
+    // Set default currency to last used in modal (falling back to primary currency)
+    const lastCurr = localStorage.getItem(DEFAULT_CURR_KEY) || state.currency || 'USD';
     const modalCurrSelect = document.getElementById('modal-currency-select');
-    if (modalCurrSelect) modalCurrSelect.value = lastCurr;
+    if (modalCurrSelect) modalCurrSelect.value = CURRENCIES[lastCurr] ? lastCurr : state.currency;
 
     setModalRecurring(Boolean(prefillRecurring));
     const modalRecFreq = document.getElementById('modal-rec-freq');
@@ -2385,6 +2663,7 @@ function initEvents() {
     const calcPrev = document.getElementById('calc-preview');
     if (calcPrev) calcPrev.textContent = '';
     updateKeypadEqualBtn();
+    updateModalFxPreview();
     setKeypadVisible(false);
 
     document.getElementById('add-modal').classList.remove('hidden');
@@ -2395,6 +2674,11 @@ function initEvents() {
   window.closeModal = function() {
     const calcPrev = document.getElementById('calc-preview');
     if (calcPrev) calcPrev.textContent = '';
+    const fxPrev = document.getElementById('fx-conversion-preview');
+    if (fxPrev) {
+      fxPrev.classList.add('hidden');
+      fxPrev.textContent = '';
+    }
     document.getElementById('add-modal').classList.add('hidden');
     document.getElementById('add-modal').classList.remove('flex');
     document.getElementById('autocomplete-list').classList.add('hidden');
@@ -2428,6 +2712,7 @@ function initEvents() {
     if (modalCurrSelect) {
       modalCurrSelect.value = tx.currency || state.currency || 'USD';
     }
+    updateModalFxPreview();
 
     setModalType(tx.type);
     selectCategory(tx.category);
@@ -2473,6 +2758,13 @@ function initEvents() {
 
   document.getElementById('open-add-modal-btn').addEventListener('click', () => window.openModal(false));
   document.getElementById('close-add-modal-btn').addEventListener('click', window.closeModal);
+
+  const modalCurrSelectEl = document.getElementById('modal-currency-select');
+  if (modalCurrSelectEl) {
+    modalCurrSelectEl.addEventListener('change', () => {
+      updateModalFxPreview();
+    });
+  }
 
   // Modal Type Switchers
   document.getElementById('type-expense-btn').addEventListener('click', () => setModalType('expense'));
@@ -2632,6 +2924,8 @@ function initEvents() {
         if (!document.getElementById('input-amount').value || document.getElementById('input-amount').value === '0') {
           document.getElementById('input-amount').value = recentAmt;
           updateCalcPreview();
+        } else {
+          updateModalFxPreview();
         }
         autocompleteList.classList.add('hidden');
       });
@@ -2765,6 +3059,17 @@ function initEvents() {
         };
         applyEditedTitle(updatedTx, existingTx, title);
 
+        if (currency === state.currency) {
+          delete updatedTx.fxRate;
+          delete updatedTx.fxBase;
+        } else if (existingTx.currency === currency && existingTx.fxBase === state.currency && Number(existingTx.fxRate) > 0) {
+          updatedTx.fxRate = Number(existingTx.fxRate);
+          updatedTx.fxBase = state.currency;
+        } else {
+          updatedTx.fxRate = getExchangeRate(currency, state.currency);
+          updatedTx.fxBase = state.currency;
+        }
+
         if (recId) {
           updatedTx.recurringId = recId;
         } else {
@@ -2807,6 +3112,10 @@ function initEvents() {
         date,
         createdAt: Date.now()
       };
+      if (currency !== state.currency) {
+        newTx.fxRate = getExchangeRate(currency, state.currency);
+        newTx.fxBase = state.currency;
+      }
       if (recId) {
         newTx.recurringId = recId;
       }
@@ -2901,6 +3210,7 @@ function initEvents() {
   // Settings Modal Handlers
   const settingsModal = document.getElementById('settings-modal');
   document.getElementById('open-settings-btn').addEventListener('click', () => {
+    renderFxRatesUI();
     updateGoogleDriveStatusUI();
     settingsModal.classList.remove('hidden');
     settingsModal.classList.add('flex');
@@ -2909,6 +3219,75 @@ function initEvents() {
     settingsModal.classList.add('hidden');
     settingsModal.classList.remove('flex');
   });
+
+  // FEATURE: Primary Currency & Reference FX Settings
+  const settingsBaseCurrency = document.getElementById('settings-base-currency');
+  if (settingsBaseCurrency) {
+    settingsBaseCurrency.addEventListener('change', (e) => {
+      const nextCurr = e.target.value;
+      if (!CURRENCIES[nextCurr]) return;
+      state.currency = nextCurr;
+      localStorage.setItem(DEFAULT_CURR_KEY, nextCurr);
+      persistData();
+      initCurrency();
+      renderFxRatesUI();
+      renderRecurringList();
+    });
+  }
+
+  const fxSyncBtn = document.getElementById('fx-sync-btn');
+  if (fxSyncBtn) {
+    fxSyncBtn.addEventListener('click', () => {
+      syncLatestFxRates();
+    });
+  }
+
+  const fxToggleRatesBtn = document.getElementById('fx-toggle-rates-btn');
+  const fxRatesPanel = document.getElementById('fx-rates-panel');
+  if (fxToggleRatesBtn && fxRatesPanel) {
+    fxToggleRatesBtn.addEventListener('click', () => {
+      fxRatesPanel.classList.toggle('hidden');
+    });
+  }
+
+  const fxSaveRatesBtn = document.getElementById('fx-save-rates-btn');
+  if (fxSaveRatesBtn) {
+    fxSaveRatesBtn.addEventListener('click', () => {
+      const dict = I18N[state.lang] || I18N.en;
+      const nextRates = { ...state.fxRates, USD: 1 };
+      let hasInvalid = false;
+      document.querySelectorAll('.fx-rate-input').forEach(inp => {
+        const code = inp.getAttribute('data-fx-code');
+        const val = Number(inp.value);
+        if (!code || !Number.isFinite(val) || val <= 0) {
+          hasInvalid = true;
+        } else {
+          nextRates[code] = val;
+        }
+      });
+      if (hasInvalid) {
+        alert(dict.fxInvalidRate);
+        return;
+      }
+      saveFxRates(nextRates, new Date().toISOString());
+      renderFxRatesUI();
+      render();
+      updateModalFxPreview();
+      alert(dict.fxSavedRates);
+    });
+  }
+
+  const fxResetRatesBtn = document.getElementById('fx-reset-rates-btn');
+  if (fxResetRatesBtn) {
+    fxResetRatesBtn.addEventListener('click', () => {
+      const dict = I18N[state.lang] || I18N.en;
+      saveFxRates(DEFAULT_FX_RATES, null);
+      renderFxRatesUI();
+      render();
+      updateModalFxPreview();
+      alert(dict.fxSavedRates);
+    });
+  }
 
   const settingsRecBtn = document.getElementById('settings-open-rec-btn');
   if (settingsRecBtn) {
@@ -3291,18 +3670,24 @@ function applyAllDueRecurring() {
   const baseTs = Date.now();
 
   dueOccurrences.forEach(({ rule, date }, idx) => {
-    state.transactions.unshift({
+    const ruleCurr = rule.currency || 'USD';
+    const txObj = {
       id: generateId('tx_rec'),
       recurringId: rule.id,
       title: rule.title,
       title_tw: rule.title_tw,
-      currency: rule.currency || 'USD',
+      currency: ruleCurr,
       amount: rule.amount,
       type: rule.type,
       category: rule.category || (rule.type === 'income' ? 'salary' : 'housing'),
       date,
       createdAt: baseTs + idx
-    });
+    };
+    if (ruleCurr !== state.currency) {
+      txObj.fxRate = getExchangeRate(ruleCurr, state.currency);
+      txObj.fxBase = state.currency;
+    }
+    state.transactions.unshift(txObj);
   });
 
   persistData();
@@ -3472,8 +3857,9 @@ function render() {
   let expense = 0;
 
   monthTxs.forEach(t => {
-    if (t.type === 'income') income += Number(t.amount);
-    if (t.type === 'expense') expense += Number(t.amount);
+    const baseAmt = convertTxToBase(t);
+    if (t.type === 'income') income += baseAmt;
+    if (t.type === 'expense') expense += baseAmt;
   });
 
   const net = income - expense;
@@ -3540,8 +3926,9 @@ function renderChart() {
   let total = 0;
 
   monthTxs.forEach(t => {
-    catSums[t.category] = (catSums[t.category] || 0) + Number(t.amount);
-    total += Number(t.amount);
+    const baseAmt = convertTxToBase(t);
+    catSums[t.category] = (catSums[t.category] || 0) + baseAmt;
+    total += baseAmt;
   });
 
   const svg = document.getElementById('donut-svg');
@@ -3733,13 +4120,16 @@ function renderTransactions() {
       }
     }
 
-    const dayTotalExpense = items.filter(i => i.type === 'expense').reduce((sum, i) => sum + Number(i.amount), 0);
+    const dayTotalExpense = items.filter(i => i.type === 'expense').reduce((sum, i) => sum + convertTxToBase(i), 0);
 
     const itemsHtml = items.map(item => {
       const title = getItemTitle(item);
       const meta = getCategoryMeta(item.type, item.category, title);
       const isExpense = item.type === 'expense';
-      const itemSym = (CURRENCIES[item.currency] && CURRENCIES[item.currency].symbol) || sym;
+      const itemCurr = item.currency || state.currency;
+      const itemSym = (CURRENCIES[itemCurr] && CURRENCIES[itemCurr].symbol) || sym;
+      const isForeign = itemCurr !== state.currency;
+      const convertedAmt = isForeign ? convertTxToBase(item) : Number(item.amount);
       const safeId = escapeHtml(item.id);
       const safeTitle = escapeHtml(title);
       const safeCatName = escapeHtml(meta.name);
@@ -3763,8 +4153,9 @@ function renderTransactions() {
           <div class="flex items-center gap-1 sm:gap-2">
             <div class="text-right mr-1">
               <div class="text-sm font-extrabold ${isExpense ? 'text-rose-500' : 'text-emerald-500'}">
-                ${isExpense ? '-' : '+'}${escapeHtml(itemSym)} ${escapeHtml(formatMoney(item.amount, item.currency))}
+                ${isExpense ? '-' : '+'}${escapeHtml(itemSym)} ${escapeHtml(formatMoney(item.amount, itemCurr))}
               </div>
+              ${isForeign ? `<div class="text-[10px] font-semibold text-slate-400">≈ ${escapeHtml(sym)} ${escapeHtml(formatMoney(convertedAmt, state.currency))}</div>` : ''}
             </div>
 
             <!-- Edit Button -->
@@ -3840,7 +4231,7 @@ function copyAIPrompt() {
   const catSums = {};
 
   monthTxs.forEach(t => {
-    const amt = Number(t.amount);
+    const amt = convertTxToBase(t);
     if (t.type === 'income') income += amt;
     if (t.type === 'expense') {
       expense += amt;
@@ -3851,6 +4242,15 @@ function copyAIPrompt() {
   const net = income - expense;
   const rate = income > 0 ? Math.round((net / income) * 100) : 0;
   const sortedCats = Object.entries(catSums).sort((a, b) => b[1] - a[1]);
+  const formatTxPromptAmount = (t) => {
+    const tCurr = t.currency || state.currency;
+    const tSym = (CURRENCIES[tCurr] && CURRENCIES[tCurr].symbol) || sym;
+    const orig = `${tSym}${formatMoney(t.amount, tCurr)}`;
+    if (tCurr !== state.currency) {
+      return `${orig} (≈ ${sym}${formatMoney(convertTxToBase(t), state.currency)})`;
+    }
+    return orig;
+  };
 
   let promptText = '';
 
@@ -3872,12 +4272,12 @@ function copyAIPrompt() {
 
     const topExpenses = monthTxs
       .filter(t => t.type === 'expense')
-      .sort((a, b) => Number(b.amount) - Number(a.amount))
+      .sort((a, b) => convertTxToBase(b) - convertTxToBase(a))
       .slice(0, 5)
       .map((t, idx) => {
         const cat = getCategoryMeta(t.type, t.category);
         const title = getItemTitle(t) || cat.name;
-        return `${idx + 1}. ${title} (${t.date}): ${sym}${formatMoney(t.amount)}`;
+        return `${idx + 1}. ${title} (${t.date}): ${formatTxPromptAmount(t)}`;
       })
       .join('\n') || 'None';
 
@@ -3886,7 +4286,7 @@ function copyAIPrompt() {
       const cat = getCategoryMeta(t.type, t.category);
       const title = getItemTitle(t);
       const displayDesc = title ? `${title} (${cat.name})` : cat.name;
-      return `- ${t.date} | ${displayDesc} | ${sign}${sym}${formatMoney(t.amount)}`;
+      return `- ${t.date} | ${displayDesc} | ${sign}${formatTxPromptAmount(t)}`;
     }).join('\n') || 'No records for this month';
 
     promptText = `# Personal Financial Review & Budget Analysis Request (from PocketFlow)
@@ -3944,12 +4344,12 @@ Thank you! Please provide a structured, friendly, and professional response in E
 
     const topExpenses = monthTxs
       .filter(t => t.type === 'expense')
-      .sort((a, b) => Number(b.amount) - Number(a.amount))
+      .sort((a, b) => convertTxToBase(b) - convertTxToBase(a))
       .slice(0, 5)
       .map((t, idx) => {
         const cat = getCategoryMeta(t.type, t.category);
         const title = getItemTitle(t) || cat.name;
-        return `${idx + 1}. ${title} (${t.date}): ${sym}${formatMoney(t.amount)}`;
+        return `${idx + 1}. ${title} (${t.date}): ${formatTxPromptAmount(t)}`;
       })
       .join('\n') || '無';
 
@@ -3958,7 +4358,7 @@ Thank you! Please provide a structured, friendly, and professional response in E
       const cat = getCategoryMeta(t.type, t.category);
       const title = getItemTitle(t);
       const displayDesc = title ? `${title} (${cat.name})` : cat.name;
-      return `- ${t.date} | ${displayDesc} | ${sign}${sym}${formatMoney(t.amount)}`;
+      return `- ${t.date} | ${displayDesc} | ${sign}${formatTxPromptAmount(t)}`;
     }).join('\n') || '本月尚無明細';
 
     promptText = `# 財務健檢與預算分析請求 (來自 PocketFlow 記帳本)
@@ -4037,6 +4437,8 @@ function exportJSON() {
     exportedAt: new Date().toISOString(),
     language: state.lang,
     currency: state.currency,
+    fxRates: state.fxRates,
+    fxUpdatedAt: state.fxUpdatedAt,
     transactions: state.transactions,
     recurring: state.recurring
   };
@@ -4051,19 +4453,24 @@ function exportJSON() {
 
 function exportCSV() {
   const isEn = state.lang === 'en';
-  let csv = isEn ? '\uFEFFDate,Type,Title,Category,Amount,Currency\n' : '\uFEFF日期,類型,項目名稱,分類,金額,幣別\n';
+  let csv = isEn
+    ? '\uFEFFDate,Type,Title,Category,Amount,Currency,BaseAmount,BaseCurrency\n'
+    : '\uFEFF日期,類型,項目名稱,分類,金額,幣別,換算金額,主幣別\n';
 
   state.transactions.forEach(t => {
     const meta = getCategoryMeta(t.type, t.category);
     const title = getItemTitle(t);
     const typeLabel = t.type === 'expense' ? (isEn ? 'Expense' : '支出') : (isEn ? 'Income' : '收入');
+    const baseAmt = Number(convertTxToBase(t).toFixed(2));
     const row = [
       escapeCsvCell(t.date),
       escapeCsvCell(typeLabel),
       escapeCsvCell(title || ''),
       escapeCsvCell(meta.name),
       escapeCsvCell(t.amount),
-      escapeCsvCell(t.currency || state.currency)
+      escapeCsvCell(t.currency || state.currency),
+      escapeCsvCell(baseAmt),
+      escapeCsvCell(state.currency)
     ];
     csv += `${row.join(',')}\n`;
   });
@@ -4097,6 +4504,9 @@ function importJSON(e) {
           state.transactions = sanitizedTxs;
           state.recurring = sanitizedRecs;
           if (data.currency && CURRENCIES[data.currency]) state.currency = data.currency;
+          if (data.fxRates && typeof data.fxRates === 'object') {
+            saveFxRates(data.fxRates, typeof data.fxUpdatedAt === 'string' ? data.fxUpdatedAt : null);
+          }
           if (data.language && I18N[data.language]) state.lang = data.language;
           state.isDemo = false;
           localStorage.setItem('pocketflow_is_demo', 'false');
@@ -4287,6 +4697,8 @@ async function backupToGoogleDrive() {
         exportedAt: new Date().toISOString(),
         language: state.lang,
         currency: state.currency,
+        fxRates: state.fxRates,
+        fxUpdatedAt: state.fxUpdatedAt,
         transactions: state.transactions,
         recurring: state.recurring
       };
@@ -4449,6 +4861,9 @@ async function restoreFromGoogleDrive() {
         state.transactions = sanitizedTxs;
         state.recurring = sanitizedRecs;
         if (data.currency && CURRENCIES[data.currency]) state.currency = data.currency;
+        if (data.fxRates && typeof data.fxRates === 'object') {
+          saveFxRates(data.fxRates, typeof data.fxUpdatedAt === 'string' ? data.fxUpdatedAt : null);
+        }
         if (data.language && I18N[data.language]) state.lang = data.language;
         state.isDemo = false;
         localStorage.setItem('pocketflow_is_demo', 'false');

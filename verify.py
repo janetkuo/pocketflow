@@ -287,6 +287,29 @@ def check_business_logic():
       throw new Error('sortTransactionsDesc failed: ' + JSON.stringify(sorted));
     }
 
+    // Check multi-currency FX conversion & snapshot preservation
+    const testRates = { USD: 1, TWD: 32, JPY: 160, EUR: 0.8, KRW: 1400, HKD: 7.8, GBP: 0.8 };
+    if (Math.abs(getExchangeRate('JPY', 'TWD', testRates) - 0.2) > 1e-9) {
+      throw new Error('getExchangeRate JPY->TWD failed');
+    }
+    if (convertTxToBase({ amount: 100, currency: 'USD' }, 'USD', testRates) !== 100) {
+      throw new Error('convertTxToBase same currency failed');
+    }
+    if (Math.abs(convertTxToBase({ amount: 1600, currency: 'JPY', fxRate: 0.007, fxBase: 'USD' }, 'USD', testRates) - 11.2) > 1e-9) {
+      throw new Error('convertTxToBase should honor matching fxRate snapshot');
+    }
+    if (Math.abs(convertTxToBase({ amount: 1600, currency: 'JPY', fxRate: 0.007, fxBase: 'USD' }, 'TWD', testRates) - 320) > 1e-9) {
+      throw new Error('convertTxToBase should fallback to rate table when base currency changes');
+    }
+    const sanitizedFx = sanitizeImportedRecord({ title: 'Sushi', amount: 1500, currency: 'JPY', fxRate: 0.0065, fxBase: 'USD', date: '2026-11-19' }, false);
+    if (!sanitizedFx || sanitizedFx.fxRate !== 0.0065 || sanitizedFx.fxBase !== 'USD') {
+      throw new Error('sanitizeImportedRecord fx snapshot preservation failed');
+    }
+    const sanitizedBadFx = sanitizeImportedRecord({ title: 'Sushi', amount: 1500, currency: 'JPY', fxRate: -1, fxBase: 'ZZZ', date: '2026-11-19' }, false);
+    if (!sanitizedBadFx || 'fxRate' in sanitizedBadFx || 'fxBase' in sanitizedBadFx) {
+      throw new Error('sanitizeImportedRecord should drop invalid fx metadata');
+    }
+
     'OK'
     """
     proc = subprocess.run(['osascript', '-l', 'JavaScript', '-e', test_logic], capture_output=True, text=True)
