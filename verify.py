@@ -14,13 +14,16 @@ def check_js_syntax():
     
     # Test app.js
     app_test = """
+    const setTimeout = () => 1;
+    const clearTimeout = () => {};
     const localStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
     const navigator = { serviceWorker: { register: () => Promise.resolve(), addEventListener: () => {} } };
     const window = { addEventListener: () => {}, innerWidth: 1024, matchMedia: () => ({ matches: false }) };
+    const _els = {};
     const document = {
       documentElement: { classList: { add: () => {}, remove: () => {}, toggle: () => {} } },
       addEventListener: () => {},
-      getElementById: () => ({ classList: { add: () => {}, remove: () => {}, toggle: () => {} }, setAttribute: () => {}, addEventListener: () => {} }),
+      getElementById: (id) => (_els[id] || (_els[id] = { classList: { add: () => {}, remove: () => {}, toggle: () => {} }, setAttribute: () => {}, addEventListener: () => {}, focus: () => {} })),
       querySelectorAll: () => []
     };
     eval($.NSString.stringWithContentsOfFileEncodingError('app.js', $.NSUTF8StringEncoding, null).js);
@@ -80,13 +83,16 @@ def check_dom_ids():
 def check_business_logic():
     print("🔍 [3/4] Validating helper functions and core calculations...")
     test_logic = """
+    const setTimeout = () => 1;
+    const clearTimeout = () => {};
     const localStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
     const navigator = { serviceWorker: { register: () => Promise.resolve(), addEventListener: () => {} } };
     const window = { addEventListener: () => {}, innerWidth: 1024, matchMedia: () => ({ matches: false }) };
+    const _els = {};
     const document = {
       documentElement: { classList: { add: () => {}, remove: () => {}, toggle: () => {} } },
       addEventListener: () => {},
-      getElementById: () => ({ classList: { add: () => {}, remove: () => {}, toggle: () => {} }, setAttribute: () => {}, addEventListener: () => {} }),
+      getElementById: (id) => (_els[id] || (_els[id] = { classList: { add: () => {}, remove: () => {}, toggle: () => {} }, setAttribute: () => {}, addEventListener: () => {}, focus: () => {} })),
       querySelectorAll: () => []
     };
     eval($.NSString.stringWithContentsOfFileEncodingError('app.js', $.NSUTF8StringEncoding, null).js);
@@ -309,6 +315,15 @@ def check_business_logic():
     if (!sanitizedBadFx || 'fxRate' in sanitizedBadFx || 'fxBase' in sanitizedBadFx) {
       throw new Error('sanitizeImportedRecord should drop invalid fx metadata');
     }
+
+    // Check non-blocking toast & confirm dialog helpers
+    showToast('Saved item', { variant: 'success', duration: 1000 });
+    const toastMsgEl = document.getElementById('app-toast-message');
+    if (toastMsgEl.textContent !== 'Saved item') {
+      throw new Error('showToast failed to set message');
+    }
+    const pendingConfirm = showConfirmDialog({ title: 'Confirm', message: 'Proceed?' });
+    resolveConfirmDialog(true);
 
     'OK'
     """

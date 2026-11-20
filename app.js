@@ -267,6 +267,14 @@ const I18N = {
     fxSavedRates: '✅ Reference exchange rates saved!',
     fxInvalidRate: '⚠️ Please enter valid positive exchange rates.',
 
+    confirmTitle: 'Confirm Action',
+    confirmBtn: 'Confirm',
+    cancelBtn: 'Cancel',
+    undoBtn: 'Undo',
+    deletedTxToast: (name) => `Deleted "${name}"`,
+    deletedRecToast: (name) => `Deleted recurring "${name}"`,
+    restoredToast: 'Restored',
+
     months: [
       'January', 'February', 'March', 'April', 'May', 'June',
       'July', 'August', 'September', 'October', 'November', 'December'
@@ -491,6 +499,14 @@ const I18N = {
     fxSaveRates: '儲存匯率',
     fxSavedRates: '✅ 參考匯率已儲存！',
     fxInvalidRate: '⚠️ 請輸入大於 0 的有效匯率數值。',
+
+    confirmTitle: '確認操作',
+    confirmBtn: '確定',
+    cancelBtn: '取消',
+    undoBtn: '復原',
+    deletedTxToast: (name) => `已刪除「${name}」`,
+    deletedRecToast: (name) => `已刪除週期項目「${name}」`,
+    restoredToast: '已復原',
 
     months: [
       '1月', '2月', '3月', '4月', '5月', '6月',
@@ -1267,6 +1283,105 @@ function getCurrencySymbol() {
   return (CURRENCIES[state.currency] && CURRENCIES[state.currency].symbol) || '$';
 }
 
+// Non-blocking Toast & Custom Confirmation Dialog Helpers
+let toastHideTimer = null;
+let toastActionHandler = null;
+let activeConfirmResolver = null;
+let lastFocusedBeforeModal = null;
+
+function showToast(message, options = {}) {
+  const toastEl = document.getElementById('app-toast');
+  const msgEl = document.getElementById('app-toast-message');
+  const actionBtn = document.getElementById('app-toast-action-btn');
+  if (!toastEl || !msgEl) return;
+
+  if (toastHideTimer) {
+    clearTimeout(toastHideTimer);
+    toastHideTimer = null;
+  }
+
+  const { actionLabel = '', onAction = null, duration = 4000, variant = 'default' } = options;
+  msgEl.textContent = message;
+
+  toastEl.classList.remove('bg-slate-900/95', 'bg-rose-700/95', 'bg-emerald-700/95');
+  if (variant === 'error') {
+    toastEl.classList.add('bg-rose-700/95');
+  } else if (variant === 'success') {
+    toastEl.classList.add('bg-emerald-700/95');
+  } else {
+    toastEl.classList.add('bg-slate-900/95');
+  }
+
+  toastActionHandler = typeof onAction === 'function' ? onAction : null;
+  if (actionBtn) {
+    if (actionLabel && toastActionHandler) {
+      actionBtn.textContent = actionLabel;
+      actionBtn.classList.remove('hidden');
+      actionBtn.onclick = () => {
+        const fn = toastActionHandler;
+        toastActionHandler = null;
+        toastEl.classList.add('hidden');
+        if (toastHideTimer) clearTimeout(toastHideTimer);
+        if (fn) fn();
+      };
+    } else {
+      actionBtn.classList.add('hidden');
+      actionBtn.onclick = null;
+    }
+  }
+
+  toastEl.classList.remove('hidden');
+  toastHideTimer = setTimeout(() => {
+    toastEl.classList.add('hidden');
+    toastActionHandler = null;
+  }, duration);
+}
+
+function resolveConfirmDialog(result) {
+  const modal = document.getElementById('confirm-modal');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }
+  const resolver = activeConfirmResolver;
+  activeConfirmResolver = null;
+  if (resolver) resolver(Boolean(result));
+}
+
+function showConfirmDialog({ title, message, confirmLabel, cancelLabel, danger = false } = {}) {
+  const modal = document.getElementById('confirm-modal');
+  const titleEl = document.getElementById('confirm-modal-title');
+  const msgEl = document.getElementById('confirm-modal-message');
+  const okBtn = document.getElementById('confirm-modal-ok-btn');
+  const cancelBtn = document.getElementById('confirm-modal-cancel-btn');
+  const dict = I18N[state.lang] || I18N.en;
+
+  if (!modal || !msgEl || !okBtn || !cancelBtn) {
+    return Promise.resolve(false);
+  }
+
+  if (activeConfirmResolver) {
+    activeConfirmResolver(false);
+    activeConfirmResolver = null;
+  }
+
+  if (titleEl) titleEl.textContent = title || dict.confirmTitle;
+  msgEl.textContent = message || '';
+  cancelBtn.textContent = cancelLabel || dict.cancelBtn;
+  okBtn.textContent = confirmLabel || dict.confirmBtn;
+  okBtn.className = danger
+    ? 'px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-sm transition cursor-pointer'
+    : 'px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-sm transition cursor-pointer';
+
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+  setTimeout(() => okBtn.focus(), 20);
+
+  return new Promise((resolve) => {
+    activeConfirmResolver = resolve;
+  });
+}
+
 function updateCurrencySymbols() {
   const sym = getCurrencySymbol();
   document.querySelectorAll('.curr-symbol').forEach(el => {
@@ -1412,10 +1527,10 @@ async function syncLatestFxRates() {
     renderFxRatesUI();
     render();
     updateModalFxPreview();
-    alert(dict.fxSyncSuccess);
+    showToast(dict.fxSyncSuccess, { variant: 'success' });
   } catch (err) {
     console.warn('FX sync error:', err);
-    alert(dict.fxSyncError);
+    showToast(dict.fxSyncError, { variant: 'error' });
   } finally {
     if (syncBtn) syncBtn.disabled = false;
     if (syncLabel) syncLabel.textContent = dict.fxSyncBtn;
@@ -2668,6 +2783,9 @@ function initEvents() {
 
     document.getElementById('add-modal').classList.remove('hidden');
     document.getElementById('add-modal').classList.add('flex');
+    if (typeof document.activeElement !== 'undefined' && document.activeElement) {
+      lastFocusedBeforeModal = document.activeElement;
+    }
     setTimeout(() => document.getElementById('input-amount').focus(), 100);
   };
 
@@ -2681,12 +2799,22 @@ function initEvents() {
     }
     document.getElementById('add-modal').classList.add('hidden');
     document.getElementById('add-modal').classList.remove('flex');
-    document.getElementById('autocomplete-list').classList.add('hidden');
+    const acList = document.getElementById('autocomplete-list');
+    if (acList) acList.classList.add('hidden');
+    const titleEl = document.getElementById('input-title');
+    if (titleEl) titleEl.setAttribute('aria-expanded', 'false');
+    if (lastFocusedBeforeModal && typeof lastFocusedBeforeModal.focus === 'function') {
+      lastFocusedBeforeModal.focus();
+      lastFocusedBeforeModal = null;
+    }
   };
 
   window.openEditModal = function(id) {
     const tx = state.transactions.find(t => t.id === id);
     if (!tx) return;
+    if (typeof document.activeElement !== 'undefined' && document.activeElement) {
+      lastFocusedBeforeModal = document.activeElement;
+    }
     const dict = I18N[state.lang] || I18N.en;
 
     document.getElementById('transaction-form').reset();
@@ -2844,16 +2972,81 @@ function initEvents() {
   // Autocomplete Input Handling
   const titleInput = document.getElementById('input-title');
   const autocompleteList = document.getElementById('autocomplete-list');
+  let activeAutocompleteIndex = -1;
+
+  const hideAutocomplete = () => {
+    autocompleteList.classList.add('hidden');
+    titleInput.setAttribute('aria-expanded', 'false');
+    activeAutocompleteIndex = -1;
+  };
+
+  const selectAutocompleteEl = (el) => {
+    if (!el) return;
+    titleInput.value = el.getAttribute('data-title');
+    const selectedType = el.getAttribute('data-type');
+    const selectedCat = el.getAttribute('data-category');
+    const recentAmt = el.getAttribute('data-amount');
+    const itemCurr = el.getAttribute('data-currency');
+
+    setModalType(selectedType);
+    selectCategory(selectedCat);
+
+    const modalCurrSelect = document.getElementById('modal-currency-select');
+    if (itemCurr && modalCurrSelect) {
+      modalCurrSelect.value = itemCurr;
+    }
+
+    if (el.getAttribute('data-is-recurring') === 'true') {
+      setModalRecurring(true);
+      const f = el.getAttribute('data-freq') || 'monthly';
+      const d = el.getAttribute('data-day');
+      if (document.getElementById('modal-rec-freq')) document.getElementById('modal-rec-freq').value = f;
+      if (f === 'weekly') {
+        if (d && document.getElementById('modal-rec-weekday')) {
+          document.getElementById('modal-rec-weekday').value = d;
+          modalRecDayTouched = true;
+        }
+      } else {
+        if (d && document.getElementById('modal-rec-day')) {
+          document.getElementById('modal-rec-day').value = d;
+          modalRecDayTouched = true;
+        }
+      }
+      updateModalRecScheduleUI(f);
+    }
+
+    if (!document.getElementById('input-amount').value || document.getElementById('input-amount').value === '0') {
+      document.getElementById('input-amount').value = recentAmt;
+      updateCalcPreview();
+    } else {
+      updateModalFxPreview();
+    }
+    hideAutocomplete();
+  };
+
+  const updateAutocompleteActiveStyles = () => {
+    const items = autocompleteList.querySelectorAll('.auto-item');
+    items.forEach((el, idx) => {
+      const isActive = idx === activeAutocompleteIndex;
+      el.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      el.classList.toggle('bg-indigo-50', isActive);
+      el.classList.toggle('dark:bg-slate-700/80', isActive);
+      if (isActive && typeof el.scrollIntoView === 'function') {
+        el.scrollIntoView({ block: 'nearest' });
+      }
+    });
+  };
 
   titleInput.addEventListener('input', (e) => {
     const query = e.target.value;
     const matches = getAutocompleteSuggestions(query);
     if (matches.length === 0) {
-      autocompleteList.classList.add('hidden');
+      hideAutocomplete();
       return;
     }
 
-    autocompleteList.innerHTML = matches.map(item => {
+    activeAutocompleteIndex = -1;
+    autocompleteList.innerHTML = matches.map((item, idx) => {
       const cat = getCategoryMeta(item.type, item.category, item.title);
       const itemSym = (CURRENCIES[item.currency] && CURRENCIES[item.currency].symbol) || '$';
       const typeLabel = item.type === 'expense' 
@@ -2867,7 +3060,7 @@ function initEvents() {
       const safeCatName = escapeHtml(cat.name);
 
       return `
-        <div class="auto-item px-3 py-2.5 hover:bg-indigo-50 dark:hover:bg-slate-700/80 cursor-pointer flex items-center justify-between transition"
+        <div role="option" aria-selected="false" data-index="${idx}" class="auto-item px-3 py-2.5 hover:bg-indigo-50 dark:hover:bg-slate-700/80 cursor-pointer flex items-center justify-between transition"
              data-title="${safeTitle}" data-category="${safeCat}" data-type="${safeType}" data-amount="${escapeHtml(item.amount)}" data-currency="${safeCurr}"
              data-is-recurring="${item.isRecurring ? 'true' : 'false'}" data-freq="${escapeHtml(item.freq || 'monthly')}" data-day="${escapeHtml(item.day || '')}">
           <div class="flex items-center gap-2">
@@ -2885,56 +3078,35 @@ function initEvents() {
     }).join('');
 
     autocompleteList.classList.remove('hidden');
+    titleInput.setAttribute('aria-expanded', 'true');
 
     autocompleteList.querySelectorAll('.auto-item').forEach(el => {
-      el.addEventListener('click', () => {
-        titleInput.value = el.getAttribute('data-title');
-        const selectedType = el.getAttribute('data-type');
-        const selectedCat = el.getAttribute('data-category');
-        const recentAmt = el.getAttribute('data-amount');
-        const itemCurr = el.getAttribute('data-currency');
-
-        setModalType(selectedType);
-        selectCategory(selectedCat);
-
-        const modalCurrSelect = document.getElementById('modal-currency-select');
-        if (itemCurr && modalCurrSelect) {
-          modalCurrSelect.value = itemCurr;
-        }
-
-        if (el.getAttribute('data-is-recurring') === 'true') {
-          setModalRecurring(true);
-          const f = el.getAttribute('data-freq') || 'monthly';
-          const d = el.getAttribute('data-day');
-          if (document.getElementById('modal-rec-freq')) document.getElementById('modal-rec-freq').value = f;
-          if (f === 'weekly') {
-            if (d && document.getElementById('modal-rec-weekday')) {
-              document.getElementById('modal-rec-weekday').value = d;
-              modalRecDayTouched = true;
-            }
-          } else {
-            if (d && document.getElementById('modal-rec-day')) {
-              document.getElementById('modal-rec-day').value = d;
-              modalRecDayTouched = true;
-            }
-          }
-          updateModalRecScheduleUI(f);
-        }
-
-        if (!document.getElementById('input-amount').value || document.getElementById('input-amount').value === '0') {
-          document.getElementById('input-amount').value = recentAmt;
-          updateCalcPreview();
-        } else {
-          updateModalFxPreview();
-        }
-        autocompleteList.classList.add('hidden');
-      });
+      el.addEventListener('click', () => selectAutocompleteEl(el));
     });
+  });
+
+  titleInput.addEventListener('keydown', (e) => {
+    if (autocompleteList.classList.contains('hidden')) return;
+    const items = autocompleteList.querySelectorAll('.auto-item');
+    if (items.length === 0) return;
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      activeAutocompleteIndex = (activeAutocompleteIndex + 1) % items.length;
+      updateAutocompleteActiveStyles();
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      activeAutocompleteIndex = activeAutocompleteIndex <= 0 ? items.length - 1 : activeAutocompleteIndex - 1;
+      updateAutocompleteActiveStyles();
+    } else if (e.key === 'Enter' && activeAutocompleteIndex >= 0) {
+      e.preventDefault();
+      selectAutocompleteEl(items[activeAutocompleteIndex]);
+    }
   });
 
   document.addEventListener('click', (e) => {
     if (!titleInput.contains(e.target) && !autocompleteList.contains(e.target)) {
-      autocompleteList.classList.add('hidden');
+      hideAutocomplete();
     }
   });
 
@@ -2948,29 +3120,29 @@ function initEvents() {
 
     // Check division by zero
     if (isDivisionByZeroExpr(rawAmt)) {
-      alert(dict.calcDivZero);
+      showToast(dict.calcDivZero, { variant: 'error' });
       return;
     }
 
     if (!rawAmt) {
-      alert(dict.amountMustBePositive);
+      showToast(dict.amountMustBePositive, { variant: 'error' });
       return;
     }
 
     if (/[+\-×÷*/]\s*$/.test(rawAmt)) {
-      alert(dict.calcInvalidExpr);
+      showToast(dict.calcInvalidExpr, { variant: 'error' });
       return;
     }
 
     const evaluated = evaluateExpression(rawAmt);
     if (evaluated === null || isNaN(evaluated) || !isFinite(evaluated)) {
-      alert(dict.calcInvalidExpr);
+      showToast(dict.calcInvalidExpr, { variant: 'error' });
       return;
     }
 
     const amount = parseFloat(evaluated.toFixed(2));
     if (amount <= 0) {
-      alert(dict.amountMustBePositive);
+      showToast(dict.amountMustBePositive, { variant: 'error' });
       return;
     }
     document.getElementById('input-amount').value = amount;
@@ -3138,6 +3310,9 @@ function initEvents() {
   // Recurring Modal
   const recModal = document.getElementById('recurring-modal');
   const openRecModal = () => {
+    if (typeof document.activeElement !== 'undefined' && document.activeElement) {
+      lastFocusedBeforeModal = document.activeElement;
+    }
     cancelEditRecurring();
     renderRecurringList();
     recModal.classList.remove('hidden');
@@ -3147,10 +3322,37 @@ function initEvents() {
     cancelEditRecurring();
     recModal.classList.add('hidden');
     recModal.classList.remove('flex');
+    if (lastFocusedBeforeModal && typeof lastFocusedBeforeModal.focus === 'function') {
+      lastFocusedBeforeModal.focus();
+      lastFocusedBeforeModal = null;
+    }
   };
 
   document.getElementById('open-recurring-modal-btn').addEventListener('click', openRecModal);
   document.getElementById('close-recurring-modal-btn').addEventListener('click', closeRecModal);
+
+  const addModalEl = document.getElementById('add-modal');
+  if (addModalEl) {
+    addModalEl.addEventListener('click', (e) => {
+      if (e.target === addModalEl) window.closeModal();
+    });
+  }
+  if (recModal) {
+    recModal.addEventListener('click', (e) => {
+      if (e.target === recModal) closeRecModal();
+    });
+  }
+
+  const confirmModalEl = document.getElementById('confirm-modal');
+  const confirmOkBtn = document.getElementById('confirm-modal-ok-btn');
+  const confirmCancelBtn = document.getElementById('confirm-modal-cancel-btn');
+  if (confirmOkBtn) confirmOkBtn.addEventListener('click', () => resolveConfirmDialog(true));
+  if (confirmCancelBtn) confirmCancelBtn.addEventListener('click', () => resolveConfirmDialog(false));
+  if (confirmModalEl) {
+    confirmModalEl.addEventListener('click', (e) => {
+      if (e.target === confirmModalEl) resolveConfirmDialog(false);
+    });
+  }
 
   const recQuickAddBtn = document.getElementById('rec-quick-add-btn');
   if (recQuickAddBtn) {
@@ -3183,9 +3385,16 @@ function initEvents() {
   // Global Escape key handler to close active modals or autocomplete
   window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
+      const confirmModal = document.getElementById('confirm-modal');
+      if (confirmModal && !confirmModal.classList.contains('hidden')) {
+        resolveConfirmDialog(false);
+        return;
+      }
       const autocompleteList = document.getElementById('autocomplete-list');
       if (autocompleteList && !autocompleteList.classList.contains('hidden')) {
         autocompleteList.classList.add('hidden');
+        const titleEl = document.getElementById('input-title');
+        if (titleEl) titleEl.setAttribute('aria-expanded', 'false');
         return;
       }
       const addModal = document.getElementById('add-modal');
@@ -3202,6 +3411,10 @@ function initEvents() {
       if (settingsModal && !settingsModal.classList.contains('hidden')) {
         settingsModal.classList.add('hidden');
         settingsModal.classList.remove('flex');
+        if (lastFocusedBeforeModal && typeof lastFocusedBeforeModal.focus === 'function') {
+          lastFocusedBeforeModal.focus();
+          lastFocusedBeforeModal = null;
+        }
         return;
       }
     }
@@ -3209,16 +3422,29 @@ function initEvents() {
 
   // Settings Modal Handlers
   const settingsModal = document.getElementById('settings-modal');
+  const closeSettingsModal = () => {
+    settingsModal.classList.add('hidden');
+    settingsModal.classList.remove('flex');
+    if (lastFocusedBeforeModal && typeof lastFocusedBeforeModal.focus === 'function') {
+      lastFocusedBeforeModal.focus();
+      lastFocusedBeforeModal = null;
+    }
+  };
   document.getElementById('open-settings-btn').addEventListener('click', () => {
+    if (typeof document.activeElement !== 'undefined' && document.activeElement) {
+      lastFocusedBeforeModal = document.activeElement;
+    }
     renderFxRatesUI();
     updateGoogleDriveStatusUI();
     settingsModal.classList.remove('hidden');
     settingsModal.classList.add('flex');
   });
-  document.getElementById('close-settings-modal-btn').addEventListener('click', () => {
-    settingsModal.classList.add('hidden');
-    settingsModal.classList.remove('flex');
-  });
+  document.getElementById('close-settings-modal-btn').addEventListener('click', closeSettingsModal);
+  if (settingsModal) {
+    settingsModal.addEventListener('click', (e) => {
+      if (e.target === settingsModal) closeSettingsModal();
+    });
+  }
 
   // FEATURE: Primary Currency & Reference FX Settings
   const settingsBaseCurrency = document.getElementById('settings-base-currency');
@@ -3266,14 +3492,14 @@ function initEvents() {
         }
       });
       if (hasInvalid) {
-        alert(dict.fxInvalidRate);
+        showToast(dict.fxInvalidRate, { variant: 'error' });
         return;
       }
       saveFxRates(nextRates, new Date().toISOString());
       renderFxRatesUI();
       render();
       updateModalFxPreview();
-      alert(dict.fxSavedRates);
+      showToast(dict.fxSavedRates, { variant: 'success' });
     });
   }
 
@@ -3285,7 +3511,7 @@ function initEvents() {
       renderFxRatesUI();
       render();
       updateModalFxPreview();
-      alert(dict.fxSavedRates);
+      showToast(dict.fxSavedRates, { variant: 'success' });
     });
   }
 
@@ -3338,7 +3564,7 @@ function initEvents() {
       gdriveTokenExpiresAt = 0;
       updateGoogleDriveStatusUI();
       const dict = I18N[state.lang] || I18N.en;
-      alert(dict.gdriveSavedClientId);
+      showToast(dict.gdriveSavedClientId, { variant: 'success' });
     });
   }
 
@@ -3383,9 +3609,9 @@ function initEvents() {
   }
 
   // Clear all data (Start fresh)
-  document.getElementById('clear-all-data-btn').addEventListener('click', () => {
+  document.getElementById('clear-all-data-btn').addEventListener('click', async () => {
     const dict = I18N[state.lang] || I18N.en;
-    if (confirm(dict.clearConfirm)) {
+    if (await showConfirmDialog({ title: dict.clearDataTitle, message: dict.clearConfirm, confirmLabel: dict.clearDataBtn, danger: true })) {
       state.transactions = [];
       state.recurring = [];
       state.isDemo = false;
@@ -3395,8 +3621,7 @@ function initEvents() {
       renderRecurringList();
       checkDueRecurring();
       updateDemoBanner();
-      settingsModal.classList.add('hidden');
-      settingsModal.classList.remove('flex');
+      closeSettingsModal();
     }
   });
 
@@ -3424,7 +3649,7 @@ function initEvents() {
     const currency = document.getElementById('rec-currency').value || 'USD';
     const rawAmount = parseFloat(document.getElementById('rec-amount').value);
     if (!Number.isFinite(rawAmount) || rawAmount <= 0) {
-      alert(dict.amountMustBePositive);
+      showToast(dict.amountMustBePositive, { variant: 'error' });
       return;
     }
     const amount = parseFloat(rawAmount.toFixed(2));
@@ -3831,6 +4056,9 @@ function renderRecurringList() {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       const id = btn.getAttribute('data-id');
+      const idx = state.recurring.findIndex(r => r.id === id);
+      if (idx === -1) return;
+      const removedRule = state.recurring[idx];
       if (document.getElementById('rec-edit-id')?.value === id) {
         cancelEditRecurring();
       }
@@ -3838,6 +4066,23 @@ function renderRecurringList() {
       persistData();
       renderRecurringList();
       checkDueRecurring();
+
+      const curDict = I18N[state.lang] || I18N.en;
+      const label = getItemTitle(removedRule) || getCategoryMeta(removedRule.type, removedRule.category).name;
+      showToast(curDict.deletedRecToast(label), {
+        actionLabel: curDict.undoBtn,
+        duration: 5000,
+        onAction: () => {
+          if (!state.recurring.some(r => r.id === removedRule.id)) {
+            const insertAt = Math.min(idx, state.recurring.length);
+            state.recurring.splice(insertAt, 0, removedRule);
+            persistData();
+            renderRecurringList();
+            checkDueRecurring();
+            showToast((I18N[state.lang] || I18N.en).restoredToast, { variant: 'success', duration: 2000 });
+          }
+        }
+      });
     });
   });
 }
@@ -4159,14 +4404,14 @@ function renderTransactions() {
             </div>
 
             <!-- Edit Button -->
-            <button class="edit-tx-btn p-1.5 text-slate-400 hover:text-indigo-600 rounded-xl hover:bg-indigo-50 dark:hover:bg-slate-800 transition opacity-80 sm:opacity-0 group-hover:opacity-100"
-                    data-id="${safeId}" title="${escapeHtml(dict.editTxBtn)}">
+            <button class="edit-tx-btn p-1.5 text-slate-400 hover:text-indigo-600 rounded-xl hover:bg-indigo-50 dark:hover:bg-slate-800 transition opacity-80 sm:opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+                    data-id="${safeId}" title="${escapeHtml(dict.editTxBtn)}" aria-label="${escapeHtml(dict.editTxBtn)}">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
             </button>
 
             <!-- Delete Button -->
-            <button class="delete-tx-btn p-1.5 text-slate-400 hover:text-rose-500 rounded-xl hover:bg-rose-50 dark:hover:bg-slate-800 transition opacity-80 sm:opacity-0 group-hover:opacity-100"
-                    data-id="${safeId}" title="${escapeHtml(dict.deleteTxBtn)}">
+            <button class="delete-tx-btn p-1.5 text-slate-400 hover:text-rose-500 rounded-xl hover:bg-rose-50 dark:hover:bg-slate-800 transition opacity-80 sm:opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+                    data-id="${safeId}" title="${escapeHtml(dict.deleteTxBtn)}" aria-label="${escapeHtml(dict.deleteTxBtn)}">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
             </button>
           </div>
@@ -4210,9 +4455,28 @@ function renderTransactions() {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       const id = btn.getAttribute('data-id');
+      const idx = state.transactions.findIndex(t => t.id === id);
+      if (idx === -1) return;
+      const removedTx = state.transactions[idx];
       state.transactions = state.transactions.filter(t => t.id !== id);
       persistData();
       checkDueRecurring();
+
+      const curDict = I18N[state.lang] || I18N.en;
+      const label = getItemTitle(removedTx) || getCategoryMeta(removedTx.type, removedTx.category).name;
+      showToast(curDict.deletedTxToast(label), {
+        actionLabel: curDict.undoBtn,
+        duration: 5000,
+        onAction: () => {
+          if (!state.transactions.some(t => t.id === removedTx.id)) {
+            const insertAt = Math.min(idx, state.transactions.length);
+            state.transactions.splice(insertAt, 0, removedTx);
+            persistData();
+            checkDueRecurring();
+            showToast((I18N[state.lang] || I18N.en).restoredToast, { variant: 'success', duration: 2000 });
+          }
+        }
+      });
     });
   });
 }
@@ -4490,7 +4754,7 @@ function importJSON(e) {
   const dict = I18N[state.lang] || I18N.en;
 
   const reader = new FileReader();
-  reader.onload = (event) => {
+  reader.onload = async (event) => {
     try {
       const data = JSON.parse(event.target.result);
       if (Array.isArray(data.transactions)) {
@@ -4500,7 +4764,7 @@ function importJSON(e) {
         const sanitizedRecs = Array.isArray(data.recurring)
           ? data.recurring.map(item => sanitizeImportedRecord(item, true)).filter(Boolean)
           : [];
-        if (confirm(dict.importConfirm(sanitizedTxs.length))) {
+        if (await showConfirmDialog({ title: dict.importJsonBtn, message: dict.importConfirm(sanitizedTxs.length) })) {
           state.transactions = sanitizedTxs;
           state.recurring = sanitizedRecs;
           if (data.currency && CURRENCIES[data.currency]) state.currency = data.currency;
@@ -4517,15 +4781,15 @@ function importJSON(e) {
           applyLanguage();
           checkDueRecurring();
           updateDemoBanner();
-          alert(dict.importSuccess);
+          showToast(dict.importSuccess, { variant: 'success' });
           document.getElementById('settings-modal').classList.add('hidden');
           document.getElementById('settings-modal').classList.remove('flex');
         }
       } else {
-        alert(dict.importInvalid);
+        showToast(dict.importInvalid, { variant: 'error' });
       }
     } catch (err) {
-      alert(dict.importError);
+      showToast(dict.importError, { variant: 'error' });
     }
   };
   reader.readAsText(file);
@@ -4604,9 +4868,9 @@ async function fetchGoogleDriveUserInfo(token) {
   }
 }
 
-function disconnectGoogleDrive() {
+async function disconnectGoogleDrive() {
   const dict = I18N[state.lang] || I18N.en;
-  if (!confirm(dict.gdriveDisconnectConfirm)) return;
+  if (!(await showConfirmDialog({ title: dict.gdriveTitle, message: dict.gdriveDisconnectConfirm, confirmLabel: dict.gdriveDisconnectBtn, danger: true }))) return;
 
   if (gdriveAccessToken && typeof google !== 'undefined' && google.accounts && google.accounts.oauth2) {
     try {
@@ -4630,7 +4894,7 @@ function initGoogleDriveClient(callback) {
   const clientId = getGoogleClientId();
 
   if (!clientId) {
-    alert(dict.gdriveMissingClientId);
+    showToast(dict.gdriveMissingClientId, { variant: 'error' });
     const panel = document.getElementById('gdrive-config-panel');
     if (panel) panel.classList.remove('hidden');
     const input = document.getElementById('gdrive-client-id-input');
@@ -4639,7 +4903,7 @@ function initGoogleDriveClient(callback) {
   }
 
   if (typeof google === 'undefined' || !google.accounts || !google.accounts.oauth2) {
-    alert(dict.gdriveLibraryLoading);
+    showToast(dict.gdriveLibraryLoading, { variant: 'error' });
     return;
   }
 
@@ -4657,7 +4921,7 @@ function initGoogleDriveClient(callback) {
         if (response.error) {
           console.error('Google OAuth error:', response);
           if (response.error !== 'popup_closed_by_user') {
-            alert(dict.gdriveBackupError(response.error_description || response.error));
+            showToast(dict.gdriveBackupError(response.error_description || response.error), { variant: 'error' });
           }
           return;
         }
@@ -4676,7 +4940,7 @@ function initGoogleDriveClient(callback) {
     gdriveTokenClient.requestAccessToken({ prompt: '' });
   } catch (err) {
     console.error('GIS initialization error:', err);
-    alert(err.message || 'Google Auth Error');
+    showToast(err.message || 'Google Auth Error', { variant: 'error' });
   }
 }
 
@@ -4778,10 +5042,10 @@ async function backupToGoogleDrive() {
       // Record successful backup time
       localStorage.setItem(GDRIVE_LAST_BACKUP_KEY, new Date().toISOString());
       updateGoogleDriveStatusUI();
-      alert(dict.gdriveBackupSuccess);
+      showToast(dict.gdriveBackupSuccess, { variant: 'success' });
     } catch (err) {
       console.error('Google Drive backup error:', err);
-      alert(dict.gdriveBackupError(err.message || 'Unknown error'));
+      showToast(dict.gdriveBackupError(err.message || 'Unknown error'), { variant: 'error' });
     } finally {
       if (backupBtn) backupBtn.disabled = false;
       if (backupLabel) backupLabel.textContent = originalLabel;
@@ -4821,7 +5085,7 @@ async function restoreFromGoogleDrive() {
 
       const searchJson = await searchRes.json();
       if (!searchJson.files || searchJson.files.length === 0) {
-        alert(dict.gdriveRestoreNotFound);
+        showToast(dict.gdriveRestoreNotFound, { variant: 'error' });
         return;
       }
 
@@ -4840,7 +5104,7 @@ async function restoreFromGoogleDrive() {
       const data = await contentRes.json();
 
       if (!Array.isArray(data.transactions)) {
-        alert(dict.importInvalid);
+        showToast(dict.importInvalid, { variant: 'error' });
         return;
       }
 
@@ -4857,7 +5121,7 @@ async function restoreFromGoogleDrive() {
         ? data.recurring.map(item => sanitizeImportedRecord(item, true)).filter(Boolean)
         : [];
 
-      if (confirm(dict.gdriveRestoreConfirm(dateStr, sanitizedTxs.length))) {
+      if (await showConfirmDialog({ title: dict.gdriveTitle, message: dict.gdriveRestoreConfirm(dateStr, sanitizedTxs.length) })) {
         state.transactions = sanitizedTxs;
         state.recurring = sanitizedRecs;
         if (data.currency && CURRENCIES[data.currency]) state.currency = data.currency;
@@ -4875,7 +5139,7 @@ async function restoreFromGoogleDrive() {
         checkDueRecurring();
         updateDemoBanner();
 
-        alert(dict.gdriveRestoreSuccess);
+        showToast(dict.gdriveRestoreSuccess, { variant: 'success' });
         const settingsModal = document.getElementById('settings-modal');
         if (settingsModal) {
           settingsModal.classList.add('hidden');
@@ -4884,7 +5148,7 @@ async function restoreFromGoogleDrive() {
       }
     } catch (err) {
       console.error('Google Drive restore error:', err);
-      alert(dict.gdriveRestoreError(err.message || 'Unknown error'));
+      showToast(dict.gdriveRestoreError(err.message || 'Unknown error'), { variant: 'error' });
     } finally {
       if (restoreBtn) restoreBtn.disabled = false;
       if (restoreLabel) restoreLabel.textContent = originalLabel;
