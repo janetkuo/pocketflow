@@ -10,7 +10,7 @@ import sys
 import os
 
 def check_js_syntax():
-    print("🔍 [1/3] Validating JavaScript syntax with macOS JavaScriptCore...")
+    print("🔍 [1/4] Validating JavaScript syntax with macOS JavaScriptCore...")
     
     # Test app.js
     app_test = """
@@ -51,7 +51,7 @@ def check_js_syntax():
     return True
 
 def check_dom_ids():
-    print("🔍 [2/3] Checking DOM ID bindings between app.js and index.html...")
+    print("🔍 [2/4] Checking DOM ID bindings between app.js and index.html...")
     if not os.path.exists('app.js') or not os.path.exists('index.html'):
         print("❌ app.js or index.html not found!")
         return False
@@ -62,17 +62,23 @@ def check_dom_ids():
         html = f.read()
     
     ids_in_js = set(re.findall(r'document\.getElementById\([\'\"]([a-zA-Z0-9_-]+)[\'\"]\)', app_js))
-    ids_in_html = set(re.findall(r'id=[\'\"]([a-zA-Z0-9_-]+)[\'\"]', html))
+    all_ids_in_html = re.findall(r'id=[\'\"]([a-zA-Z0-9_-]+)[\'\"]', html)
+    ids_in_html = set(all_ids_in_html)
+
+    duplicates = sorted({i for i in all_ids_in_html if all_ids_in_html.count(i) > 1})
+    if duplicates:
+        print(f"❌ Duplicate element IDs in index.html: {duplicates}")
+        return False
     
     missing = ids_in_js - ids_in_html
     if missing:
         print(f"❌ Missing element IDs in index.html: {missing}")
         return False
-    print(f"   ✅ All {len(ids_in_js)} DOM IDs match between app.js and index.html.")
+    print(f"   ✅ All {len(ids_in_js)} DOM IDs match between app.js and index.html (0 duplicates).")
     return True
 
 def check_business_logic():
-    print("🔍 [3/3] Validating helper functions and core calculations...")
+    print("🔍 [3/4] Validating helper functions and core calculations...")
     test_logic = """
     const localStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
     const navigator = { serviceWorker: { register: () => Promise.resolve(), addEventListener: () => {} } };
@@ -174,13 +180,24 @@ def check_business_logic():
     if (csvQuotes !== '"Coffee ""Large"", Iced"') {
       throw new Error('escapeCsvCell quotes failed: ' + csvQuotes);
     }
+    const csvNewline = escapeCsvCell("Line1\\nLine2");
+    if (csvNewline !== '"Line1\\nLine2"') {
+      throw new Error('escapeCsvCell newline failed: ' + csvNewline);
+    }
+    const csvMinus = escapeCsvCell('-1+1');
+    if (csvMinus !== "\\'-1+1") {
+      throw new Error('escapeCsvCell minus formula failed: ' + csvMinus);
+    }
 
     // Check expression evaluation & validation
     if (evaluateExpression('12.5 + 3 * 2') !== 18.5) throw new Error('evaluateExpression order of ops failed');
     if (evaluateExpression('12.34.56') !== null) throw new Error('evaluateExpression malformed decimal should be null');
     if (evaluateExpression('5++3') !== null) throw new Error('evaluateExpression double operator should be null');
     if (!isDivisionByZeroExpr('10 / 0.00')) throw new Error('isDivisionByZeroExpr failed for 0.00');
+    if (!isDivisionByZeroExpr('10 / 0.')) throw new Error('isDivisionByZeroExpr failed for 0.');
+    if (!isDivisionByZeroExpr('10 ÷ .0')) throw new Error('isDivisionByZeroExpr failed for .0');
     if (isDivisionByZeroExpr('10 / 0.5')) throw new Error('isDivisionByZeroExpr false positive for 0.5');
+    if (isDivisionByZeroExpr('5 + 0 / 2')) throw new Error('isDivisionByZeroExpr false positive for 5 + 0 / 2');
 
     // Check bilingual title editing sync
     const txItem = { title: 'Oat Milk Latte', title_tw: '中杯燕麥熱拿鐵' };
@@ -204,6 +221,11 @@ def check_business_logic():
     if (changedZhCopy.title !== '抹茶拿鐵' || changedZhCopy.title_tw !== '抹茶拿鐵') {
       throw new Error('applyEditedTitle should sync both titles when edited in zh-TW');
     }
+    const clearedCopy = { ...txItem };
+    applyEditedTitle(clearedCopy, txItem, '', 'zh-TW');
+    if (clearedCopy.title !== '' || 'title_tw' in clearedCopy) {
+      throw new Error('applyEditedTitle should clear both titles when cleared to empty');
+    }
 
     // Check generateId & sanitizeImportedRecord
     const id1 = generateId('tx');
@@ -215,6 +237,10 @@ def check_business_logic():
     if (!sanitized || sanitized.amount !== 0 || sanitized.type !== 'expense' || !/^\\d{4}-\\d{2}-\\d{2}$/.test(sanitized.date)) {
       throw new Error('sanitizeImportedRecord failed: ' + JSON.stringify(sanitized));
     }
+    const sanitizedRec = sanitizeImportedRecord({ title: 'Gym', amount: 50, type: 'expense', freq: 'weekly', day: 99 }, true);
+    if (!sanitizedRec || sanitizedRec.freq !== 'weekly' || sanitizedRec.day !== 7) {
+      throw new Error('sanitizeImportedRecord recurring clamp failed: ' + JSON.stringify(sanitizedRec));
+    }
 
     'OK'
     """
@@ -222,7 +248,7 @@ def check_business_logic():
     if proc.returncode != 0:
         print(f"❌ Logic Test Error:\n{proc.stderr.strip()}")
         return False
-    print("   ✅ formatMoney ($6,098.50) and resolveItemIcon (☕, 🚇) verified.")
+    print("   ✅ Core formatting, icon resolution, escaping, expression validation, and record sanitization verified.")
     return True
 
 def check_branding_and_icons():
