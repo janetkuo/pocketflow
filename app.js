@@ -995,8 +995,22 @@ function sanitizeImportedRecord(raw, isRecurring = false) {
     if (typeof raw.recurringId === 'string' && raw.recurringId.trim()) {
       record.recurringId = raw.recurringId.trim();
     }
+    if (Number.isFinite(Number(raw.createdAt)) && Number(raw.createdAt) > 0) {
+      record.createdAt = Number(raw.createdAt);
+    }
+  }
+  if (isRecurring && typeof raw.startDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(raw.startDate)) {
+    record.startDate = raw.startDate;
   }
   return record;
+}
+
+function sortTransactionsDesc(list) {
+  return [...list].sort((a, b) => {
+    const dateCmp = String(b.date || '').localeCompare(String(a.date || ''));
+    if (dateCmp !== 0) return dateCmp;
+    return (Number(b.createdAt) || 0) - (Number(a.createdAt) || 0);
+  });
 }
 
 // Helpers for Title & Category Localized Strings
@@ -2488,11 +2502,13 @@ function initEvents() {
               modalRecDay.value = d;
             }
           }
-          const dt = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
-          const jsDay = dt.getDay();
-          const modalRecWeekday = document.getElementById('modal-rec-weekday');
-          if (modalRecWeekday) {
-            modalRecWeekday.value = jsDay === 0 ? '7' : String(jsDay);
+          if (!modalRecDayTouched) {
+            const dt = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+            const jsDay = dt.getDay();
+            const modalRecWeekday = document.getElementById('modal-rec-weekday');
+            if (modalRecWeekday) {
+              modalRecWeekday.value = jsDay === 0 ? '7' : String(jsDay);
+            }
           }
         }
       }
@@ -2522,6 +2538,13 @@ function initEvents() {
   const modalRecDayInput = document.getElementById('modal-rec-day');
   if (modalRecDayInput) {
     modalRecDayInput.addEventListener('input', () => {
+      modalRecDayTouched = true;
+    });
+  }
+
+  const modalRecWeekdaySelect = document.getElementById('modal-rec-weekday');
+  if (modalRecWeekdaySelect) {
+    modalRecWeekdaySelect.addEventListener('change', () => {
       modalRecDayTouched = true;
     });
   }
@@ -2589,10 +2612,21 @@ function initEvents() {
 
         if (el.getAttribute('data-is-recurring') === 'true') {
           setModalRecurring(true);
-          const f = el.getAttribute('data-freq');
+          const f = el.getAttribute('data-freq') || 'monthly';
           const d = el.getAttribute('data-day');
-          if (f && document.getElementById('modal-rec-freq')) document.getElementById('modal-rec-freq').value = f;
-          if (d && document.getElementById('modal-rec-day')) document.getElementById('modal-rec-day').value = d;
+          if (document.getElementById('modal-rec-freq')) document.getElementById('modal-rec-freq').value = f;
+          if (f === 'weekly') {
+            if (d && document.getElementById('modal-rec-weekday')) {
+              document.getElementById('modal-rec-weekday').value = d;
+              modalRecDayTouched = true;
+            }
+          } else {
+            if (d && document.getElementById('modal-rec-day')) {
+              document.getElementById('modal-rec-day').value = d;
+              modalRecDayTouched = true;
+            }
+          }
+          updateModalRecScheduleUI(f);
         }
 
         if (!document.getElementById('input-amount').value || document.getElementById('input-amount').value === '0') {
@@ -2714,6 +2748,7 @@ function initEvents() {
               day: recDay
             };
             if (state.lang === 'zh-TW') newRule.title_tw = recTitle;
+            if (recFreq === 'weekly' && date) newRule.startDate = date;
             state.recurring.push(newRule);
           }
         } else {
@@ -2756,6 +2791,9 @@ function initEvents() {
         if (state.lang === 'zh-TW') {
           newRule.title_tw = recTitle;
         }
+        if (recFreq === 'weekly' && date) {
+          newRule.startDate = date;
+        }
         state.recurring.push(newRule);
       }
 
@@ -2766,7 +2804,8 @@ function initEvents() {
         type: state.modalType,
         category: state.selectedCategory,
         currency,
-        date
+        date,
+        createdAt: Date.now()
       };
       if (recId) {
         newTx.recurringId = recId;
@@ -3179,57 +3218,79 @@ function selectCategory(catId) {
   renderCategoryPicker();
 }
 
-function getDueRecurringItems() {
-  const curYear = state.currentDate.getFullYear();
-  const curMonth = state.currentDate.getMonth() + 1;
-  const monthStr = `${curYear}-${String(curMonth).padStart(2, '0')}`;
+function getDueRecurringOccurrences(
+  year = state.currentDate.getFullYear(),
+  month = state.currentDate.getMonth() + 1,
+  referenceDate = new Date(),
+  recurringList = state.recurring,
+  transactionsList = state.transactions
+) {
+  const monthStr = `${year}-${String(month).padStart(2, '0')}`;
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const refStr = getLocalDateString(referenceDate);
+  const due = [];
 
-  return state.recurring.filter(rule => {
-    const alreadyRecorded = state.transactions.some(tx => 
-      tx.recurringId === rule.id && tx.date.startsWith(monthStr)
+  recurringList.forEach(rule => {
+    const ruleTxs = transactionsList.filter(
+      tx => tx.recurringId === rule.id && typeof tx.date === 'string' && tx.date.startsWith(monthStr)
     );
-    return !alreadyRecorded;
+
+    if (rule.freq === 'weekly') {
+      const existingDates = new Set(ruleTxs.map(tx => tx.date));
+      const targetJsDay = (parseInt(rule.day, 10) || 1) % 7; // 1..6 -> Mon..Sat, 7 -> 0 (Sun)
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dt = new Date(year, month - 1, d);
+        if (dt.getDay() !== targetJsDay) continue;
+        const dateStr = `${monthStr}-${String(d).padStart(2, '0')}`;
+        if (dateStr > refStr) continue;
+        if (rule.startDate && dateStr < rule.startDate) continue;
+        if (!existingDates.has(dateStr)) {
+          due.push({ rule, date: dateStr });
+        }
+      }
+    } else if (ruleTxs.length === 0) {
+      const clampedDay = Math.min(Math.max(parseInt(rule.day, 10) || 1, 1), daysInMonth);
+      const dateStr = `${monthStr}-${String(clampedDay).padStart(2, '0')}`;
+      due.push({ rule, date: dateStr });
+    }
   });
+
+  return due;
+}
+
+function getDueRecurringItems() {
+  return getDueRecurringOccurrences();
 }
 
 function checkDueRecurring() {
-  const dueItems = getDueRecurringItems();
+  const dueOccurrences = getDueRecurringOccurrences();
   const alertBar = document.getElementById('recurring-alert-bar');
   const alertText = document.getElementById('recurring-alert-text');
   const dict = I18N[state.lang] || I18N.en;
 
   if (!alertBar || !alertText) return;
 
-  if (dueItems.length > 0) {
+  if (dueOccurrences.length > 0) {
     alertBar.classList.remove('hidden');
-    const itemsSummary = dueItems.map(i => getItemTitle(i)).join(state.lang === 'en' ? ', ' : '、');
-    alertText.textContent = dict.recurringAlertText(dueItems.length, itemsSummary);
+    const counts = new Map();
+    dueOccurrences.forEach(({ rule }) => {
+      const title = getItemTitle(rule);
+      counts.set(title, (counts.get(title) || 0) + 1);
+    });
+    const itemsSummary = Array.from(counts.entries())
+      .map(([title, count]) => (count > 1 ? `${title} ×${count}` : title))
+      .join(state.lang === 'en' ? ', ' : '、');
+    alertText.textContent = dict.recurringAlertText(dueOccurrences.length, itemsSummary);
   } else {
     alertBar.classList.add('hidden');
   }
 }
 
 function applyAllDueRecurring() {
-  const dueItems = getDueRecurringItems();
-  const curYear = state.currentDate.getFullYear();
-  const curMonth = state.currentDate.getMonth() + 1;
+  const dueOccurrences = getDueRecurringOccurrences();
+  const baseTs = Date.now();
 
-  dueItems.forEach(rule => {
-    let dateStr;
-    if (rule.freq === 'weekly') {
-      const targetDay = (rule.day % 7); // 1->1..6->6, 7->0 (Sun)
-      let d = 1;
-      const testDate = new Date(curYear, curMonth - 1, d);
-      while (testDate.getDay() !== targetDay && d <= 7) {
-        d++;
-        testDate.setDate(d);
-      }
-      dateStr = `${curYear}-${String(curMonth).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-    } else {
-      const day = Math.min(rule.day || 1, 28);
-      dateStr = `${curYear}-${String(curMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    }
-
+  dueOccurrences.forEach(({ rule, date }, idx) => {
     state.transactions.unshift({
       id: generateId('tx_rec'),
       recurringId: rule.id,
@@ -3239,7 +3300,8 @@ function applyAllDueRecurring() {
       amount: rule.amount,
       type: rule.type,
       category: rule.category || (rule.type === 'income' ? 'salary' : 'housing'),
-      date: dateStr
+      date,
+      createdAt: baseTs + idx
     });
   });
 
@@ -3633,7 +3695,7 @@ function renderTransactions() {
   }
 
   emptyState.classList.add('hidden');
-  list.sort((a, b) => b.date.localeCompare(a.date));
+  list = sortTransactionsDesc(list);
 
   const groups = {};
   list.forEach(t => {
@@ -3772,7 +3834,7 @@ function copyAIPrompt() {
   const sym = getCurrencySymbol();
   const dict = I18N[state.lang] || I18N.en;
 
-  const monthTxs = state.transactions.filter(t => t.date.startsWith(monthStr));
+  const monthTxs = sortTransactionsDesc(state.transactions.filter(t => t.date.startsWith(monthStr)));
   let income = 0;
   let expense = 0;
   const catSums = {};
@@ -3801,10 +3863,11 @@ function copyAIPrompt() {
     }).join('\n') || '- No expense records for this month';
 
     const recurringLines = state.recurring.map(r => {
-      const isExp = r.type === 'expense';
       const cat = getCategoryMeta(r.type, r.category);
       const title = getItemTitle(r) || cat.name;
-      return `- [${isExp ? 'Fixed Expense' : 'Fixed Income'}] ${title}: Day ${r.day} each month ${sym}${formatMoney(r.amount)}`;
+      const schedule = dict.recurringItemSub(r.day, r.type, r.freq);
+      const rSym = (CURRENCIES[r.currency] && CURRENCIES[r.currency].symbol) || sym;
+      return `- ${title}: ${schedule} · ${rSym}${formatMoney(r.amount, r.currency)}`;
     }).join('\n') || '- No recurring items configured';
 
     const topExpenses = monthTxs
@@ -3872,10 +3935,11 @@ Thank you! Please provide a structured, friendly, and professional response in E
     }).join('\n') || '- 本月尚無支出紀錄';
 
     const recurringLines = state.recurring.map(r => {
-      const isExp = r.type === 'expense';
       const cat = getCategoryMeta(r.type, r.category);
       const title = getItemTitle(r) || cat.name;
-      return `- [${isExp ? '固定支出' : '固定收入'}] ${title}: 每月 ${r.day} 號 ${sym}${formatMoney(r.amount)}`;
+      const schedule = dict.recurringItemSub(r.day, r.type, r.freq);
+      const rSym = (CURRENCIES[r.currency] && CURRENCIES[r.currency].symbol) || sym;
+      return `- ${title}: ${schedule} · ${rSym}${formatMoney(r.amount, r.currency)}`;
     }).join('\n') || '- 目前無設定固定週期收支';
 
     const topExpenses = monthTxs

@@ -242,6 +242,51 @@ def check_business_logic():
       throw new Error('sanitizeImportedRecord recurring clamp failed: ' + JSON.stringify(sanitizedRec));
     }
 
+    // Check monthly end-of-month clamping & weekly recurring occurrences
+    const refNov19 = new Date(2026, 10, 19);
+    const monthly31 = [{ id: 'r31', title: 'EndMonth', amount: 100, type: 'expense', freq: 'monthly', day: 31 }];
+    const nov31 = getDueRecurringOccurrences(2026, 11, refNov19, monthly31, []);
+    if (nov31.length !== 1 || nov31[0].date !== '2026-11-30') {
+      throw new Error('monthly 31 in Nov failed: ' + JSON.stringify(nov31));
+    }
+    const febNonLeap = getDueRecurringOccurrences(2026, 2, refNov19, monthly31, []);
+    if (febNonLeap.length !== 1 || febNonLeap[0].date !== '2026-02-28') {
+      throw new Error('monthly 31 in Feb 2026 failed: ' + JSON.stringify(febNonLeap));
+    }
+    const febLeap = getDueRecurringOccurrences(2024, 2, refNov19, monthly31, []);
+    if (febLeap.length !== 1 || febLeap[0].date !== '2024-02-29') {
+      throw new Error('monthly 31 in Feb 2024 failed: ' + JSON.stringify(febLeap));
+    }
+
+    const weeklyThu = [{ id: 'rthu', title: 'Thu Lunch', amount: 20, type: 'expense', freq: 'weekly', day: 4 }];
+    const thuDueAll = getDueRecurringOccurrences(2026, 11, refNov19, weeklyThu, []);
+    if (thuDueAll.map(d => d.date).join(',') !== '2026-11-05,2026-11-12,2026-11-19') {
+      throw new Error('weekly Thursday occurrences failed: ' + JSON.stringify(thuDueAll));
+    }
+    const thuDuePartial = getDueRecurringOccurrences(2026, 11, refNov19, weeklyThu, [
+      { id: 't1', recurringId: 'rthu', date: '2026-11-12' }
+    ]);
+    if (thuDuePartial.map(d => d.date).join(',') !== '2026-11-05,2026-11-19') {
+      throw new Error('weekly partial occurrences failed: ' + JSON.stringify(thuDuePartial));
+    }
+    const weeklyWithStart = [{ id: 'rthu2', title: 'Thu Lunch', amount: 20, type: 'expense', freq: 'weekly', day: 4, startDate: '2026-11-19' }];
+    const thuDueStart = getDueRecurringOccurrences(2026, 11, refNov19, weeklyWithStart, [
+      { id: 't2', recurringId: 'rthu2', date: '2026-11-19' }
+    ]);
+    if (thuDueStart.length !== 0) {
+      throw new Error('weekly startDate guard failed: ' + JSON.stringify(thuDueStart));
+    }
+
+    // Check stable descending transaction sort
+    const sorted = sortTransactionsDesc([
+      { id: 'a', date: '2026-11-18', createdAt: 100 },
+      { id: 'b', date: '2026-11-19', createdAt: 100 },
+      { id: 'c', date: '2026-11-19', createdAt: 300 }
+    ]);
+    if (sorted.map(t => t.id).join(',') !== 'c,b,a') {
+      throw new Error('sortTransactionsDesc failed: ' + JSON.stringify(sorted));
+    }
+
     'OK'
     """
     proc = subprocess.run(['osascript', '-l', 'JavaScript', '-e', test_logic], capture_output=True, text=True)
