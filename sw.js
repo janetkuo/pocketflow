@@ -1,7 +1,8 @@
-const CACHE_NAME = 'pocketflow-tracker-v35';
+const CACHE_NAME = 'pocketflow-tracker-v36';
 const ASSETS = [
   './',
   './index.html',
+  './styles.css',
   './app.js',
   './manifest.json',
   './manifest.zh.json',
@@ -56,11 +57,11 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
   const isSameOrigin = url.origin === self.location.origin;
   const isNavigation = event.request.mode === 'navigate';
-  const isCoreScript = isSameOrigin && url.pathname.endsWith('app.js');
+  const isCoreAsset = isSameOrigin && (url.pathname.endsWith('app.js') || url.pathname.endsWith('styles.css'));
 
-  // Strategy 1: Network-First for Navigation (HTML) & core app logic (app.js)
+  // Strategy 1: Network-First for Navigation (HTML) & core app assets (app.js, styles.css)
   // Ensures updates appear immediately upon refreshing without requiring two reloads
-  if (isNavigation || isCoreScript) {
+  if (isNavigation || isCoreAsset) {
     event.respondWith(
       fetchWithTimeout(event.request, 2500)
         .then((networkResponse) => {
@@ -74,7 +75,7 @@ self.addEventListener('fetch', (event) => {
         })
         .catch(() => {
           // If offline or timed out, fallback to local cache
-          return caches.match(event.request).then((cachedResponse) => {
+          return caches.match(event.request, { ignoreSearch: true }).then((cachedResponse) => {
             if (cachedResponse) return cachedResponse;
             return caches.match('./index.html').then((fallbackHtml) => {
               return fallbackHtml || caches.match('./');
@@ -87,7 +88,7 @@ self.addEventListener('fetch', (event) => {
 
   // Strategy 2: Cache-First for static assets (icons, manifest, etc.)
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
+    caches.match(event.request, { ignoreSearch: true }).then((cachedResponse) => {
       if (cachedResponse) return cachedResponse;
       return fetch(event.request).then((networkResponse) => {
         if (networkResponse && networkResponse.ok && isSameOrigin) {

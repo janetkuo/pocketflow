@@ -355,7 +355,18 @@ def check_branding_and_icons():
         if './icon.svg' not in manifest_zh or './icon-maskable.svg' not in manifest_zh:
             print("❌ manifest.zh.json missing icon.svg or icon-maskable.svg!")
             return False
-    print("   ✅ icon.svg, icon-maskable.svg, and index.html single source of truth verified.")
+    if not os.path.exists('styles.css'):
+        print("❌ Missing pre-compiled styles.css for offline PWA!")
+        return False
+    if './styles.css' not in html or 'cdn.tailwindcss.com' in html:
+        print("❌ index.html must reference local ./styles.css instead of cdn.tailwindcss.com!")
+        return False
+    with open('sw.js') as f:
+        sw_js = f.read()
+    if './styles.css' not in sw_js or 'ignoreSearch: true' not in sw_js:
+        print("❌ sw.js must pre-cache ./styles.css and match assets with ignoreSearch: true!")
+        return False
+    print("   ✅ icon.svg, icon-maskable.svg, offline styles.css, and sw.js cache configuration verified.")
     return True
 
 if __name__ == '__main__':

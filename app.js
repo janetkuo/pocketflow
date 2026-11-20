@@ -18,16 +18,14 @@ const GDRIVE_USER_EMAIL_KEY = 'pocketflow_gdrive_user_email';
 const GDRIVE_CONNECTED_KEY = 'pocketflow_gdrive_connected';
 const DEFAULT_GDRIVE_CLIENT_ID = '592001205133-6f41prs5p41s92e61pae5eb34rs05as2.apps.googleusercontent.com';
 
-// Google Drive Auth State
+// Google Drive Auth State (Access Token kept strictly in memory)
 let gdriveTokenClient = null;
-let gdriveAccessToken = localStorage.getItem(GDRIVE_TOKEN_KEY) || null;
-let gdriveTokenExpiresAt = parseInt(localStorage.getItem(GDRIVE_TOKEN_EXPIRES_KEY) || '0', 10);
-if (gdriveAccessToken && Date.now() >= gdriveTokenExpiresAt - 30000) {
-  gdriveAccessToken = null;
-  gdriveTokenExpiresAt = 0;
+let gdriveAccessToken = null;
+let gdriveTokenExpiresAt = 0;
+try {
   localStorage.removeItem(GDRIVE_TOKEN_KEY);
   localStorage.removeItem(GDRIVE_TOKEN_EXPIRES_KEY);
-}
+} catch (_) {}
 
 // Supported Currencies
 const CURRENCIES = {
@@ -227,6 +225,8 @@ const I18N = {
     gdriveRestoreConfirm: (date, count) => `Found cloud backup from ${date} (${count} transactions).\nDo you want to restore and replace current data?`,
     gdriveRestoreSuccess: '🎉 Data restored from Google Drive successfully!',
     gdriveRestoreError: (err) => `Failed to restore from Google Drive: ${err}`,
+    gdriveOverwriteConfirm: (cloudDate) => `A newer backup (${cloudDate}) exists on Google Drive from another session.\nDo you want to overwrite it with this device's data?`,
+    gdriveClientIdPlaceholder: 'Using built-in default (optional custom Client ID)',
 
     backupTitle: 'Backup & Transfer',
     backupDesc: 'Download backup files to keep in cloud storage or restore easily when switching devices:',
@@ -460,6 +460,8 @@ const I18N = {
     gdriveRestoreConfirm: (date, count) => `找到雲端備份檔（日期：${date}，包含 ${count} 筆交易紀錄）。\n確定要還原並覆蓋目前紀錄嗎？`,
     gdriveRestoreSuccess: '🎉 已成功自 Google 雲端硬碟還原資料！',
     gdriveRestoreError: (err) => `自 Google 雲端硬碟還原失敗：${err}`,
+    gdriveOverwriteConfirm: (cloudDate) => `雲端已有更新的備份（${cloudDate}），可能是由其他裝置上傳。\n確定要以目前裝置的資料覆蓋雲端備份嗎？`,
+    gdriveClientIdPlaceholder: '目前使用內建預設（選填：輸入自訂 Client ID）',
 
     backupTitle: '資料備份與轉移',
     backupDesc: '可下載備份檔保存至雲端硬碟，或在電腦與手機換機時無痛匯入還原：',
@@ -4700,6 +4702,7 @@ function exportJSON() {
     version: 1,
     exportedAt: new Date().toISOString(),
     language: state.lang,
+    palette: state.palette,
     currency: state.currency,
     fxRates: state.fxRates,
     fxUpdatedAt: state.fxUpdatedAt,
@@ -4768,6 +4771,9 @@ function importJSON(e) {
           state.transactions = sanitizedTxs;
           state.recurring = sanitizedRecs;
           if (data.currency && CURRENCIES[data.currency]) state.currency = data.currency;
+          if (data.palette && MORANDI_PALETTES[data.palette]) {
+            applyPalette(data.palette);
+          }
           if (data.fxRates && typeof data.fxRates === 'object') {
             saveFxRates(data.fxRates, typeof data.fxUpdatedAt === 'string' ? data.fxUpdatedAt : null);
           }
@@ -4809,9 +4815,13 @@ function updateGoogleDriveStatusUI() {
   const lastBackupText = document.getElementById('gdrive-last-backup-text');
   const clientIdInput = document.getElementById('gdrive-client-id-input');
 
+  const customClientId = (localStorage.getItem(GDRIVE_CLIENT_ID_KEY) || '').trim();
   const clientId = getGoogleClientId();
-  if (clientIdInput && document.activeElement !== clientIdInput) {
-    clientIdInput.value = clientId;
+  if (clientIdInput) {
+    clientIdInput.setAttribute('placeholder', dict.gdriveClientIdPlaceholder || '123456...apps.googleusercontent.com');
+    if (document.activeElement !== clientIdInput) {
+      clientIdInput.value = customClientId;
+    }
   }
 
   const isConnected = localStorage.getItem(GDRIVE_CONNECTED_KEY) === 'true';
@@ -4868,6 +4878,15 @@ async function fetchGoogleDriveUserInfo(token) {
   }
 }
 
+function clearInMemoryGDriveToken() {
+  gdriveAccessToken = null;
+  gdriveTokenExpiresAt = 0;
+  try {
+    localStorage.removeItem(GDRIVE_TOKEN_KEY);
+    localStorage.removeItem(GDRIVE_TOKEN_EXPIRES_KEY);
+  } catch (_) {}
+}
+
 async function disconnectGoogleDrive() {
   const dict = I18N[state.lang] || I18N.en;
   if (!(await showConfirmDialog({ title: dict.gdriveTitle, message: dict.gdriveDisconnectConfirm, confirmLabel: dict.gdriveDisconnectBtn, danger: true }))) return;
@@ -4880,16 +4899,13 @@ async function disconnectGoogleDrive() {
     }
   }
 
-  gdriveAccessToken = null;
-  gdriveTokenExpiresAt = 0;
-  localStorage.removeItem(GDRIVE_TOKEN_KEY);
-  localStorage.removeItem(GDRIVE_TOKEN_EXPIRES_KEY);
+  clearInMemoryGDriveToken();
   localStorage.removeItem(GDRIVE_USER_EMAIL_KEY);
   localStorage.removeItem(GDRIVE_CONNECTED_KEY);
   updateGoogleDriveStatusUI();
 }
 
-function initGoogleDriveClient(callback) {
+function initGoogleDriveClient(callback, forceRefresh = false) {
   const dict = I18N[state.lang] || I18N.en;
   const clientId = getGoogleClientId();
 
@@ -4907,8 +4923,8 @@ function initGoogleDriveClient(callback) {
     return;
   }
 
-  // Reuse unexpired access token
-  if (gdriveAccessToken && Date.now() < gdriveTokenExpiresAt - 30000) {
+  // Reuse unexpired in-memory access token unless forceRefresh is requested
+  if (!forceRefresh && gdriveAccessToken && Date.now() < gdriveTokenExpiresAt - 30000) {
     callback(gdriveAccessToken);
     return;
   }
@@ -4928,8 +4944,6 @@ function initGoogleDriveClient(callback) {
         gdriveAccessToken = response.access_token;
         const expiresInSec = parseInt(response.expires_in, 10) || 3599;
         gdriveTokenExpiresAt = Date.now() + expiresInSec * 1000;
-        localStorage.setItem(GDRIVE_TOKEN_KEY, gdriveAccessToken);
-        localStorage.setItem(GDRIVE_TOKEN_EXPIRES_KEY, String(gdriveTokenExpiresAt));
         localStorage.setItem(GDRIVE_CONNECTED_KEY, 'true');
         fetchGoogleDriveUserInfo(gdriveAccessToken);
         updateGoogleDriveStatusUI();
@@ -4944,7 +4958,7 @@ function initGoogleDriveClient(callback) {
   }
 }
 
-async function backupToGoogleDrive() {
+async function backupToGoogleDrive(retried = false) {
   const dict = I18N[state.lang] || I18N.en;
   const backupBtn = document.getElementById('gdrive-backup-btn');
   const backupLabel = document.getElementById('gdrive-backup-label');
@@ -4960,6 +4974,7 @@ async function backupToGoogleDrive() {
         version: 1,
         exportedAt: new Date().toISOString(),
         language: state.lang,
+        palette: state.palette,
         currency: state.currency,
         fxRates: state.fxRates,
         fxUpdatedAt: state.fxUpdatedAt,
@@ -4974,11 +4989,12 @@ async function backupToGoogleDrive() {
       });
 
       if (searchRes.status === 401) {
-        gdriveAccessToken = null;
-        gdriveTokenExpiresAt = 0;
-        localStorage.removeItem(GDRIVE_TOKEN_KEY);
-        localStorage.removeItem(GDRIVE_TOKEN_EXPIRES_KEY);
+        clearInMemoryGDriveToken();
         updateGoogleDriveStatusUI();
+        if (!retried) {
+          backupToGoogleDrive(true);
+          return;
+        }
         throw new Error('Google authorization expired. Please try again.');
       }
 
@@ -4989,6 +5005,23 @@ async function backupToGoogleDrive() {
 
       const searchJson = await searchRes.json();
       const existingFile = searchJson.files && searchJson.files.length > 0 ? searchJson.files[0] : null;
+
+      if (existingFile && existingFile.modifiedTime) {
+        const lastSyncIso = localStorage.getItem(GDRIVE_LAST_BACKUP_KEY);
+        const cloudMs = Date.parse(existingFile.modifiedTime);
+        const localSyncMs = lastSyncIso ? Date.parse(lastSyncIso) : 0;
+        if (Number.isFinite(cloudMs) && cloudMs - localSyncMs > 5000) {
+          const cloudTimeStr = state.lang === 'zh-TW'
+            ? new Date(cloudMs).toLocaleString('zh-TW')
+            : new Date(cloudMs).toLocaleString('en-US');
+          const confirmed = await showConfirmDialog({
+            title: dict.gdriveTitle,
+            message: dict.gdriveOverwriteConfirm(cloudTimeStr),
+            danger: true
+          });
+          if (!confirmed) return;
+        }
+      }
 
       if (existingFile) {
         // Update existing file content
@@ -5050,10 +5083,10 @@ async function backupToGoogleDrive() {
       if (backupBtn) backupBtn.disabled = false;
       if (backupLabel) backupLabel.textContent = originalLabel;
     }
-  });
+  }, retried);
 }
 
-async function restoreFromGoogleDrive() {
+async function restoreFromGoogleDrive(retried = false) {
   const dict = I18N[state.lang] || I18N.en;
   const restoreBtn = document.getElementById('gdrive-restore-btn');
   const restoreLabel = document.getElementById('gdrive-restore-label');
@@ -5070,11 +5103,12 @@ async function restoreFromGoogleDrive() {
       });
 
       if (searchRes.status === 401) {
-        gdriveAccessToken = null;
-        gdriveTokenExpiresAt = 0;
-        localStorage.removeItem(GDRIVE_TOKEN_KEY);
-        localStorage.removeItem(GDRIVE_TOKEN_EXPIRES_KEY);
+        clearInMemoryGDriveToken();
         updateGoogleDriveStatusUI();
+        if (!retried) {
+          restoreFromGoogleDrive(true);
+          return;
+        }
         throw new Error('Google authorization expired. Please try again.');
       }
 
@@ -5125,12 +5159,16 @@ async function restoreFromGoogleDrive() {
         state.transactions = sanitizedTxs;
         state.recurring = sanitizedRecs;
         if (data.currency && CURRENCIES[data.currency]) state.currency = data.currency;
+        if (data.palette && MORANDI_PALETTES[data.palette]) {
+          applyPalette(data.palette);
+        }
         if (data.fxRates && typeof data.fxRates === 'object') {
           saveFxRates(data.fxRates, typeof data.fxUpdatedAt === 'string' ? data.fxUpdatedAt : null);
         }
         if (data.language && I18N[data.language]) state.lang = data.language;
         state.isDemo = false;
         localStorage.setItem('pocketflow_is_demo', 'false');
+        localStorage.setItem(GDRIVE_LAST_BACKUP_KEY, targetFile.modifiedTime || new Date().toISOString());
 
         cancelEditRecurring();
         persistData();
@@ -5138,6 +5176,7 @@ async function restoreFromGoogleDrive() {
         applyLanguage();
         checkDueRecurring();
         updateDemoBanner();
+        updateGoogleDriveStatusUI();
 
         showToast(dict.gdriveRestoreSuccess, { variant: 'success' });
         const settingsModal = document.getElementById('settings-modal');
@@ -5153,10 +5192,10 @@ async function restoreFromGoogleDrive() {
       if (restoreBtn) restoreBtn.disabled = false;
       if (restoreLabel) restoreLabel.textContent = originalLabel;
     }
-  });
+  }, retried);
 }
 
-// Register Service Worker for PWA with aggressive update checks & instant reload
+// Register Service Worker for PWA with non-disruptive update notification
 if ('serviceWorker' in navigator) {
   let hadController = Boolean(navigator.serviceWorker.controller);
   let refreshing = false;
@@ -5174,25 +5213,14 @@ if ('serviceWorker' in navigator) {
     }
   }
 
-  // When SW claims control, reload immediately if idle, or prompt user
+  // Prompt user cleanly via banner when a new SW takes control (avoid mid-session jarring reloads)
   if (typeof navigator.serviceWorker.addEventListener === 'function') {
     navigator.serviceWorker.addEventListener('controllerchange', () => {
       if (!hadController) {
         hadController = true;
         return;
       }
-      // Check if user is actively entering an unsaved transaction
-      const modal = document.getElementById('add-modal');
-      const isModalOpen = modal && !modal.classList.contains('hidden');
-      const titleVal = document.getElementById('input-title') ? document.getElementById('input-title').value.trim() : '';
-      const amountVal = document.getElementById('input-amount') ? document.getElementById('input-amount').value.trim() : '';
-      const isDirty = isModalOpen && (Boolean(titleVal) || (Boolean(amountVal) && amountVal !== '0'));
-
-      if (isDirty) {
-        showPwaUpdateBanner();
-      } else {
-        triggerPwaReload();
-      }
+      showPwaUpdateBanner();
     });
   }
 
