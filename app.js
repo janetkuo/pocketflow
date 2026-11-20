@@ -791,17 +791,22 @@ const AUTOCOMPLETE_PRESETS = {
   ]
 };
 
+const INITIAL_NOW = new Date();
+const INITIAL_YEAR = INITIAL_NOW.getFullYear();
+const INITIAL_MONTH = INITIAL_NOW.getMonth() + 1;
+const INITIAL_YM = `${INITIAL_YEAR}-${String(INITIAL_MONTH).padStart(2, '0')}`;
+
 // Initial Sample Data (default English with Traditional Chinese localization)
 const DEMO_TRANSACTIONS = [
-  { id: 'tx_1', title: 'Shopping & Essentials', title_tw: '商場生活用品購物', amount: 68.5, type: 'expense', category: 'shopping', date: '2026-10-17', currency: 'USD' },
-  { id: 'tx_2', title: 'Oat Milk Latte', title_tw: '中杯燕麥熱拿鐵', amount: 5.75, type: 'expense', category: 'drinks', date: '2026-10-17', currency: 'USD' },
-  { id: 'tx_3', title: 'Weekly Metro Pass', title_tw: '地鐵通勤週票', amount: 35, type: 'expense', category: 'transport', date: '2026-10-16', currency: 'USD' },
-  { id: 'tx_4', title: 'Weekend Dinner with Friends', title_tw: '週末朋友聚餐', amount: 92, type: 'expense', category: 'food', date: '2026-10-15', currency: 'USD' },
-  { id: 'tx_5', title: 'Gaming & Entertainment Subscription', title_tw: '遊戲娛樂月費訂閱', amount: 15.99, type: 'expense', category: 'entertainment', date: '2026-10-15', recurringId: 'rec_netflix', currency: 'USD' },
-  { id: 'tx_9', title: 'High-Yield Savings Interest', title_tw: '高利活存利息入帳', amount: 48.5, type: 'income', category: 'interest', date: '2026-10-12', currency: 'USD' },
-  { id: 'tx_6', title: 'Monthly Salary Deposit', title_tw: '10月份薪資入帳', amount: 5200, type: 'income', category: 'salary', date: '2026-10-05', recurringId: 'rec_salary', currency: 'USD' },
-  { id: 'tx_7', title: 'Apartment Rent & Utilities', title_tw: '公寓房租與水電', amount: 1650, type: 'expense', category: 'housing', date: '2026-10-10', recurringId: 'rec_rent', currency: 'USD' },
-  { id: 'tx_8', title: 'Web Design Project Payment', title_tw: '網站設計接案款', amount: 850, type: 'income', category: 'parttime', date: '2026-10-08', currency: 'USD' }
+  { id: 'tx_1', title: 'Shopping & Essentials', title_tw: '商場生活用品購物', amount: 68.5, type: 'expense', category: 'shopping', date: `${INITIAL_YM}-17`, currency: 'USD' },
+  { id: 'tx_2', title: 'Oat Milk Latte', title_tw: '中杯燕麥熱拿鐵', amount: 5.75, type: 'expense', category: 'drinks', date: `${INITIAL_YM}-17`, currency: 'USD' },
+  { id: 'tx_3', title: 'Weekly Metro Pass', title_tw: '地鐵通勤週票', amount: 35, type: 'expense', category: 'transport', date: `${INITIAL_YM}-16`, currency: 'USD' },
+  { id: 'tx_4', title: 'Weekend Dinner with Friends', title_tw: '週末朋友聚餐', amount: 92, type: 'expense', category: 'food', date: `${INITIAL_YM}-15`, currency: 'USD' },
+  { id: 'tx_5', title: 'Gaming & Entertainment Subscription', title_tw: '遊戲娛樂月費訂閱', amount: 15.99, type: 'expense', category: 'entertainment', date: `${INITIAL_YM}-15`, recurringId: 'rec_netflix', currency: 'USD' },
+  { id: 'tx_9', title: 'High-Yield Savings Interest', title_tw: '高利活存利息入帳', amount: 48.5, type: 'income', category: 'interest', date: `${INITIAL_YM}-12`, currency: 'USD' },
+  { id: 'tx_6', title: 'Monthly Salary Deposit', title_tw: `${INITIAL_MONTH}月份薪資入帳`, amount: 5200, type: 'income', category: 'salary', date: `${INITIAL_YM}-05`, recurringId: 'rec_salary', currency: 'USD' },
+  { id: 'tx_7', title: 'Apartment Rent & Utilities', title_tw: '公寓房租與水電', amount: 1650, type: 'expense', category: 'housing', date: `${INITIAL_YM}-10`, recurringId: 'rec_rent', currency: 'USD' },
+  { id: 'tx_8', title: 'Web Design Project Payment', title_tw: '網站設計接案款', amount: 850, type: 'income', category: 'parttime', date: `${INITIAL_YM}-08`, currency: 'USD' }
 ];
 
 const DEMO_RECURRING = [
@@ -834,7 +839,7 @@ let state = {
   recurring: loadInitialData(RECURRING_KEY, DEMO_RECURRING),
   currency: localStorage.getItem(CURRENCY_KEY) || 'USD',
   isDemo: isDemoMode,
-  currentDate: new Date(2026, 9, 1), // Oct 2026
+  currentDate: new Date(INITIAL_YEAR, INITIAL_MONTH - 1, 1),
   currentFilter: 'all',
   searchQuery: '',
   modalType: 'expense',
@@ -898,7 +903,7 @@ function normalizeDemoItems() {
     state.transactions = state.transactions.map(tx => {
       const demo = DEMO_TRANSACTIONS.find(d => d.id === tx.id);
       if (demo) {
-        return { ...tx, title: demo.title, title_tw: demo.title_tw, category: demo.category, currency: tx.currency || demo.currency };
+        return { ...tx, title: demo.title, title_tw: demo.title_tw, category: demo.category, date: demo.date, currency: tx.currency || demo.currency };
       }
       return tx;
     });
